@@ -1,0 +1,29 @@
+# Credentials and local configuration
+.env
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# Local and personal content
+personal/
+content/
+media/
+*.zim
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+.cache/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
