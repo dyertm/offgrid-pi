@@ -130,6 +130,36 @@ The active scope includes:
 * GitHub repository structure
 * Clean installation testing
 
+* ## Offline Entertainment Module (7-30-27)
+
+The Offgrid Pi will include an optional offline entertainment module for use during extended power outages, emergencies, travel, camping, or other periods without reliable internet access.
+
+The module will provide local playback of legally owned movies, television programs, music, audiobooks, and other media stored on attached USB storage.
+
+Kodi will serve as the primary media-library interface. VLC will be installed as a lightweight fallback player for individual files and media formats that do not work correctly in Kodi.
+
+The entertainment module must remain separate from the system’s emergency-reference content. Entertainment files must not reduce the reliability, accessibility, or available storage required for maps, medical information, repair manuals, communications references, Kiwix libraries, and other essential resources.
+
+### Primary Functions
+
+* Browse and play movies and television programs without internet access.
+* Play locally stored music and audiobooks.
+* Maintain separate family, children’s, and general media folders.
+* Retain media metadata and artwork locally when practical.
+* Launch the media center from the main Offgrid Pi interface.
+* Return to the main Offgrid Pi interface after exiting Kodi.
+* Allow direct file playback through VLC if Kodi is unavailable.
+
+### Design Priorities
+
+* Fully functional without internet access.
+* Simple enough for nontechnical users.
+* Compatible with Raspberry Pi 4 hardware.
+* Low power consumption during playback.
+* No dependence on cloud accounts or streaming services.
+* Media stored separately from the operating-system SD card.
+* Emergency information receives priority over entertainment content.
+
 ## 6. Deferred scope
 
 The following subjects are important but are intentionally deferred until the core software platform is working:
