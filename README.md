@@ -14,6 +14,7 @@ The project will use Internet-in-a-Box and other open-source tools to provide of
 * Repair and maintenance manuals
 * Local PDF documents and personal reference material
 * Optional family education resources
+* Optional offline movies, music, and audiobooks
 
 ## Project Goals
 
@@ -49,6 +50,8 @@ The initial software stack may include:
 * Calibre-Web or another local document library
 * A customized local home page
 * Backup, restore, and system health scripts
+* Kodi for optional offline media-library playback
+* VLC as a fallback player for individual media files
 
 The final software selection will remain intentionally small. Additional applications will be added only when they provide a clear off-grid or emergency-use benefit.
 
@@ -72,6 +75,10 @@ Washington, Oregon, and Idaho maps, public-land information, regional hazards, t
 
 Selected mathematics, science, history, reading, and practical-skills resources.
 
+### Offline Entertainment
+
+User-supplied, legally owned movies, television programs, music, and audiobooks. This profile will remain optional and will use storage separate from the operating-system drive. Emergency and reference content will receive storage priority.
+
 ## Project Status
 
 This project is currently in the initial planning and build stage.
@@ -85,12 +92,13 @@ The first version will focus on:
 5. Creating a simple local home screen
 6. Documenting backup and recovery procedures
 7. Testing whether the system can be rebuilt from this repository
+8. Prototyping an optional Kodi and VLC offline-media module after the core platform is stable
 
 ## Important Content Note
 
 This repository will contain configuration files, scripts, manifests, and documentation.
 
-It will not directly contain large Wikipedia archives, map databases, copyrighted books, personal documents, passwords, private keys, or other sensitive information. Content manifests will identify authorized download sources whenever possible.
+It will not directly contain large Wikipedia archives, map databases, copyrighted books or media, personal documents, passwords, private keys, or other sensitive information. Content manifests will identify authorized download sources whenever possible.
 
 ## Attribution
 
