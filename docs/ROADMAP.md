@@ -33,6 +33,7 @@ Completion criteria
 The project scope is clearly documented.
 Deferred features are separated from active development.
 The repository is ready to receive scripts and code.
+
 Phase 1 — Raspberry Pi foundation
 
 Status: Not started
@@ -62,6 +63,7 @@ Network access works.
 Operating system is updated.
 SSH access works if enabled.
 Build steps have been documented.
+
 Phase 2 — Kiwix proof of concept
 
 Status: Not started
@@ -90,6 +92,7 @@ At least one ZIM library is available.
 Search works offline.
 The service survives a reboot.
 The installation can be repeated from documentation.
+
 Phase 3 — Dashboard prototype
 
 Status: Not started
@@ -120,6 +123,7 @@ Dashboard is readable on the GeeekPi display.
 All initial navigation links function.
 No required assets are loaded from the internet.
 Dashboard launches automatically after boot.
+
 Phase 4 — Local document library
 
 Status: Not started
@@ -147,6 +151,7 @@ The index updates reliably.
 Files can be opened through the dashboard.
 Personal folders are not exposed by default.
 The system works offline.
+
 Phase 5 — Reproducible installer
 
 Status: Not started
@@ -180,6 +185,7 @@ The installer does not require undocumented manual changes.
 Re-running the installer does not damage the installation.
 Failure states provide useful messages.
 User content is preserved during upgrades and uninstall operations.
+
 Phase 6 — Content-pack system
 
 Status: Not started
@@ -212,6 +218,7 @@ Required storage is shown before downloading.
 Sources and licenses are documented.
 Installed content is recorded.
 Failed downloads can resume or be retried safely.
+
 Phase 7 — System status and administration
 
 Status: Not started
@@ -240,6 +247,7 @@ Users can identify common problems without opening a terminal.
 Administrative actions require appropriate authorization.
 Shutdown and restart actions do not risk file-system damage.
 Status information works without internet access.
+
 Phase 8 — Offline maps
 
 Status: Deferred
@@ -267,7 +275,56 @@ Completion criteria
 
 To be defined after technical evaluation.
 
-Phase 9 — Local Wi-Fi hotspot mode
+Phase 9 - Offline Entertainment Module
+
+Status: Planned
+
+Objective
+
+Add reliable offline playback of movies, music, audiobooks, and other locally stored media without interfering with the Offgrid Pi’s emergency-information functions.
+
+Tasks
+
+Install Kodi on Raspberry Pi OS.
+Install VLC as a fallback media player.
+Create the approved media folder structure.
+Select the USB HDD or SSD that will store media.
+Configure the media drive to mount consistently at startup.
+Add the media folders as Kodi library sources.
+Configure Kodi for fully offline operation.
+Download and retain permitted metadata and artwork locally.
+Disable unnecessary online Kodi services and add-ons.
+Add a Movies and Entertainment option to the main Offgrid Pi launcher.
+Configure Kodi to return cleanly to the desktop or launcher when closed.
+Test MP4 and MKV playback.
+Test H.264 video at 720p.
+Test H.264 video at 1080p.
+Test audio playback.
+Test subtitle playback.
+Test playback with all network connections disabled.
+Test playback from each intended USB storage device.
+Check for Raspberry Pi undervoltage warnings during playback.
+Measure approximate power consumption during video playback.
+Verify that the EcoFlow RIVER 2 can operate the complete system reliably.
+Determine whether a powered USB hub is required.
+Document media-import and library-update procedures.
+Document storage allocation between emergency and entertainment content.
+Record installation and validation results in the build log.
+
+Completion Criteria
+
+This phase will be considered complete when:
+
+Kodi launches from the main Offgrid Pi interface.
+At least one test movie plays without an internet connection.
+VLC successfully opens a media file as a fallback.
+Audio and subtitles work correctly.
+The media drive mounts automatically after a restart.
+Kodi exits cleanly and returns the user to the main system.
+Video playback does not produce undervoltage warnings, drive disconnects, overheating, or system instability.
+Emergency-reference content remains available and unaffected.
+
+Phase 10 — Local Wi-Fi hotspot mode
 
 Status: Deferred
 
@@ -284,7 +341,7 @@ Completion criteria
 
 To be defined after the base network services are stable.
 
-Phase 10 — Storage architecture
+Phase 11 — Storage architecture
 
 Status: Deferred
 
@@ -304,7 +361,7 @@ Completion criteria
 
 To be defined after the approximate content-library size is known.
 
-Phase 11 — Off-grid power optimization
+Phase 12 — Off-grid power optimization
 
 Status: Deferred
 
@@ -328,7 +385,7 @@ Completion criteria
 
 To be defined after the software and storage configuration are stable.
 
-Phase 12 — Backup, recovery, and resilience
+Phase 13 — Backup, recovery, and resilience
 
 Status: Deferred
 
@@ -347,7 +404,8 @@ A failed boot card can be replaced.
 Configuration can be restored.
 User content can be recovered.
 Recovery instructions are available offline.
-Phase 13 — Prebuilt release image
+
+Phase 14 — Prebuilt release image
 
 Status: Deferred
 
@@ -365,7 +423,8 @@ Completion criteria
 A user can flash the image and complete setup without undocumented steps.
 No development credentials or personal data are included.
 The image corresponds to a tagged repository release.
-Phase 14 — Physical protection and long-term storage
+
+Phase 15 — Physical protection and long-term storage
 
 Status: Deferred
 
@@ -380,7 +439,7 @@ Separate evidence-based recommendations from marketing claims
 
 This phase will begin only after the software platform, content, storage, and power systems are working.
 
-Phase 15 — Community release
+Phase 16 — Community release
 
 Status: Future
 
