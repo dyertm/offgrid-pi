@@ -17,6 +17,7 @@ Serve at least one Kiwix library
 Display the Offgrid Pi dashboard locally
 Allow browser access from other devices on the same network
 Continue providing installed content without internet access
+Optionally launch Kodi and play locally stored media without internet access
 2. Required hardware
 Raspberry Pi 4B
 Raspberry Pi-compatible 5V 3A USB-C power supply
@@ -29,6 +30,7 @@ USB keyboard
 USB mouse
 Ethernet or Wi-Fi connection
 Windows, macOS, or Linux computer for imaging the microSD card
+Optional USB storage device for media-module testing
 3. Recommended microSD card
 
 For development:
@@ -222,7 +224,12 @@ Proposed content directories:
 sudo mkdir -p /srv/offgridpi/content/kiwix
 sudo mkdir -p /srv/offgridpi/content/documents
 sudo mkdir -p /srv/offgridpi/content/maps
-sudo mkdir -p /srv/offgridpi/content/media
+sudo mkdir -p /srv/offgridpi/content/media/movies
+sudo mkdir -p /srv/offgridpi/content/media/television
+sudo mkdir -p /srv/offgridpi/content/media/family
+sudo mkdir -p /srv/offgridpi/content/media/kids
+sudo mkdir -p /srv/offgridpi/content/media/music
+sudo mkdir -p /srv/offgridpi/content/media/audiobooks
 sudo mkdir -p /srv/offgridpi/indexes
 sudo mkdir -p /srv/offgridpi/logs
 sudo mkdir -p /srv/offgridpi/backups
@@ -320,13 +327,62 @@ Project title
 Kiwix link
 Document-library link
 Placeholder map link
+Optional offline-entertainment launcher
 System-status link
 Administration link
 Project version
 
 The dashboard should be readable on the 1024 × 600 development display.
 
-19. Configure dashboard hosting
+19. Install the optional offline media module
+
+Status: Planned and not yet validated
+
+The offline media module is optional. It should be installed only after the Raspberry Pi desktop, storage paths, and dashboard are functioning reliably.
+
+The planned applications are:
+
+Kodi as the primary media-library and playback interface
+VLC as a fallback player for individual media files
+
+The exact package names and installation commands must be validated on the selected Raspberry Pi OS release before they are treated as release-ready instructions. Record the package versions and installation results in BUILD_LOG.md.
+
+Media should be stored outside the operating-system microSD card whenever practical. An available USB drive may be used for initial testing, but final drive selection and capacity allocation belong to the storage-architecture phase.
+
+The initial directory structure is:
+
+/srv/offgridpi/content/media/movies
+/srv/offgridpi/content/media/television
+/srv/offgridpi/content/media/family
+/srv/offgridpi/content/media/kids
+/srv/offgridpi/content/media/music
+/srv/offgridpi/content/media/audiobooks
+
+The installation and configuration process should eventually:
+
+Install Kodi and VLC.
+Add the approved media directories as local sources.
+Avoid requiring cloud accounts or streaming services.
+Retain permitted metadata and artwork locally when practical.
+Add a dashboard or desktop launcher for Kodi.
+Preserve access to the normal Raspberry Pi desktop.
+Return cleanly to the dashboard or desktop when Kodi closes.
+Avoid exposing personal media through the local web dashboard by default.
+
+Initial validation should include:
+
+MP4 and MKV containers
+H.264 video at 720p and 1080p
+AAC stereo audio
+SRT subtitles
+VLC fallback playback
+Operation with internet access disconnected
+Restart and automatic-mount behavior
+Temperature, undervoltage, drive stability, and playback reliability
+
+Only user-supplied, legally obtained media should be added. Media files, library databases containing private information, and copyrighted artwork must not be committed to the public repository.
+
+20. Configure dashboard hosting
 
 The final hosting method has not yet been selected.
 
@@ -345,7 +401,7 @@ Easy to configure
 Able to start automatically
 Suitable for local-network access
 Maintainable by the project
-20. Configure automatic dashboard launch
+21. Configure automatic dashboard launch
 
 After login, the local browser should open the Offgrid Pi dashboard automatically.
 
@@ -358,7 +414,7 @@ A project launcher application
 
 The first version should preserve access to the normal desktop for troubleshooting.
 
-21. Verify local access
+22. Verify local access
 
 Test from the Raspberry Pi:
 
@@ -368,7 +424,7 @@ or the final configured dashboard port.
 
 Test the Kiwix service through its configured local address.
 
-22. Verify network access
+23. Verify network access
 
 From another device on the same network, test:
 
@@ -382,7 +438,7 @@ The dashboard opens.
 Kiwix opens.
 Installed content can be searched.
 Administrative actions are not exposed without appropriate controls.
-23. Verify offline operation
+24. Verify offline operation
 
 Disconnect the Raspberry Pi from the internet while leaving the local system running.
 
@@ -392,9 +448,10 @@ The dashboard loads.
 Kiwix content loads.
 Search works.
 Local documents open.
+Kodi and VLC play local test media when the optional module is installed.
 The browser does not depend on remote fonts, scripts, icons, or analytics.
 Services restart successfully without internet access.
-24. Run the health check
+25. Run the health check
 
 The future health-check script should verify:
 
@@ -411,11 +468,13 @@ File permissions
 System temperature
 Network addresses
 Recent errors
+Optional Kodi and VLC package status
+Optional media-drive mount status and available space
 
 Planned command:
 
 sudo ./scripts/check-system.sh
-25. Installation completion criteria
+26. Installation completion criteria
 
 The installation is considered successful when:
 
@@ -428,7 +487,8 @@ Another device can reach the dashboard.
 The system works without internet access.
 All commands and deviations are recorded.
 No passwords or personal information have been committed to GitHub.
-26. Uninstallation
+When installed, the optional media module plays a local test file without internet access.
+27. Uninstallation
 
 An uninstall script will be created after the first working installation.
 
@@ -436,7 +496,7 @@ It should:
 
 Stop and disable Offgrid Pi services
 Remove application files
-Preserve user content by default
+Preserve user content and media by default
 Offer an explicit option to remove content
 Remove created service definitions
 Restore modified autostart settings

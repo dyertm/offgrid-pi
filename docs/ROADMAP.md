@@ -103,6 +103,7 @@ Create the dashboard layout
 Add category navigation
 Add a Kiwix link
 Add a document-library link
+Add an optional offline-entertainment launcher or placeholder
 Add system-status placeholders
 Optimize for 1024 × 600
 Host all assets locally
@@ -275,54 +276,74 @@ Completion criteria
 
 To be defined after technical evaluation.
 
-Phase 9 - Offline Entertainment Module
+Phase 9 — Offline entertainment module
 
 Status: Planned
 
-Objective
+Dependencies
 
-Add reliable offline playback of movies, music, audiobooks, and other locally stored media without interfering with the Offgrid Pi’s emergency-information functions.
+* Raspberry Pi foundation is stable.
+* The dashboard can launch local applications.
+* Temporary USB storage is available for testing.
+* Final storage allocation will be coordinated with Phase 11.
+* Off-grid runtime validation will be completed in Phase 12.
 
-Tasks
+Objectives
 
-Install Kodi on Raspberry Pi OS.
-Install VLC as a fallback media player.
-Create the approved media folder structure.
-Select the USB HDD or SSD that will store media.
-Configure the media drive to mount consistently at startup.
-Add the media folders as Kodi library sources.
-Configure Kodi for fully offline operation.
-Download and retain permitted metadata and artwork locally.
-Disable unnecessary online Kodi services and add-ons.
-Add a Movies and Entertainment option to the main Offgrid Pi launcher.
-Configure Kodi to return cleanly to the desktop or launcher when closed.
-Test MP4 and MKV playback.
-Test H.264 video at 720p.
-Test H.264 video at 1080p.
-Test audio playback.
-Test subtitle playback.
-Test playback with all network connections disabled.
-Test playback from each intended USB storage device.
-Check for Raspberry Pi undervoltage warnings during playback.
-Measure approximate power consumption during video playback.
-Verify that the EcoFlow RIVER 2 can operate the complete system reliably.
-Determine whether a powered USB hub is required.
-Document media-import and library-update procedures.
-Document storage allocation between emergency and entertainment content.
-Record installation and validation results in the build log.
+* Install Kodi on Raspberry Pi OS.
+* Install VLC as a fallback media player.
+* Create the approved media-directory structure.
+* Test media from an available USB storage device.
+* Configure the test drive to mount consistently.
+* Add media folders as Kodi library sources.
+* Configure Kodi for useful offline operation.
+* Retain permitted metadata and artwork locally when practical.
+* Disable or avoid unnecessary online services and add-ons.
+* Add an Offline Entertainment option to the Offgrid Pi dashboard or desktop launcher.
+* Return cleanly to the dashboard or desktop when Kodi closes.
+* Test video, audio, and subtitle playback with network access disabled.
+* Check for overheating, undervoltage warnings, drive disconnects, and system instability.
+* Document media import, naming, library refresh, and removal procedures.
+* Document that users must supply legally obtained media.
 
-Completion Criteria
+Initial compatibility tests
 
-This phase will be considered complete when:
+* MP4 playback
+* MKV playback
+* H.264 at 720p
+* H.264 at 1080p
+* AAC stereo audio
+* SRT subtitles
+* VLC fallback playback
 
-Kodi launches from the main Offgrid Pi interface.
-At least one test movie plays without an internet connection.
-VLC successfully opens a media file as a fallback.
-Audio and subtitles work correctly.
-The media drive mounts automatically after a restart.
-Kodi exits cleanly and returns the user to the main system.
-Video playback does not produce undervoltage warnings, drive disconnects, overheating, or system instability.
-Emergency-reference content remains available and unaffected.
+Deliverables
+
+* Optional Kodi and VLC installation instructions
+* Media-directory template
+* Dashboard or desktop launcher
+* Offline playback test record
+* Media-library management instructions
+* Known-limitations and troubleshooting notes
+
+Completion criteria
+
+* Kodi launches locally from the documented interface.
+* At least one test movie plays without internet access.
+* VLC opens at least one media file as a fallback.
+* Audio and subtitles work correctly.
+* The test media drive mounts after restart.
+* Kodi exits without preventing access to the dashboard or desktop.
+* Playback does not produce unresolved overheating, undervoltage, drive-disconnect, or stability problems.
+* Emergency-reference services remain available and unaffected.
+
+Out of scope for this phase
+
+* Final media-drive purchase or long-term storage recommendation
+* Jellyfin or other network media-server deployment
+* Video transcoding
+* EcoFlow runtime measurement
+* Solar recharge testing
+* Large-scale redistribution of media files
 
 Phase 10 — Local Wi-Fi hotspot mode
 
@@ -355,6 +376,8 @@ Automate drive detection where practical
 Define backup process
 Define recovery process
 Define content-drive migration
+Reserve capacity for knowledge content before entertainment media
+Define stable media-library mount paths
 Test unexpected drive removal
 Test read-only recovery options
 Completion criteria
@@ -375,6 +398,7 @@ Measure idle power use
 Measure active-search power use
 Measure monitor power use
 Measure external-drive power use
+Measure Kodi video-playback power use
 Test USB and DC powering methods
 Compare direct DC operation with AC inverter operation
 Define reduced-power mode
@@ -467,6 +491,7 @@ Local-network access
 Health check
 Documentation
 Clean uninstall process
+Optional offline media playback when the module is selected
 
 Maps, hotspot mode, extensive content packs, storage recommendations, and downloadable images do not need to be complete for the first public release.
 

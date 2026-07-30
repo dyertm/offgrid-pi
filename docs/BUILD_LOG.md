@@ -90,6 +90,39 @@ Configure Kiwix to serve the test file.
 Test local browser access.
 Test access from another network device.
 Record all commands and results below.
+July 30, 2026 — Offline media module approved
+
+Status: Completed
+
+Work completed
+Approved an optional offline entertainment module for movies, television programs, music, and audiobooks.
+Selected Kodi as the primary media-library interface.
+Selected VLC as the fallback player for individual files.
+Confirmed that Raspberry Pi OS 64-bit with Desktop will remain the operating-system baseline.
+Deferred LibreELEC because Offgrid Pi must continue supporting Kiwix, maps, documents, scripts, and normal desktop administration.
+Deferred Jellyfin, network streaming, and transcoding from the initial media implementation.
+Defined preliminary media directories under /srv/offgridpi/content/media.
+Established that emergency-reference content receives storage priority over entertainment media.
+Assigned final media-drive selection and reserved-capacity planning to the storage-architecture phase.
+Assigned EcoFlow runtime and solar testing to the off-grid power-optimization phase.
+Updated README.md, 01-HARDWARE.md, PROJECT_BLUEPRINT.md, DECISIONS.md, ROADMAP.md, INSTALLATION.md, and BUILD_LOG.md.
+
+Validation status
+No Kodi or VLC packages have been installed yet.
+No media playback tests have been performed yet.
+No USB-drive mount behavior has been validated yet.
+No power-consumption measurements have been performed yet.
+
+Planned media test targets
+MP4 and MKV containers
+H.264 video at 720p and 1080p
+AAC stereo audio
+SRT subtitles
+VLC fallback playback
+Offline operation with network access disconnected
+Drive remount after reboot
+Temperature, undervoltage, and stability checks
+
 Initial imaging session
 
 Date: Not started
@@ -240,6 +273,50 @@ Planned dashboard path
 Test results
 
 To be completed during development.
+
+Offline media module test
+
+Date: Not started
+Status: Planned
+
+Software
+Kodi installed:
+Kodi version:
+VLC installed:
+VLC version:
+Installation method:
+
+Storage
+Test drive manufacturer:
+Test drive model:
+Capacity:
+File system:
+Mount path:
+Automatic mount after reboot:
+Available space before testing:
+
+Playback tests
+MP4 test:
+MKV test:
+720p H.264 test:
+1080p H.264 test:
+AAC stereo test:
+SRT subtitle test:
+VLC fallback test:
+Offline playback test:
+Kodi exit and return test:
+
+System behavior
+CPU temperature before playback:
+CPU temperature during playback:
+Undervoltage warnings:
+Drive disconnects:
+Dropped frames or stuttering:
+Other errors:
+
+Notes
+
+To be completed during Phase 9.
 
 Known issues
 

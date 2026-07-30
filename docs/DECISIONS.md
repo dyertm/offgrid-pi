@@ -271,59 +271,57 @@ Review condition
 
 Confirm during the first working prototype that the directory design supports Kiwix, document indexing, and future map storage.
 
+Decision 013 — Add an optional offline media-playback module
+
 Date: July 30, 2026
-## Decision: Offline Media Playback
+Status: Accepted
 
-**Status:** Approved
-**Decision:** Install Kodi and VLC on Raspberry Pi OS to support offline media playback.
+Decision
 
-### Context
+Offgrid Pi will support optional offline playback of user-supplied, legally owned movies, television programs, music, and audiobooks.
 
-The Offgrid Pi is intended to provide useful information and services during emergencies and extended periods without internet access. In addition to emergency references, offline entertainment can provide comfort, morale, education, and family recreation during extended outages or shelter-in-place situations.
+Kodi will be the primary media-library interface. VLC will be installed as a fallback player for opening individual files and troubleshooting formats that do not behave correctly in Kodi.
 
-### Decision
+The system will continue to use Raspberry Pi OS 64-bit with Desktop. Media playback will be added as an optional module rather than replacing the operating system with a dedicated media-center distribution.
 
-Kodi will be installed as the primary offline media-library interface.
+Reason
 
-VLC will be installed as a fallback player for opening individual media files and troubleshooting files that do not play correctly in Kodi.
+Entertainment, education, and morale resources can remain useful during extended outages, shelter-in-place situations, remote travel, and other periods without internet access. Adding media playback to the existing desktop preserves the Pi's primary knowledge, mapping, document, and administration functions.
 
-The system will continue to use Raspberry Pi OS as its primary operating system. LibreELEC will not be used because it is designed primarily as a dedicated Kodi operating system and would limit the Pi’s ability to run Kiwix, offline maps, document tools, scripts, and other emergency applications.
+Alternatives considered
 
-Jellyfin will not be included in the initial build. The first version of the system will use direct local playback rather than media-server streaming or video transcoding. Jellyfin may be evaluated later if local-network streaming to phones, tablets, or other computers becomes a project requirement.
+* LibreELEC or another dedicated Kodi operating system
+* Jellyfin or another media-server platform
+* VLC without a library interface
+* No integrated media playback
 
-### Media Standards
+Consequences
 
-Preferred media formats are:
+* Kodi and VLC must be included in installation, validation, and uninstall procedures when the optional module is selected.
+* The Offgrid Pi dashboard should provide a local launcher for Kodi while preserving normal desktop access.
+* Direct local playback will be the initial design. Network streaming and transcoding are outside the initial media scope.
+* Media files will remain outside the GitHub repository and content-pack downloads unless redistribution is explicitly permitted.
+* Emergency-reference content will receive storage priority over entertainment media.
+* Media should be stored on attached USB storage rather than the operating-system microSD card.
+* Initial testing will use stable wall power. Off-grid runtime and solar testing will remain part of the later power-optimization phase.
+* Final drive selection, reserved capacity, mount behavior, and recovery procedures will be completed during the storage-architecture phase.
 
-* MP4 or MKV container
+Preferred compatibility targets
+
+The first validation pass should prioritize:
+
+* MP4 or MKV containers
 * H.264 video
-* 720p or 1080p resolution
+* 720p and 1080p playback
 * AAC stereo audio
-* SRT subtitles when subtitles are needed
+* SRT subtitles
 
-H.265 media may be tested, but H.264 will remain the preferred format because it offers broader compatibility with other devices and requires less troubleshooting.
+H.265 may be tested, but it is not required for the first successful implementation.
 
-### Storage Decision
+Review conditions
 
-Media files will be stored on attached USB storage rather than on the Raspberry Pi operating-system SD card.
+Revisit this decision if:
 
-Emergency-reference content and entertainment content will use separate folders. When possible, storage allocation will be planned so that entertainment files cannot consume space reserved for emergency information.
-
-### Consequences
-
-Benefits include:
-
-* Reliable playback without internet access
-* A polished interface that nontechnical users can navigate
-* Support for movies, music, audiobooks, and family content
-* No dependence on streaming subscriptions or cloud services
-* Continued access to the full Raspberry Pi OS environment
-
-Tradeoffs include:
-
-* Additional storage requirements
-* Increased power use while playing video
-* Possible USB-drive power or compatibility issues
-* Additional configuration and testing
-* Media metadata may need to be downloaded before the system is taken offline
-
+* Kodi packages are not reliable on the selected Raspberry Pi OS release.
+* Direct playback is insufficient and local-network streaming becomes a defined requirement.
+* Media playback creates unacceptable heat, power draw, storage pressure, or system instability.

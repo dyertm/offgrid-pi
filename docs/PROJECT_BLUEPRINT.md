@@ -25,6 +25,7 @@ Create a dependable, approachable, and reproducible offline knowledge platform t
 * Equipment documentation
 * Regional maps and geographic information
 * User-supplied documents
+* Optional offline entertainment and morale resources
 
 The system should remain useful during internet outages, remote travel, grid failures, natural disasters, or other situations where normal online resources are unavailable.
 
@@ -92,6 +93,7 @@ Potential modules include:
 * Education pack
 * Radio reference pack
 * Local Wi-Fi access point
+* Offline media playback
 * Backup and recovery tools
 
 ### 4.6 Repairability
@@ -130,35 +132,34 @@ The active scope includes:
 * GitHub repository structure
 * Clean installation testing
 
-* ## Offline Entertainment Module (7-30-27)
+### 5.1 Approved optional module: Offline entertainment
 
-The Offgrid Pi will include an optional offline entertainment module for use during extended power outages, emergencies, travel, camping, or other periods without reliable internet access.
+Offgrid Pi will include an optional offline entertainment module after the core platform is stable. The module will support local playback of user-supplied, legally owned movies, television programs, music, audiobooks, and similar media without requiring internet access.
 
-The module will provide local playback of legally owned movies, television programs, music, audiobooks, and other media stored on attached USB storage.
+Kodi will provide the primary media-library interface. VLC will provide a lightweight fallback for individual files and troubleshooting. The module will run on Raspberry Pi OS rather than replacing the system with a dedicated media-center operating system.
 
-Kodi will serve as the primary media-library interface. VLC will be installed as a lightweight fallback player for individual files and media formats that do not work correctly in Kodi.
+The module must remain separate from essential knowledge content. Media files must not reduce the reliability, accessibility, or reserved storage needed for Kiwix libraries, maps, medical information, repair manuals, communications references, local documents, system backups, or future emergency-content expansion.
 
-The entertainment module must remain separate from the system’s emergency-reference content. Entertainment files must not reduce the reliability, accessibility, or available storage required for maps, medical information, repair manuals, communications references, Kiwix libraries, and other essential resources.
-
-### Primary Functions
+Primary functions include:
 
 * Browse and play movies and television programs without internet access.
 * Play locally stored music and audiobooks.
-* Maintain separate family, children’s, and general media folders.
-* Retain media metadata and artwork locally when practical.
-* Launch the media center from the main Offgrid Pi interface.
-* Return to the main Offgrid Pi interface after exiting Kodi.
-* Allow direct file playback through VLC if Kodi is unavailable.
+* Maintain separate general, family, and children’s media folders.
+* Retain permitted metadata and artwork locally when practical.
+* Launch Kodi from the Offgrid Pi dashboard or desktop.
+* Return cleanly to the dashboard or desktop after Kodi closes.
+* Open individual files through VLC when Kodi is unavailable or unsuitable.
 
-### Design Priorities
+Design priorities include:
 
-* Fully functional without internet access.
-* Simple enough for nontechnical users.
-* Compatible with Raspberry Pi 4 hardware.
-* Low power consumption during playback.
-* No dependence on cloud accounts or streaming services.
-* Media stored separately from the operating-system SD card.
-* Emergency information receives priority over entertainment content.
+* Fully offline operation after installation and library preparation
+* Simple operation for nontechnical users
+* Raspberry Pi 4 compatibility
+* Direct local playback without required transcoding
+* No dependency on cloud accounts or streaming services
+* Media storage outside the operating-system microSD card
+* Storage priority for emergency and reference content
+* Validation of heat, stability, drive behavior, and power consumption
 
 ## 6. Deferred scope
 
@@ -274,7 +275,17 @@ Supported content may include:
 * Checklists
 * Locally created documentation
 
-### 9.4 Dashboard layer
+### 9.4 Media-playback layer
+
+The optional media module will provide direct local playback through:
+
+* Kodi as the primary library and full-screen playback interface
+* VLC as a fallback player for individual files
+* User-managed media stored under the Offgrid Pi content structure or on external storage mounted into that structure
+
+The first implementation will not require a media server, remote streaming, or video transcoding.
+
+### 9.5 Dashboard layer
 
 A custom Offgrid Pi dashboard will act as the system’s primary interface.
 
@@ -283,13 +294,14 @@ The dashboard should link to:
 * Kiwix libraries
 * Document categories
 * Offline maps
+* Optional offline entertainment
 * System status
 * Storage information
 * Administration tools
 * Shutdown and restart functions
 * Project documentation
 
-### 9.5 Service layer
+### 9.6 Service layer
 
 The project is expected to use standard Linux services managed by `systemd`.
 
@@ -303,7 +315,7 @@ offgridpi-indexer.service
 
 Final service names may change during development.
 
-### 9.6 Network layer
+### 9.7 Network layer
 
 The system should support:
 
@@ -335,6 +347,12 @@ The planned content structure is:
 │   ├── documents/
 │   ├── maps/
 │   └── media/
+│       ├── movies/
+│       ├── television/
+│       ├── family/
+│       ├── kids/
+│       ├── music/
+│       └── audiobooks/
 ├── indexes/
 ├── logs/
 └── backups/
@@ -374,6 +392,7 @@ The initial dashboard may contain:
 * Maps
 * Equipment Manuals
 * Local Documents
+* Offline Entertainment
 * System Status
 * Administration
 
@@ -412,7 +431,7 @@ Possible packs include:
 
 Content files should generally not be stored directly in the GitHub repository because of their size.
 
-The repository should instead contain manifests and download instructions.
+The repository should instead contain manifests and download instructions. User-supplied entertainment media will not be treated as a public content pack and must not be committed to the repository.
 
 ## 13. GitHub repository structure
 
@@ -490,9 +509,10 @@ The installation script should eventually:
 12. Configure the local hostname.
 13. Enable required services.
 14. Offer optional starter content.
-15. Run a system health check.
-16. Display access instructions.
-17. Record installation results in a log.
+15. Offer installation of the optional Kodi and VLC media module.
+16. Run a system health check.
+17. Display access instructions.
+18. Record installation results in a log.
 
 The first release may use multiple scripts before these functions are combined into one installer.
 
@@ -525,6 +545,7 @@ The project must identify:
 * Licenses for content catalogs
 * Licenses for recommended third-party content
 * Restrictions on redistributing downloaded ZIM, map, PDF, or media files
+* The requirement that users provide and manage their own legally obtained entertainment media
 
 The GitHub repository should not redistribute third-party content unless redistribution is clearly permitted.
 
@@ -547,6 +568,7 @@ A first usable release should meet the following requirements:
 * Includes a health-check script
 * Does not expose personal content by default
 * Can be reproduced from the public repository
+* When the optional media module is selected, launches Kodi locally and plays at least one test file without internet access
 
 ## 18. Project workflow
 
@@ -580,6 +602,8 @@ Completed planning decisions include:
 * Storage architecture will be finalized after the core software is functional.
 * EMP and Faraday-storage planning are deferred.
 * Power-system integration is deferred until software development is further along.
+* Kodi and VLC have been selected for an optional offline media-playback module.
+* Final media-drive selection and off-grid runtime testing remain deferred to the storage and power phases.
 
 ## 20. Next milestone
 
