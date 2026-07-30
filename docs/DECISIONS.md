@@ -270,3 +270,60 @@ Future external drives can be mounted under or linked to the content structure.
 Review condition
 
 Confirm during the first working prototype that the directory design supports Kiwix, document indexing, and future map storage.
+
+Date: July 30, 2026
+## Decision: Offline Media Playback
+
+**Status:** Approved
+**Decision:** Install Kodi and VLC on Raspberry Pi OS to support offline media playback.
+
+### Context
+
+The Offgrid Pi is intended to provide useful information and services during emergencies and extended periods without internet access. In addition to emergency references, offline entertainment can provide comfort, morale, education, and family recreation during extended outages or shelter-in-place situations.
+
+### Decision
+
+Kodi will be installed as the primary offline media-library interface.
+
+VLC will be installed as a fallback player for opening individual media files and troubleshooting files that do not play correctly in Kodi.
+
+The system will continue to use Raspberry Pi OS as its primary operating system. LibreELEC will not be used because it is designed primarily as a dedicated Kodi operating system and would limit the Pi’s ability to run Kiwix, offline maps, document tools, scripts, and other emergency applications.
+
+Jellyfin will not be included in the initial build. The first version of the system will use direct local playback rather than media-server streaming or video transcoding. Jellyfin may be evaluated later if local-network streaming to phones, tablets, or other computers becomes a project requirement.
+
+### Media Standards
+
+Preferred media formats are:
+
+* MP4 or MKV container
+* H.264 video
+* 720p or 1080p resolution
+* AAC stereo audio
+* SRT subtitles when subtitles are needed
+
+H.265 media may be tested, but H.264 will remain the preferred format because it offers broader compatibility with other devices and requires less troubleshooting.
+
+### Storage Decision
+
+Media files will be stored on attached USB storage rather than on the Raspberry Pi operating-system SD card.
+
+Emergency-reference content and entertainment content will use separate folders. When possible, storage allocation will be planned so that entertainment files cannot consume space reserved for emergency information.
+
+### Consequences
+
+Benefits include:
+
+* Reliable playback without internet access
+* A polished interface that nontechnical users can navigate
+* Support for movies, music, audiobooks, and family content
+* No dependence on streaming subscriptions or cloud services
+* Continued access to the full Raspberry Pi OS environment
+
+Tradeoffs include:
+
+* Additional storage requirements
+* Increased power use while playing video
+* Possible USB-drive power or compatibility issues
+* Additional configuration and testing
+* Media metadata may need to be downloaded before the system is taken offline
+
