@@ -108,4 +108,6 @@ Internet-in-a-Box, Kiwix, OpenStreetMap, and other included projects remain the 
 
 ## License
 
-A project license will be selected after the initial configuration and scripts have been created.
+Offgrid Pi is released under the MIT License. See [LICENSE](LICENSE) for details.
+
+Third-party software, offline content, maps, ZIM files, media, icons, and other external resources remain subject to their respective licenses and are not automatically covered by the Offgrid Pi license.
