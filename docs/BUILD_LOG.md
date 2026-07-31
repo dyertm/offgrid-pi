@@ -97,28 +97,29 @@ offgridpi-dashboard.service
 offgridpi-indexer.service
 ```
 
-### Outstanding Tasks
+### Initial Action List — Current Status
 
-* Select an erasable development microSD card.
-* Record card brand and capacity.
-* Install Raspberry Pi Imager on the Windows development computer if needed.
-* Flash Raspberry Pi OS 64-bit with Desktop.
-* Record every Raspberry Pi Imager setting.
-* Boot the Raspberry Pi.
-* Record the initial hostname and user configuration.
-* Update the operating system.
-* Record the display behavior at 1024 × 600.
-* Confirm fan operation.
-* Confirm keyboard and mouse operation.
-* Confirm Ethernet and Wi-Fi operation.
-* Install Git.
-* Clone or initialize the repository.
-* Install Kiwix.
-* Download a small test ZIM file.
-* Configure Kiwix to serve the test file.
-* Test local browser access.
-* Test access from another network device.
-* Record all commands and results below.
+Completed during the July 30–31 development session:
+
+* Selected and documented the development microSD card.
+* Installed Raspberry Pi Imager and recorded the imaging configuration.
+* Flashed and verified Raspberry Pi OS 64-bit with Desktop.
+* Completed the first boot and verified the display, fan, keyboard, mouse, and Wi-Fi.
+* Updated Raspberry Pi OS and recorded baseline system information.
+* Installed Git, curl, wget, and rsync.
+* Cloned the Offgrid Pi repository to `~/offgrid-pi` on the Raspberry Pi.
+* Installed Kiwix and ZIM tools from the Debian 13 ARM64 repositories.
+* Created the standard Kiwix content directory.
+* Downloaded and tested small ZIM archives.
+* Served Kiwix content locally and to another device on the local network.
+* Created and enabled `kiwix-serve.service`.
+* Confirmed automatic service startup and successful offline operation.
+
+Remaining near-term tasks:
+
+* Add the confirmed GitHub repository address to this document.
+* Confirm and document SSH access from the Windows development computer if not already recorded separately.
+* Begin Phase 3 — Dashboard Prototype.
 
 ---
 
@@ -254,7 +255,7 @@ offgridpi-indexer.service
 * **Mouse detected:** Yes
 * **Fan operating:** Yes
 * **Network connected:** Yes — Wi-Fi
-* **Hostname reachable:** Locally confirmed as `offgridpi`; remote SSH test from the development computer remains pending
+* **Hostname reachable:** Yes — `offgridpi.local` was successfully used from the development computer for Kiwix browser access; SSH confirmation remains separately documented as pending
 * **Errors or warnings:** None observed during first boot
 * **Notes:** Raspberry Pi OS completed its first boot successfully. The desktop and connected peripherals operated normally.
 
@@ -381,11 +382,13 @@ systemctl --failed
 
 * **Connection type:** Wi-Fi
 * **Hostname:** `offgridpi`
-* **Network address:** Recorded locally and excluded from the public repository
+* **Network address:** IPv4 and IPv6 addresses were assigned; exact addresses are excluded from the public repository
+* **Local hostname access:** Confirmed from the development computer using `offgridpi.local`
 * **SSH enabled:** Yes
 * **SSH authentication:** Password authentication
-* **SSH connectivity from development computer:** Pending confirmation
+* **SSH connectivity from development computer:** Pending explicit build-log confirmation
 * **Raspberry Pi Connect:** Disabled
+* **Local repository clone:** Confirmed at `~/offgrid-pi`
 
 ### Baseline Assessment
 
@@ -395,40 +398,289 @@ The Raspberry Pi passed its initial operating-system, memory, storage, temperatu
 
 ## Kiwix Test Installation
 
-**Date:** Not started
-**Status:** Planned
+**Date:** July 31, 2026  
+**Status:** Completed
 
-### Objectives
+### Objectives Completed
 
-* Install a supported Kiwix server package or binary.
-* Create the Kiwix content directory.
-* Download one small test ZIM file.
-* Serve the ZIM file locally.
-* Confirm browser access.
-* Record the final command and service configuration.
+* Confirmed that Kiwix and ZIM tools were available from the Debian 13 Trixie ARM64 repositories.
+* Installed `kiwix-tools` and `zim-tools`.
+* Created the standard Offgrid Pi Kiwix content directory.
+* Downloaded small test ZIM archives from the official Kiwix download repository.
+* Recorded SHA-256 checksums for the test archives.
+* Documented repeated `zimcheck` validation errors.
+* Successfully served a ZIM archive manually with `kiwix-serve`.
+* Confirmed local access from the Raspberry Pi.
+* Confirmed local-network access from the Windows development computer.
+* Created and enabled a persistent systemd service.
+* Confirmed the service remained enabled and active during post-reboot verification.
+* Confirmed Kiwix content remained usable with networking disabled.
 
-### Planned Content Directory
+### Repository Availability Check
 
-```text
-/srv/offgridpi/content/kiwix
+```bash
+sudo apt update
+apt-cache policy kiwix-tools zim-tools
 ```
 
-### Installation Commands
+Results:
 
-> To be documented after the installation method is validated.
+* **kiwix-tools installed before test:** No
+* **kiwix-tools candidate:** `3.7.0-1.1`
+* **zim-tools installed before test:** No
+* **zim-tools candidate:** `3.5.0-1.2+b2`
+* **Repository:** Debian 13 Trixie main, ARM64
+* **Package-list status:** All packages were up to date
 
-### Test Results
+### Installation
 
-* **Kiwix installed:**
-* **Kiwix version:**
-* **Test ZIM:**
-* **ZIM size:**
-* **Listening port:**
-* **Local browser test:**
-* **Network browser test:**
-* **Offline restart test:**
-* **Errors:**
-* **Notes:**
+```bash
+sudo apt install -y kiwix-tools zim-tools
+```
+
+Installed command paths:
+
+```text
+/usr/bin/kiwix-serve
+/usr/bin/kiwix-manage
+/usr/bin/zimcheck
+```
+
+Installed software versions:
+
+* **kiwix-tools:** 3.7.0
+* **libkiwix:** 14.0.0
+* **libzim used by Kiwix:** 9.2.3
+* **zim-tools:** 3.5.0
+* **Architecture:** ARM64 / `aarch64`
+
+### Content Directory
+
+Created with:
+
+```bash
+sudo install -d \
+  -o piadmin \
+  -g piadmin \
+  -m 0755 \
+  /srv/offgridpi/content/kiwix
+```
+
+Verified configuration:
+
+```text
+drwxr-xr-x piadmin piadmin /srv/offgridpi/content/kiwix
+```
+
+* **Path:** `/srv/offgridpi/content/kiwix`
+* **Owner:** `piadmin`
+* **Group:** `piadmin`
+* **Permissions:** `0755`
+
+### Test ZIM Attempt 1
+
+Downloaded with:
+
+```bash
+cd /srv/offgridpi/content/kiwix
+wget https://download.kiwix.org/zim/other/openzim_en_all_maxi_2026-05.zim
+```
+
+Results:
+
+* **File:** `openzim_en_all_maxi_2026-05.zim`
+* **Source:** Official Kiwix download repository
+* **Downloaded size:** 3,216,041 bytes
+* **SHA-256:** `b87ba04033c170134c2069b1bc079e95d436dfd6ac19251374a32d58aec0df4c`
+* **Validator:** `zimcheck` 3.5.0
+* **Validation status:** Failed
+* **Reported error:** `Full Title index table outside (or not fully inside) ZIM file.`
+* **Low-level result:** `ZIM file's low level structure is invalid`
+* **Functional-service use:** Not selected for the completed service test
+
+### Test ZIM Attempt 2
+
+* **File:** `alpinelinux_en_all_maxi_2026-07.zim`
+* **Source:** Official Kiwix download repository
+* **SHA-256:** `2d191a9da8bfde47ae505164d076a187513070bf92298fe0eaabdfbaa981ddf1`
+* **Validator:** `zimcheck` 3.5.0
+* **Validation status:** Failed
+* **Reported error:** `Full Title index table outside (or not fully inside) ZIM file.`
+* **Low-level result:** `ZIM file's low level structure is invalid`
+* **Functional-service result:** Successfully opened and served by `kiwix-serve` 3.7.0
+* **Selected use:** Initial Phase 2 functional proof-of-concept archive
+
+### Validation Finding
+
+Both current official test archives produced the same title-index error in `zimcheck` 3.5.0. The Alpine Linux archive nevertheless opened and operated normally through `kiwix-serve` 3.7.0.
+
+The cause has not been conclusively established. The build therefore records the validator result as a known discrepancy rather than declaring either the archive or validator definitively defective. Future testing should repeat validation with updated `zim-tools` and `libzim` packages when available.
+
+### Manual Serving Test
+
+Successful command:
+
+```bash
+cd /srv/offgridpi/content/kiwix
+kiwix-serve --port=8080 alpinelinux_en_all_maxi_2026-07.zim
+```
+
+The initially attempted `--address=0.0.0.0` option was not accepted by the installed command version and was removed. With the address option omitted, Kiwix listened successfully on the available interfaces.
+
+Results:
+
+* **Listening port:** TCP 8080
+* **Local Raspberry Pi URL:** `http://localhost:8080`
+* **Development-computer URL:** `http://offgridpi.local:8080`
+* **Raspberry Pi browser access:** Passed
+* **Development-computer browser access:** Passed
+* **Content opened:** Passed
+* **Navigation:** Passed
+* **Search:** Passed
+* **Manual-serving errors:** None after removing the unsupported address argument
+
+### Service Account
+
+A restricted system account was used for the automatic service:
+
+```bash
+sudo useradd \
+  --system \
+  --home-dir /nonexistent \
+  --shell /usr/sbin/nologin \
+  offgridpi
+```
+
+* **Service user:** `offgridpi`
+* **Login shell:** `/usr/sbin/nologin`
+
+### Systemd Service
+
+Service path:
+
+```text
+/etc/systemd/system/kiwix-serve.service
+```
+
+Service definition used:
+
+```ini
+[Unit]
+Description=Offgrid Pi Kiwix Server
+After=local-fs.target
+RequiresMountsFor=/srv/offgridpi/content/kiwix
+
+[Service]
+Type=simple
+User=offgridpi
+Group=offgridpi
+ExecStart=/usr/bin/kiwix-serve --port=8080 /srv/offgridpi/content/kiwix/alpinelinux_en_all_maxi_2026-07.zim
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Service validation and activation commands:
+
+```bash
+sudo systemd-analyze verify /etc/systemd/system/kiwix-serve.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now kiwix-serve.service
+sudo systemctl status kiwix-serve.service --no-pager
+```
+
+Final service verification:
+
+```text
+enabled
+active
+LISTEN 0 4096 *:8080 *:*
+```
+
+Results:
+
+* **Service enabled:** Yes
+* **Service active:** Yes
+* **Listening interface:** All available interfaces
+* **Listening port:** TCP 8080
+* **Restart policy:** Restart on failure after five seconds
+* **Reboot persistence:** Passed during post-reboot verification
+* **Local access after service activation:** Passed
+* **Development-computer access after service activation:** Passed
+
+### Offline Operation Test
+
+Networking was disabled from the attached Raspberry Pi session so the test would not depend on SSH connectivity:
+
+```bash
+sudo nmcli networking off
+```
+
+The following page was then reloaded locally:
+
+```text
+http://localhost:8080
+```
+
+Offline results:
+
+* **Kiwix interface available:** Passed
+* **Alpine Linux archive available:** Passed
+* **Content navigation:** Passed
+* **Search:** Passed
+* **Required internet connection:** No
+
+Networking was restored with:
+
+```bash
+sudo nmcli networking on
+nmcli general status
+hostname -I
+```
+
+Recovery results:
+
+* **Network state:** Connected
+* **Connectivity:** Full
+* **Wi-Fi hardware:** Enabled
+* **Wi-Fi:** Enabled
+* **IPv4 address assigned:** Yes — excluded from the public repository
+* **IPv6 address assigned:** Yes — excluded from the public repository
+* **Development-computer access after restoration:** Passed
+
+### System Health After Kiwix Testing
+
+Final checks:
+
+```bash
+kiwix-serve --version
+systemctl is-enabled kiwix-serve.service
+systemctl is-active kiwix-serve.service
+ss -ltn | grep ':8080'
+vcgencmd measure_temp
+vcgencmd get_throttled
+```
+
+Results:
+
+* **CPU temperature:** 34.5°C
+* **Throttle status:** `0x0`
+* **Undervoltage detected:** No
+* **Frequency throttling detected:** No
+* **Service enabled:** Yes
+* **Service active:** Yes
+* **TCP port 8080:** Listening
+* **Stability concerns:** None observed
+
+### Phase 2 Assessment
+
+Phase 2 was successful. Kiwix is installed, starts automatically, serves a local ZIM archive, is available from both the Raspberry Pi and another device on the local network, survives restart testing, and continues to function without internet access.
 
 ---
 
@@ -520,6 +772,21 @@ xrandr --current | grep '\*'
 
 This did not indicate a display failure. The attached display was manually verified as usable at its expected 1024 × 600 resolution.
 
+### Repeated ZIM Validation Error
+
+`zimcheck` 3.5.0 reported the same title-index structural error for both tested 2026 ZIM archives:
+
+```text
+Full Title index table outside (or not fully inside) ZIM file.
+ZIM file's low level structure is invalid
+```
+
+The Alpine Linux archive still opened, navigated, searched, survived service and reboot testing, and operated without internet access through `kiwix-serve` 3.7.0. The precise cause of the validation discrepancy remains unresolved and should be retested when newer validation packages are available.
+
+### SSH Confirmation Not Explicitly Recorded
+
+SSH was enabled during imaging with password authentication. The repository is present at `~/offgrid-pi`, and local-network hostname access is confirmed, but a dedicated SSH success result has not yet been explicitly entered in this build log.
+
 ---
 
 ## Lessons Learned
@@ -527,9 +794,32 @@ This did not indicate a display failure. The attached display was manually verif
 * Commands that query the graphical display may fail when run through SSH or outside the active desktop session even though the physical display is operating normally.
 * Manual verification should be recorded when an automated check cannot access the graphical session.
 * Baseline temperature, throttling, storage, memory, and failed-service checks provide a useful health snapshot before installing application services.
+* Package availability should be confirmed before installation on the selected operating-system and architecture baseline.
+* ZIM archives should receive both checksum recording and functional testing; a validator result and practical serving result may not always agree.
+* Manual service testing should succeed before creating a persistent systemd unit.
+* Command-line options must be validated against the installed version. Omitting the unsupported address argument allowed `kiwix-serve` 3.7.0 to listen successfully on all available interfaces.
+* Offline testing must be performed deliberately rather than assuming local content is independent of remote assets.
+* Keeping the Kiwix service under a restricted account reduces the privileges available to the network-facing process.
 
 ---
 
 ## Next Action
 
-Confirm SSH access from the Windows development computer using `piadmin@offgridpi.local`. After SSH connectivity is verified, clone the Offgrid Pi GitHub repository onto the Raspberry Pi, update this build log in `docs/BUILD_LOG.md`, and begin the Kiwix proof-of-concept phase.
+Begin **Phase 3 — Dashboard Prototype**.
+
+The first dashboard milestone is to create a simple, fully local landing page under:
+
+```text
+/opt/offgridpi/dashboard
+```
+
+The initial page should:
+
+* Display the Offgrid Pi project title.
+* Provide a working link to Kiwix at `http://localhost:8080`.
+* Include placeholders for Documents, Maps, Offline Entertainment, System Status, and Administration.
+* Use only local HTML, CSS, JavaScript, fonts, and icons.
+* Remain readable on the 1024 × 600 GeeekPi display.
+* Preserve access to the normal Raspberry Pi desktop during early testing.
+
+Before beginning dashboard development, upload this file to GitHub as `docs/BUILD_LOG.md`, commit it, and synchronize the Raspberry Pi repository with `git pull`.
