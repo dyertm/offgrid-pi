@@ -1,0 +1,20 @@
+[Unit]
+Description=Offgrid Pi Kiwix Server
+After=local-fs.target
+RequiresMountsFor=/srv/offgridpi/content/kiwix
+
+[Service]
+Type=simple
+User=offgridpi
+Group=offgridpi
+ExecStart=/usr/bin/kiwix-serve --port=8080 /srv/offgridpi/content/kiwix/alpinelinux_en_all_maxi_2026-07.zim
+Restart=on-failure
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target

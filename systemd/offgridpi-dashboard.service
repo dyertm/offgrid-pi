@@ -1,0 +1,22 @@
+[Unit]
+Description=Offgrid Pi Dashboard
+After=local-fs.target
+ConditionPathExists=/opt/offgridpi/dashboard/index.html
+
+[Service]
+Type=simple
+User=offgridpi
+Group=offgridpi
+WorkingDirectory=/opt/offgridpi/dashboard
+ExecStart=/usr/bin/python3 -m http.server 8081 --directory /opt/offgridpi/dashboard
+Restart=on-failure
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyPaths=/opt/offgridpi/dashboard
+
+[Install]
+WantedBy=multi-user.target

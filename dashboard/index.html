@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+  <meta
+    name="description"
+    content="Offgrid Pi local knowledge dashboard"
+  >
+
+  <title>Offgrid Pi</title>
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+  <div class="page">
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">Offline Knowledge System</p>
+        <h1>Offgrid Pi</h1>
+        <p class="subtitle">
+          Local reference, preparedness, education, and media resources
+        </p>
+      </div>
+
+      <div class="status-badge">
+        Phase 3 Prototype
+      </div>
+    </header>
+
+    <main>
+      <section class="dashboard-grid" aria-label="Offgrid Pi services">
+
+        <a class="card card-active" id="kiwix-link" href="#">
+          <span class="card-label">Available</span>
+          <h2>Knowledge Library</h2>
+          <p>
+            Open the locally hosted Kiwix reference library.
+          </p>
+          <span class="card-action">Open Kiwix →</span>
+        </a>
+
+        <div class="card card-disabled" aria-disabled="true">
+          <span class="card-label">Planned</span>
+          <h2>Local Documents</h2>
+          <p>
+            Manuals, checklists, books, PDFs, and personal references.
+          </p>
+          <span class="card-action">Coming later</span>
+        </div>
+
+        <div class="card card-disabled" aria-disabled="true">
+          <span class="card-label">Deferred</span>
+          <h2>Offline Maps</h2>
+          <p>
+            Regional, road, topographic, and preparedness maps.
+          </p>
+          <span class="card-action">Coming later</span>
+        </div>
+
+        <div class="card card-disabled" aria-disabled="true">
+          <span class="card-label">Optional</span>
+          <h2>Offline Entertainment</h2>
+          <p>
+            Local movies, television, music, and audiobooks.
+          </p>
+          <span class="card-action">Coming later</span>
+        </div>
+
+        <div class="card card-disabled" aria-disabled="true">
+          <span class="card-label">Planned</span>
+          <h2>System Status</h2>
+          <p>
+            Storage, temperature, networking, and service health.
+          </p>
+          <span class="card-action">Coming later</span>
+        </div>
+
+        <div class="card card-disabled" aria-disabled="true">
+          <span class="card-label">Restricted</span>
+          <h2>Administration</h2>
+          <p>
+            Maintenance, content management, restart, and shutdown.
+          </p>
+          <span class="card-action">Coming later</span>
+        </div>
+
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>Host: <strong id="dashboard-host">offgridpi</strong></span>
+      <span>Local operation • No cloud account required</span>
+    </footer>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

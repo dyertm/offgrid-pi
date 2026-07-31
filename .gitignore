@@ -1,29 +1,30 @@
-# Credentials and local configuration
-.env
-*.key
-*.pem
-*.p12
-*.pfx
-secrets/
-credentials/
 
-# Local and personal content
-personal/
-content/
-media/
-*.zim
-
-# Logs and temporary files
-*.log
-tmp/
-temp/
 .cache/
-
-# Operating-system files
-.DS_Store
-Thumbs.db
+content/
+credentials/
+# Credentials and local configuration
+dashboard/documents/
 desktop.ini
-
+# Downloaded content must not be committed
+.DS_Store
 # Editor files
-.vscode/
+.env
 .idea/
+*.key
+# Local and personal content
+*.log
+# Logs and temporary files
+media/
+# Operating-system files
+*.p12
+*.pem
+personal/
+*.pfx
+# Runtime-generated document library
+secrets/
+temp/
+Thumbs.db
+tmp/
+.vscode/
+*.zim
+*.zim.sha256

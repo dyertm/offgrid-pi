@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Offgrid Pi Dashboard
+Comment=Open the local Offgrid Pi dashboard
+Exec=/opt/offgridpi/scripts/launch-dashboard.sh
+Terminal=false
+X-GNOME-Autostart-enabled=true
