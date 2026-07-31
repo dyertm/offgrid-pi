@@ -1,0 +1,12 @@
+[Unit]
+Description=Periodically update the Offgrid Pi document-library index
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Persistent=true
+Unit=offgridpi-document-index.service
+
+[Install]
+WantedBy=timers.target

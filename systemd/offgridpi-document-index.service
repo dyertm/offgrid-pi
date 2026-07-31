@@ -1,0 +1,31 @@
+[Unit]
+Description=Generate the Offgrid Pi document-library index
+After=local-fs.target
+ConditionPathIsDirectory=/srv/offgridpi/content/documents/library
+ConditionPathExists=/opt/offgridpi/scripts/index-documents.py
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+
+ExecStart=/usr/bin/python3 \
+  /opt/offgridpi/scripts/index-documents.py \
+  --root /srv/offgridpi/content/documents/library \
+  --output /opt/offgridpi/dashboard/documents/index.html
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+CapabilityBoundingSet=
+
+ReadOnlyPaths=/srv/offgridpi/content/documents/library
+ReadOnlyPaths=/opt/offgridpi/scripts/index-documents.py
+ReadWritePaths=/opt/offgridpi/dashboard/documents
