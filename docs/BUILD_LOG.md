@@ -119,7 +119,7 @@ Remaining near-term tasks:
 
 * Add the confirmed GitHub repository address to this document.
 * Confirm and document SSH access from the Windows development computer if not already recorded separately.
-* Begin Phase 3 — Dashboard Prototype.
+* Begin Phase 4 — Local Document Library.
 
 ---
 
@@ -686,27 +686,255 @@ Phase 2 was successful. Kiwix is installed, starts automatically, serves a local
 
 ## Dashboard Prototype
 
-**Date:** Not started
+**Date:** July 31, 2026  
+**Status:** Completed
+
+### Objectives Completed
+
+* Created a fully local Offgrid Pi landing page.
+* Created a responsive layout optimized for the 1024 × 600 GeeekPi display.
+* Added a working Knowledge Library card linked to Kiwix on TCP port 8080.
+* Added placeholders for Local Documents, Offline Maps, Offline Entertainment, System Status, and Administration.
+* Used only locally stored HTML, CSS, and JavaScript assets.
+* Tested the dashboard manually before creating a permanent service.
+* Created and enabled `offgridpi-dashboard.service` on TCP port 8081.
+* Created a Chromium launcher that waits for the dashboard service before opening the page.
+* Added a per-user desktop autostart entry for `piadmin`.
+* Preserved access to the normal Raspberry Pi desktop.
+* Confirmed that Chromium can be placed into full-screen mode for an appliance-style interface.
+* Confirmed local, network, reboot, and offline operation.
+
+### Dashboard Files
+
+```text
+/opt/offgridpi/dashboard/
+├── index.html
+├── css/
+│   └── styles.css
+└── js/
+    └── app.js
+```
+
+Supporting launcher:
+
+```text
+/opt/offgridpi/scripts/launch-dashboard.sh
+```
+
+Desktop autostart entry:
+
+```text
+/home/piadmin/.config/autostart/offgridpi-dashboard.desktop
+```
+
+### Initial Manual Test
+
+The prototype dashboard was first served manually with:
+
+```bash
+python3 -m http.server \
+  8081 \
+  --directory /opt/offgridpi/dashboard
+```
+
+Manual test results:
+
+* **Raspberry Pi URL:** `http://localhost:8081`
+* **Development-computer URL:** `http://offgridpi.local:8081`
+* **Dashboard loaded locally:** Passed
+* **Dashboard loaded from development computer:** Passed
+* **Knowledge Library link:** Passed from both devices
+* **1024 × 600 usability:** Passed
+* **Horizontal scrolling required:** No
+* **Remote fonts, scripts, icons, or images required:** No
+* **Visual assessment:** Dashboard displayed cleanly and was considered visually successful
+
+### Dashboard Service
+
+Service path:
+
+```text
+/etc/systemd/system/offgridpi-dashboard.service
+```
+
+Service definition used:
+
+```ini
+[Unit]
+Description=Offgrid Pi Dashboard
+After=local-fs.target
+ConditionPathExists=/opt/offgridpi/dashboard/index.html
+
+[Service]
+Type=simple
+User=offgridpi
+Group=offgridpi
+WorkingDirectory=/opt/offgridpi/dashboard
+ExecStart=/usr/bin/python3 -m http.server 8081 --directory /opt/offgridpi/dashboard
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyPaths=/opt/offgridpi/dashboard
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Service validation and activation commands:
+
+```bash
+sudo systemd-analyze verify \
+  /etc/systemd/system/offgridpi-dashboard.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now offgridpi-dashboard.service
+sudo systemctl status offgridpi-dashboard.service --no-pager
+```
+
+Results:
+
+* **Service enabled:** Yes
+* **Service active:** Yes
+* **Listening port:** TCP 8081
+* **Local HTTP response:** Passed
+* **Development-computer access:** Passed
+* **Automatic restart policy:** Restart on failure after five seconds
+* **Reboot persistence:** Passed
+
+### Chromium Automatic Launch
+
+Launcher path:
+
+```text
+/opt/offgridpi/scripts/launch-dashboard.sh
+```
+
+The launcher:
+
+* Waits for the dashboard service to answer on `http://127.0.0.1:8081/`.
+* Avoids opening a duplicate dashboard window.
+* Opens Chromium in a new maximized window.
+* Disables first-run and default-browser prompts.
+* Records launcher output under the `piadmin` user state directory.
+
+Autostart entry:
+
+```text
+/home/piadmin/.config/autostart/offgridpi-dashboard.desktop
+```
+
+Automatic-launch results:
+
+* **Chromium launched after desktop login:** Passed
+* **Dashboard opened automatically:** Passed
+* **Window opened maximized:** Passed
+* **Normal desktop remained accessible:** Passed
+* **Knowledge Library link after automatic launch:** Passed
+* **Closing or minimizing Chromium returned to the desktop:** Passed
+
+### Full-Screen Display Test
+
+Chromium was manually switched into full-screen mode using the browser full-screen control.
+
+Results:
+
+* **Dashboard occupied the full 1024 × 600 display:** Passed
+* **Browser controls hidden:** Yes
+* **Appliance-style appearance:** Passed
+* **Visual assessment:** The dashboard looked especially effective when full screen was enabled and it was the only interface visible
+* **Current decision:** Retain normal maximized automatic launch during development and use manual full-screen mode as needed. A configurable full-screen or kiosk option may be added later.
+
+### Offline Operation Test
+
+Networking was disabled from the attached Raspberry Pi session and the following local page was reloaded:
+
+```text
+http://127.0.0.1:8081
+```
+
+The Knowledge Library card was then used to open the local Kiwix service.
+
+Offline results:
+
+* **Dashboard available:** Passed
+* **Dashboard styling and scripts available:** Passed
+* **Knowledge Library link:** Passed
+* **Kiwix service available:** Passed
+* **Required internet connection:** No
+* **Networking restored successfully:** Yes
+
+### Phase 3 Assessment
+
+Phase 3 was successful. The Offgrid Pi dashboard is readable on the attached 1024 × 600 display, is available from another local-network device, starts automatically as a system service, opens automatically in Chromium after desktop login, uses only local assets, links successfully to Kiwix, and continues to function without internet access.
+
+The current Python static server is appropriate for the working prototype. Its suitability for the stable public release should be reviewed during the reproducible-installer and hardening phases.
+
+---
+
+## Local Document Library
+
+**Date:** Not started  
 **Status:** Planned
 
 ### Objectives
 
-* Create a local landing page.
-* Confirm that it displays correctly at 1024 × 600.
-* Add a link to the Kiwix service.
-* Add placeholder content categories.
-* Add basic system-status information.
-* Configure automatic browser launch.
+* Create approved public document categories.
+* Keep personal or private material outside the browser-accessible library.
+* Support common offline formats such as PDF, text, HTML, and images.
+* Generate a local browser index from files copied into the category folders.
+* Add file metadata such as display name, type, size, and modification date.
+* Add a working Local Documents link to the dashboard.
+* Test document access on the Raspberry Pi and from another local-network device.
+* Confirm that the library and its indexes remain functional without internet access.
+* Document naming, import, indexing, and removal procedures.
 
-### Planned Dashboard Path
+### Proposed Public Content Path
 
 ```text
-/opt/offgridpi/dashboard
+/srv/offgridpi/content/documents/public
+```
+
+### Proposed Private Content Path
+
+```text
+/srv/offgridpi/content/documents/personal
+```
+
+The private path will not be served by the document-library web service or included in generated indexes.
+
+### Proposed Public Categories
+
+```text
+public/
+├── emergency/
+├── first-aid/
+├── food/
+├── gardening/
+├── communications/
+├── radio/
+├── repair/
+├── equipment-manuals/
+├── education/
+└── books/
+```
+
+### Planned Indexer
+
+```text
+/opt/offgridpi/scripts/index-documents.py
+```
+
+### Planned Service
+
+```text
+offgridpi-documents.service
 ```
 
 ### Test Results
 
-> To be completed during development.
+> To be completed during Phase 4 development.
 
 ---
 
@@ -783,6 +1011,10 @@ ZIM file's low level structure is invalid
 
 The Alpine Linux archive still opened, navigated, searched, survived service and reboot testing, and operated without internet access through `kiwix-serve` 3.7.0. The precise cause of the validation discrepancy remains unresolved and should be retested when newer validation packages are available.
 
+### Prototype Dashboard Server Requires Later Review
+
+The dashboard currently uses Python's built-in static HTTP server. It has been reliable for the Phase 3 prototype, but it is intentionally simple and should be reassessed before the stable public release. A later phase may retain it with documented limitations or replace it with a lightweight dedicated web server.
+
 ### SSH Confirmation Not Explicitly Recorded
 
 SSH was enabled during imaging with password authentication. The repository is present at `~/offgrid-pi`, and local-network hostname access is confirmed, but a dedicated SSH success result has not yet been explicitly entered in this build log.
@@ -800,26 +1032,40 @@ SSH was enabled during imaging with password authentication. The repository is p
 * Command-line options must be validated against the installed version. Omitting the unsupported address argument allowed `kiwix-serve` 3.7.0 to listen successfully on all available interfaces.
 * Offline testing must be performed deliberately rather than assuming local content is independent of remote assets.
 * Keeping the Kiwix service under a restricted account reduces the privileges available to the network-facing process.
+* A manual dashboard test should pass before enabling automatic startup.
+* Relative dashboard links should derive the current hostname so they work from `localhost`, `offgridpi.local`, and the local IP address.
+* Local-only HTML, CSS, and JavaScript prevent the dashboard from breaking when internet access is removed.
+* A maximized normal browser window preserves troubleshooting access, while manual full-screen mode provides a clean appliance-style interface.
+* Desktop autostart should wait for the local web service rather than assuming it is immediately available after login.
 
 ---
 
 ## Next Action
 
-Begin **Phase 3 — Dashboard Prototype**.
+Begin **Phase 4 — Local Document Library**.
 
-The first dashboard milestone is to create a simple, fully local landing page under:
+The first Phase 4 checkpoint is to create separate public and private document paths, build the approved category folders, and verify that the private path cannot be accessed through the browser-facing library.
+
+The initial public library will be created under:
 
 ```text
-/opt/offgridpi/dashboard
+/srv/offgridpi/content/documents/public
 ```
 
-The initial page should:
+Private or personal material will be stored separately under:
 
-* Display the Offgrid Pi project title.
-* Provide a working link to Kiwix at `http://localhost:8080`.
-* Include placeholders for Documents, Maps, Offline Entertainment, System Status, and Administration.
-* Use only local HTML, CSS, JavaScript, fonts, and icons.
-* Remain readable on the 1024 × 600 GeeekPi display.
-* Preserve access to the normal Raspberry Pi desktop during early testing.
+```text
+/srv/offgridpi/content/documents/personal
+```
 
-Before beginning dashboard development, upload this file to GitHub as `docs/BUILD_LOG.md`, commit it, and synchronize the Raspberry Pi repository with `git pull`.
+The first implementation should:
+
+* Create the public category structure.
+* Add one harmless sample document for testing.
+* Create an index-generation script in `/opt/offgridpi/scripts`.
+* Serve the generated library on a separate local port.
+* Add a working Local Documents card to the existing dashboard.
+* Confirm local, network, reboot, and offline access.
+* Confirm that the personal directory is not browser accessible.
+
+Before beginning Phase 4 configuration, upload this file to GitHub as `docs/BUILD_LOG.md`, commit it, and synchronize the Raspberry Pi repository with `git pull`.
