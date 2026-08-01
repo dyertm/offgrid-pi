@@ -1,225 +1,90 @@
-# Hardware Inventory
+# Offgrid Pi Hardware Inventory
 
-This document records the hardware used for the initial Offgrid Pi build.
+**Reconciled:** August 1, 2026
 
-Keeping an accurate inventory will make the build easier to reproduce, troubleshoot, upgrade, and share with others.
+## Confirmed development hardware
 
-## Core Hardware
+| Component | Current hardware | Status |
+|---|---|---|
+| Single-board computer | Raspberry Pi 4 Model B, 4 GB RAM | Validated |
+| Boot storage | Patriot LX Series 64 GB microSDXC, UHS-I, Class 10, U1 | Validated |
+| Development power | 5V 3A USB-C Raspberry Pi-compatible supply | Validated |
+| Case | Miuzei Raspberry Pi 4 case | Validated |
+| Cooling | Integrated fan and heatsinks | Validated |
+| Display | GeeekPi 10.1-inch HDMI display | Validated |
+| Display resolution | 1024 × 600 | Validated manually |
+| Input | USB keyboard and mouse | Validated |
+| Network | Wi-Fi | Validated |
+| Imaging computer | Windows computer | Used |
+| Card reader | HDE All-in-One card reader | Used |
 
-| Component                | Current Hardware                              | Status                                  |
-| ------------------------ | --------------------------------------------- | --------------------------------------- |
-| Single-board computer    | Raspberry Pi 4 Model B                        | Available                               |
-| Installed memory         | To be confirmed                               | Check before installation               |
-| Operating-system storage | Multiple microSD cards                        | Select an erasable development card     |
-| Offline-content storage  | USB flash drives and USB hard drives          | Inventory capacity and condition        |
-| Development power supply | 5V 3A USB-C power supply                      | Available                               |
-| Primary off-grid power   | EcoFlow RIVER 2                               | Available; integration testing deferred |
-| Primary solar charging   | Renogy 200-watt folding solar panel           | Available; integration testing deferred |
-| Backup power             | Voltaic V72                                   | Available; integration testing deferred |
-| Backup solar charging    | Voltaic Arc 20W solar panel                   | Available; integration testing deferred |
-| Case                     | Miuzei Raspberry Pi 4 case                    | Available                               |
-| Cooling                  | Integrated fan and heatsinks                  | Available                               |
-| Monitor                  | GeeekPi 10.1-inch HDMI display, 1024 × 600    | Available                               |
-| Keyboard and mouse       | USB keyboard and mouse                        | Available                               |
-| Network cable            | To be confirmed                               | Recommended during setup                |
+## Current operating baseline
 
-## Recommended Storage Layout
+* Raspberry Pi OS 64-bit Desktop
+* Debian GNU/Linux 13 Trixie
+* ARM64 / `aarch64`
+* Kernel recorded during baseline: `6.18.34+rpt-rpi-v8`
+* Root storage after update: approximately 46 GB available
+* Baseline CPU temperature: approximately 35°C
+* Throttle status: `0x0`
 
-The planned storage design separates the operating system from the offline content library.
+## Existing equipment reserved for later testing
 
-### Operating-System Drive
+| Purpose | Equipment | Current phase |
+|---|---|---|
+| Primary off-grid battery | EcoFlow RIVER 2 | Deferred |
+| Primary solar charging | Renogy 200-watt folding solar panel | Deferred |
+| Secondary battery | Voltaic V72 | Deferred |
+| Secondary solar charging | Voltaic Arc 20W | Deferred |
+| Content storage candidates | USB flash drives and USB hard drives | Inventory/testing pending |
+
+## Planned storage architecture
+
+The operating system and content library should remain logically separate.
+
+### Operating-system storage
 
 Used for:
 
 * Raspberry Pi OS
-* Internet-in-a-Box applications
-* System configuration
-* Startup scripts
-* Logs
-* Temporary files
+* Application code
+* Service definitions
+* Configuration
+* Logs and temporary files
 
-Planned device:
-
-* 32–64 GB high-quality microSD card, or
-* USB SSD if the entire system will boot from external storage
-
-### Content Drive
+### Content storage
 
 Used for:
 
 * Kiwix ZIM files
-* Wikipedia
+* Public documents
 * Offline maps
-* Medical references
-* Emergency-preparedness documents
-* Repair manuals
-* E-books
-* User-supplied movies, television programs, music, and audiobooks
+* Faith resources
+* Equipment manuals
 * Personal reference material
+* Optional entertainment media
 
-Planned device:
+The final content device will likely be external USB storage, but model, capacity, file system, mount path, power draw, and backup strategy remain undecided.
 
-* USB 3 external SSD
-* Initial target capacity: 1–2 TB
-* Final size to be determined after creating the content plan
+## Storage priorities
 
-### Planned Content-Drive Structure
+1. Core knowledge and medical material
+2. Preparedness, repair, communications, agriculture, and maps
+3. Education, books, and faith resources
+4. User personal material
+5. Optional entertainment
+6. Reserved free space for updates and future growth
 
-```text
-/srv/offgridpi/content/
-├── kiwix/
-├── documents/
-├── maps/
-└── media/
-    ├── movies/
-    ├── television/
-    ├── family/
-    ├── kids/
-    ├── music/
-    └── audiobooks/
-```
+## Remaining hardware information
 
-The final external drive may be mounted elsewhere and linked or mounted into `/srv/offgridpi/content`. Emergency-reference content must retain priority over entertainment media. The project should document reserved capacity for knowledge content before a large media library is added.
+* External storage model, capacity, health, and file system
+* Stable mount behavior
+* Storage power requirements
+* Runtime with display and external storage
+* Whether a powered USB hub is needed
+* Battery runtime and solar recharge performance
+* Final recommended hardware combinations for community use
 
-### Media-Playback Storage Requirements
+## Public-documentation boundary
 
-The storage device selected for media playback should be tested for:
-
-* Reliable USB 3 connectivity
-* Automatic mounting after restart
-* Sustained playback without disconnects
-* Adequate free space for future knowledge-library growth
-* Compatibility with Kodi and VLC
-* Acceptable power draw when used with the Raspberry Pi, display, and cooling fan
-
-Initial media testing may use an available USB drive. Final media-drive selection will be completed during the storage-architecture phase.
-
-## Power Requirements
-
-The build should use a reliable Raspberry Pi-compatible power supply.
-
-The final build may also include:
-
-* Uninterruptible power supply
-* Raspberry Pi UPS HAT
-* Portable power station
-* 12-volt vehicle power adapter
-* Solar charging equipment
-
-The following backup-power equipment is already available for later testing:
-
-* EcoFlow RIVER 2 as the primary off-grid power source
-* Renogy 200-watt folding solar panel for charging the EcoFlow
-* Voltaic V72 as the secondary backup battery
-* Voltaic Arc 20W solar panel for charging the V72
-
-Development, imaging, package installation, and early media testing will use stable wall power. Runtime, solar charging, and reduced-power testing remain deferred until the software and storage configuration are stable.
-
-## Cooling
-
-Because the Raspberry Pi may run for extended periods while serving content or indexing files, active or passive cooling should be installed.
-
-Possible options include:
-
-* Case with integrated fan
-* Large passive heatsink case
-* Standard heatsinks with a small fan
-
-The selected cooling system should remain serviceable and should not require internet access to manage.
-
-## Network Design
-
-The initial build will support:
-
-* Direct use through an attached monitor, keyboard, and mouse
-* Wired Ethernet during installation and content downloads
-* Local access from computers, tablets, and phones
-* Optional Wi-Fi access point for use without a router or internet connection
-
-Internet access will be used during the initial installation and content-download process. The completed system should remain usable without an internet connection.
-
-## Initial Build Target
-
-The initial prototype will use:
-
-* Raspberry Pi 4
-* Raspberry Pi OS 64-bit with Desktop
-* Separate operating-system and content storage
-* USB 3 SSD for the offline library
-* Directly attached monitor
-* Ethernet during initial setup
-* Optional local Wi-Fi access after core functionality is tested
-
-## Information Still Needed
-
-Before installing the operating system, confirm:
-
-* Raspberry Pi memory capacity
-* Available microSD cards
-* Available USB SSDs or hard drives
-* Power-supply specifications
-* Case and cooling configuration
-* Monitor connection type
-* Whether Wi-Fi hotspot capability is required
-* Desired content-storage capacity
-* USB-drive model, capacity, file system, and power requirements
-
-## Hardware Inventory Notes
-
-Use this section to record model numbers, serial numbers, purchase dates, or other useful details.
-
-### Raspberry Pi
-
-* Model: Raspberry Pi 4 Model B
-* RAM:
-* Serial number:
-* Case: Miuzei Raspberry Pi 4 case
-* Cooling: Integrated fan and heatsinks
-
-### Operating-System Storage
-
-* Manufacturer:
-* Model:
-* Capacity:
-* Type:
-* Condition:
-
-### Content Storage
-
-* Manufacturer:
-* Model:
-* Capacity:
-* Connection type:
-* File system:
-* Condition:
-
-### Development Power Supply
-
-* Manufacturer:
-* Model:
-* Rated output: 5V 3A
-* Connector: USB-C
-* Condition:
-
-### Off-Grid Power Equipment
-
-* Primary battery: EcoFlow RIVER 2
-* Primary solar panel: Renogy 200-watt folding panel
-* Secondary battery: Voltaic V72
-* Secondary solar panel: Voltaic Arc 20W
-* Integration-test status: Deferred
-
-### Display and Peripherals
-
-* Monitor: GeeekPi 10.1-inch HDMI display
-* Resolution: 1024 × 600
-* Video cable or adapter: Micro-HDMI-to-HDMI cable
-* Keyboard: USB keyboard
-* Mouse: USB mouse
-
-## Revision History
-
-| Date          | Change                             |
-| ------------- | ---------------------------------- |
-| July 29, 2026 | Created initial hardware inventory |
-| July 30, 2026 | Added confirmed hardware, off-grid power equipment, and media-storage requirements |
+This inventory records reproducible technical hardware information. Product pricing, package tiers, branded cases, retail kit concepts, and commercialization plans are maintained separately as private source material.

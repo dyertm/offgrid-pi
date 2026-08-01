@@ -1,505 +1,301 @@
-Offgrid Pi Installation Guide
-Document status
+# Offgrid Pi Installation Guide
 
-Status: Initial draft
-Validation status: Not yet tested on the development Raspberry Pi
+**Document status:** Working prototype procedure  
+**Validation status:** Raspberry Pi foundation, Kiwix, dashboard, reboot, local-network, and offline tests completed on the development Raspberry Pi. Document-library and full installer steps remain in development.
 
-This guide describes the planned installation process. Commands and package names must be validated during the first build before this document is treated as a release-ready procedure.
+## 1. Validated development target
 
-1. Installation goal
+* Raspberry Pi 4B, 4 GB RAM
+* Raspberry Pi OS 64-bit Desktop based on Debian 13 Trixie
+* 64 GB microSD card or larger recommended
+* Raspberry Pi-compatible 5V 3A USB-C power supply
+* Fan-cooled case
+* HDMI display, keyboard, and mouse
+* Wi-Fi or Ethernet during installation
 
-At the end of the installation, the Raspberry Pi should:
-
-Boot into Raspberry Pi OS
-Connect to the local network
-Run the Offgrid Pi services automatically
-Serve at least one Kiwix library
-Display the Offgrid Pi dashboard locally
-Allow browser access from other devices on the same network
-Continue providing installed content without internet access
-Optionally launch Kodi and play locally stored media without internet access
-2. Required hardware
-Raspberry Pi 4B
-Raspberry Pi-compatible 5V 3A USB-C power supply
-Fan-cooled Raspberry Pi case
-MicroSD card
-MicroSD card reader
-HDMI display
-Micro-HDMI-to-HDMI cable
-USB keyboard
-USB mouse
-Ethernet or Wi-Fi connection
-Windows, macOS, or Linux computer for imaging the microSD card
-Optional USB storage device for media-module testing
-3. Recommended microSD card
-
-For development:
-
-32 GB minimum
-64 GB or 128 GB recommended
-Class 10 or better
-A card that may be completely erased
-
-Back up any existing files before beginning.
-
-4. Download Raspberry Pi Imager
-
-Install Raspberry Pi Imager on the computer that will be used to prepare the microSD card.
-
-Record the following information in BUILD_LOG.md:
-
-Imager version
-Installation computer
-MicroSD-card brand
-MicroSD-card capacity
-Card reader used
-5. Select the operating system
+## 2. Image Raspberry Pi OS
 
 In Raspberry Pi Imager, select:
 
-Device: Raspberry Pi 4
-Operating system: Raspberry Pi OS 64-bit with Desktop
-Storage: Selected development microSD card
+* Device: Raspberry Pi 4
+* Operating system: Raspberry Pi OS 64-bit with Raspberry Pi Desktop
+* Hostname: `offgridpi`
+* Non-default administrative username
+* Wi-Fi and locale as appropriate
+* SSH enabled for development if desired
 
-Do not continue until the correct storage device has been confirmed. The selected device will be erased.
+Do not store passwords or Wi-Fi credentials in the repository.
 
-6. Configure imaging options
+## 3. First boot and operating-system update
 
-The following values should be selected and documented.
-
-Hostname
-
-Recommended development hostname:
-
-offgridpi
-
-The expected local hostname may become:
-
-offgridpi.local
-
-Hostname resolution depends on the client device and local network.
-
-Username
-
-Use a non-default administrative username.
-
-Do not publish the password in GitHub, screenshots, documentation, or logs.
-
-Password
-
-Use a unique development password.
-
-The password may be changed before public demonstrations or release testing.
-
-Wireless network
-
-Wi-Fi may be configured in Raspberry Pi Imager for development convenience.
-
-Record:
-
-Whether Wi-Fi was configured
-Wireless country
-Network type
-Whether Ethernet will also be used
-
-Do not record the Wi-Fi password in the repository.
-
-Locale
-
-Configure:
-
-Time zone
-Keyboard layout
-Language
-Wireless country
-SSH
-
-SSH may be enabled for development.
-
-Password authentication may be used during initial setup, but SSH keys should be considered for later development.
-
-Document whether SSH is enabled.
-
-7. Write the image
-
-Begin the imaging process.
-
-Allow Raspberry Pi Imager to:
-
-Erase the card
-Write the operating-system image
-Verify the written data
-
-Record the result in BUILD_LOG.md.
-
-Do not remove the card until Raspberry Pi Imager reports that the operation is complete.
-
-8. Assemble the development system
-
-With power disconnected:
-
-Insert the microSD card.
-Connect the cooling fan if not already connected.
-Connect the monitor.
-Connect the keyboard.
-Connect the mouse.
-Connect Ethernet if being used.
-Confirm that all components are secure.
-Connect the power supply last.
-9. Complete the first boot
-
-Confirm:
-
-The Raspberry Pi powers on.
-The fan operates.
-The monitor displays the boot process.
-The desktop loads.
-The keyboard works.
-The mouse works.
-The display resolution is usable.
-The network connection is active.
-The configured hostname is correct.
-
-Record any errors or warnings in BUILD_LOG.md.
-
-10. Update Raspberry Pi OS
-
-Open a terminal and run:
-
+```bash
 sudo apt update
 sudo apt full-upgrade -y
 sudo reboot
-
-After the reboot, confirm that the desktop loads successfully.
-
-Record the operating-system information:
-
-cat /etc/os-release
-uname -a
-hostnamectl
-
-Record storage and memory information:
-
-free -h
-df -h
-
-Record network information:
-
-ip address
-
-Do not publish public IP addresses, passwords, or other sensitive network details.
-
-11. Install foundational tools
-
-The exact package list will be validated during development.
-
-The expected foundational packages include:
-
-sudo apt install -y git curl wget rsync
-
-Additional packages will be added only as required.
-
-12. Obtain the Offgrid Pi repository
-
-The final command will resemble:
-
-git clone https://github.com/REPLACE-WITH-OWNER/offgrid-pi.git
-cd offgrid-pi
-
-During early development, the repository may be created locally before it is cloned from GitHub.
-
-13. Create the directory structure
-
-The installer will eventually create these directories automatically.
-
-Proposed application directories:
-
-sudo mkdir -p /opt/offgridpi/dashboard
-sudo mkdir -p /opt/offgridpi/scripts
-sudo mkdir -p /opt/offgridpi/config
-sudo mkdir -p /opt/offgridpi/tools
-
-Proposed content directories:
-
-sudo mkdir -p /srv/offgridpi/content/kiwix
-sudo mkdir -p /srv/offgridpi/content/documents
-sudo mkdir -p /srv/offgridpi/content/maps
-sudo mkdir -p /srv/offgridpi/content/media/movies
-sudo mkdir -p /srv/offgridpi/content/media/television
-sudo mkdir -p /srv/offgridpi/content/media/family
-sudo mkdir -p /srv/offgridpi/content/media/kids
-sudo mkdir -p /srv/offgridpi/content/media/music
-sudo mkdir -p /srv/offgridpi/content/media/audiobooks
-sudo mkdir -p /srv/offgridpi/indexes
-sudo mkdir -p /srv/offgridpi/logs
-sudo mkdir -p /srv/offgridpi/backups
-
-Ownership and permissions will be determined during the first build.
-
-Do not apply broad write permissions such as chmod 777.
-
-14. Install Kiwix
-
-The exact installation method must be validated.
-
-Possible methods include:
-
-Raspberry Pi OS package repository
-Official Kiwix binary
-A project-maintained installation script
-
-The selected method must:
-
-Support the Raspberry Pi’s architecture
-Support multiple ZIM files
-Run without internet access after installation
-Be manageable through systemd
-Be reproducible through the installer
-
-The validated commands will replace this section.
-
-15. Add a test ZIM file
-
-Download one relatively small ZIM file for the first test.
-
-Place it in:
-
-/srv/offgridpi/content/kiwix
+```
 
 Record:
 
-ZIM title
-Source
-Filename
-File size
-Download date
-License
-Checksum when available
+```bash
+cat /etc/os-release
+uname -a
+hostnamectl
+free -h
+df -h
+ip address
+vcgencmd measure_temp
+vcgencmd get_throttled
+systemctl --failed
+```
 
-Large Wikipedia files should not be required for the first software test.
+## 4. Install foundational tools
 
-16. Test Kiwix manually
+```bash
+sudo apt install -y git curl wget rsync
+```
 
-Before creating a service, start Kiwix manually and confirm:
+## 5. Create standard directories
 
-The process starts.
-The test library appears.
-The library opens in the local browser.
-Search functions operate.
-The service can be reached through the Raspberry Pi’s local IP address.
-The content remains available after the internet connection is removed.
+```bash
+sudo install -d -o piadmin -g piadmin -m 0755 /srv/offgridpi/content/kiwix
+sudo install -d -o root -g root -m 0755 /opt/offgridpi/dashboard
+sudo install -d -o root -g root -m 0755 /opt/offgridpi/scripts
+sudo install -d -o root -g root -m 0755 /opt/offgridpi/config
+sudo install -d -o root -g root -m 0755 /opt/offgridpi/tools
+sudo install -d -o root -g root -m 0755 /srv/offgridpi/indexes
+sudo install -d -o root -g root -m 0755 /srv/offgridpi/logs
+sudo install -d -o root -g root -m 0755 /srv/offgridpi/backups
+```
 
-The exact command and port will be added after validation.
+The `piadmin` username reflects the development system. The future installer must use the actual configured administrator account rather than hardcoding it.
 
-17. Create the Kiwix service
+## 6. Install Kiwix
 
-After manual testing succeeds, create:
+```bash
+sudo apt update
+sudo apt install -y kiwix-tools zim-tools
+```
 
-/etc/systemd/system/kiwix-serve.service
+Record versions:
 
-The service should:
+```bash
+kiwix-serve --version
+zimcheck --version
+```
 
-Start after the required file systems and network components
-Run under a limited account where practical
-Load the configured ZIM files
-Restart after recoverable failures
-Write useful logs
-Start automatically after boot
+The development prototype recorded:
 
-After creating the service:
+* `kiwix-tools` 3.7.0
+* `zim-tools` 3.5.0
 
+## 7. Add a small test ZIM
+
+Place a small test archive in:
+
+```text
+/srv/offgridpi/content/kiwix
+```
+
+Record the filename, source, download date, size, license, and checksum.
+
+Example checksum command:
+
+```bash
+sha256sum /srv/offgridpi/content/kiwix/example.zim
+```
+
+Do not assume that a checksum or validator result alone proves functional compatibility. Test the archive through the installed Kiwix version.
+
+## 8. Test Kiwix manually
+
+```bash
+cd /srv/offgridpi/content/kiwix
+kiwix-serve --port=8080 example.zim
+```
+
+The installed Kiwix 3.7.0 prototype did not accept the initially attempted `--address=0.0.0.0` option. Omitting it allowed Kiwix to listen on the available interfaces.
+
+Test:
+
+* `http://localhost:8080`
+* `http://offgridpi.local:8080`
+
+## 9. Create the service account
+
+```bash
+sudo useradd \
+  --system \
+  --home-dir /nonexistent \
+  --shell /usr/sbin/nologin \
+  offgridpi
+```
+
+Skip this command if the account already exists.
+
+## 10. Create `kiwix-serve.service`
+
+Create `/etc/systemd/system/kiwix-serve.service`:
+
+```ini
+[Unit]
+Description=Offgrid Pi Kiwix Server
+After=local-fs.target
+RequiresMountsFor=/srv/offgridpi/content/kiwix
+
+[Service]
+Type=simple
+User=offgridpi
+Group=offgridpi
+ExecStart=/usr/bin/kiwix-serve --port=8080 /srv/offgridpi/content/kiwix/example.zim
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Replace `example.zim` with the installed filename.
+
+Validate and enable:
+
+```bash
+sudo systemd-analyze verify /etc/systemd/system/kiwix-serve.service
 sudo systemctl daemon-reload
-sudo systemctl enable kiwix-serve.service
-sudo systemctl start kiwix-serve.service
-sudo systemctl status kiwix-serve.service
+sudo systemctl enable --now kiwix-serve.service
+sudo systemctl status kiwix-serve.service --no-pager
+```
 
-The final service definition will be stored in the GitHub repository.
+## 11. Install the dashboard files
 
-18. Install the dashboard
+Copy the project dashboard into:
 
-The dashboard files will be installed under:
-
+```text
 /opt/offgridpi/dashboard
+```
 
-The initial dashboard should include:
+Expected prototype structure:
 
-Project title
-Kiwix link
-Document-library link
-Placeholder map link
-Optional offline-entertainment launcher
-System-status link
-Administration link
-Project version
+```text
+/opt/offgridpi/dashboard/
+├── index.html
+├── css/
+│   └── styles.css
+└── js/
+    └── app.js
+```
 
-The dashboard should be readable on the 1024 × 600 development display.
+All required assets must be local.
 
-19. Install the optional offline media module
+## 12. Create `offgridpi-dashboard.service`
 
-Status: Planned and not yet validated
+Create `/etc/systemd/system/offgridpi-dashboard.service`:
 
-The offline media module is optional. It should be installed only after the Raspberry Pi desktop, storage paths, and dashboard are functioning reliably.
+```ini
+[Unit]
+Description=Offgrid Pi Dashboard
+After=local-fs.target
+ConditionPathExists=/opt/offgridpi/dashboard/index.html
 
-The planned applications are:
+[Service]
+Type=simple
+User=offgridpi
+Group=offgridpi
+WorkingDirectory=/opt/offgridpi/dashboard
+ExecStart=/usr/bin/python3 -m http.server 8081 --directory /opt/offgridpi/dashboard
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyPaths=/opt/offgridpi/dashboard
 
-Kodi as the primary media-library and playback interface
-VLC as a fallback player for individual media files
+[Install]
+WantedBy=multi-user.target
+```
 
-The exact package names and installation commands must be validated on the selected Raspberry Pi OS release before they are treated as release-ready instructions. Record the package versions and installation results in BUILD_LOG.md.
+Enable it:
 
-Media should be stored outside the operating-system microSD card whenever practical. An available USB drive may be used for initial testing, but final drive selection and capacity allocation belong to the storage-architecture phase.
+```bash
+sudo systemd-analyze verify /etc/systemd/system/offgridpi-dashboard.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now offgridpi-dashboard.service
+sudo systemctl status offgridpi-dashboard.service --no-pager
+```
 
-The initial directory structure is:
+## 13. Configure Chromium automatic launch
 
-/srv/offgridpi/content/media/movies
-/srv/offgridpi/content/media/television
-/srv/offgridpi/content/media/family
-/srv/offgridpi/content/media/kids
-/srv/offgridpi/content/media/music
-/srv/offgridpi/content/media/audiobooks
+The validated prototype uses:
 
-The installation and configuration process should eventually:
+```text
+/opt/offgridpi/scripts/launch-dashboard.sh
+/home/piadmin/.config/autostart/offgridpi-dashboard.desktop
+```
 
-Install Kodi and VLC.
-Add the approved media directories as local sources.
-Avoid requiring cloud accounts or streaming services.
-Retain permitted metadata and artwork locally when practical.
-Add a dashboard or desktop launcher for Kodi.
-Preserve access to the normal Raspberry Pi desktop.
-Return cleanly to the dashboard or desktop when Kodi closes.
-Avoid exposing personal media through the local web dashboard by default.
+The launcher should:
 
-Initial validation should include:
+* Wait until `http://127.0.0.1:8081/` answers
+* Avoid duplicate dashboard windows
+* Open Chromium maximized
+* Disable first-run and default-browser prompts
+* Preserve normal desktop access
 
-MP4 and MKV containers
-H.264 video at 720p and 1080p
-AAC stereo audio
-SRT subtitles
-VLC fallback playback
-Operation with internet access disconnected
-Restart and automatic-mount behavior
-Temperature, undervoltage, drive stability, and playback reliability
+Manual full-screen mode may be used during development. Kiosk mode remains a later configurable option.
 
-Only user-supplied, legally obtained media should be added. Media files, library databases containing private information, and copyrighted artwork must not be committed to the public repository.
+## 14. Verify services
 
-20. Configure dashboard hosting
+```bash
+systemctl is-enabled kiwix-serve.service
+systemctl is-active kiwix-serve.service
+systemctl is-enabled offgridpi-dashboard.service
+systemctl is-active offgridpi-dashboard.service
+ss -ltn | grep -E ':8080|:8081'
+```
 
-The final hosting method has not yet been selected.
+## 15. Verify offline operation
 
-Possible options include:
+From the attached Raspberry Pi session:
 
-A small Python web server
-Nginx
-Lighttpd
-Another lightweight local web server
+```bash
+sudo nmcli networking off
+```
 
-The selected method should be:
+Confirm:
 
-Lightweight
-Available through standard packages
-Easy to configure
-Able to start automatically
-Suitable for local-network access
-Maintainable by the project
-21. Configure automatic dashboard launch
+* Dashboard loads at `http://127.0.0.1:8081`
+* Kiwix loads at `http://localhost:8080`
+* Search and navigation work
+* No required dashboard assets depend on the internet
 
-After login, the local browser should open the Offgrid Pi dashboard automatically.
+Restore networking:
 
-The final implementation may use:
+```bash
+sudo nmcli networking on
+nmcli general status
+```
 
-Desktop autostart configuration
-Kiosk mode
-A normal browser window
-A project launcher application
+## 16. Phase 4 document-library paths
 
-The first version should preserve access to the normal desktop for troubleshooting.
+Create public categories and a private root:
 
-22. Verify local access
+```bash
+sudo install -d -o piadmin -g piadmin -m 0755 \
+  /srv/offgridpi/content/documents/public/{emergency,first-aid,food,gardening,communications,radio,repair,equipment-manuals,education,books,faith}
 
-Test from the Raspberry Pi:
+sudo install -d -o piadmin -g piadmin -m 0700 \
+  /srv/offgridpi/content/documents/personal
+```
 
-http://localhost
+The document service and indexer must never use the `personal` path as a web root or index source.
 
-or the final configured dashboard port.
+## 17. Known prototype limitations
 
-Test the Kiwix service through its configured local address.
-
-23. Verify network access
-
-From another device on the same network, test:
-
-http://offgridpi.local
-
-If that does not resolve, use the Raspberry Pi’s local IP address.
-
-Confirm that:
-
-The dashboard opens.
-Kiwix opens.
-Installed content can be searched.
-Administrative actions are not exposed without appropriate controls.
-24. Verify offline operation
-
-Disconnect the Raspberry Pi from the internet while leaving the local system running.
-
-Confirm that:
-
-The dashboard loads.
-Kiwix content loads.
-Search works.
-Local documents open.
-Kodi and VLC play local test media when the optional module is installed.
-The browser does not depend on remote fonts, scripts, icons, or analytics.
-Services restart successfully without internet access.
-25. Run the health check
-
-The future health-check script should verify:
-
-Supported operating system
-Required directories
-Required packages
-Required services
-Service status
-Dashboard availability
-Kiwix availability
-Installed content
-Available storage
-File permissions
-System temperature
-Network addresses
-Recent errors
-Optional Kodi and VLC package status
-Optional media-drive mount status and available space
-
-Planned command:
-
-sudo ./scripts/check-system.sh
-26. Installation completion criteria
-
-The installation is considered successful when:
-
-The Raspberry Pi boots normally.
-The dashboard opens.
-Kiwix starts automatically.
-At least one test ZIM file is available.
-Local documents can be opened.
-Another device can reach the dashboard.
-The system works without internet access.
-All commands and deviations are recorded.
-No passwords or personal information have been committed to GitHub.
-When installed, the optional media module plays a local test file without internet access.
-27. Uninstallation
-
-An uninstall script will be created after the first working installation.
-
-It should:
-
-Stop and disable Offgrid Pi services
-Remove application files
-Preserve user content and media by default
-Offer an explicit option to remove content
-Remove created service definitions
-Restore modified autostart settings
-Record what was removed
-
-The uninstall process must not delete user content without clear confirmation.
+* The dashboard uses Python's built-in server and requires later release review.
+* The current service points to a specific ZIM filename rather than a generated library definition.
+* `zimcheck` 3.5.0 reported a structural error on the tested official archives even though the selected archive worked through Kiwix.
+* Document-library installation is not yet validated.
+* The combined installer, upgrade path, and uninstall script do not yet exist.

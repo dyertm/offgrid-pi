@@ -1,334 +1,152 @@
 # Offgrid Pi Project Blueprint
 
+**Reconciled:** August 1, 2026
+
 ## 1. Project overview
 
-**Offgrid Pi** is a Raspberry Pi-based offline knowledge system designed to provide access to useful information without requiring an active internet connection.
+Offgrid Pi is an offline-first knowledge platform designed to run locally without depending on an active internet connection after software and content have been installed.
 
-The system is intended to operate locally through an attached monitor, keyboard, and mouse. It may also provide browser-based access to other devices connected to the same local network.
+The initial supported platform is a Raspberry Pi 4B with an attached display. The system also exposes selected services to other devices on the same local network.
 
-The project will combine established offline-content tools with a simplified, customized interface that nontechnical users can understand and operate.
+The long-term objective is a repeatable public project rather than a one-time personal build.
 
-The initial goal is not merely to configure one personal Raspberry Pi. The goal is to create a repeatable open project that other people can install, customize, document, and maintain.
+## 2. Mission
 
-## 2. Project mission
-
-Create a dependable, approachable, and reproducible offline knowledge platform that can be used for:
+Create a dependable, approachable, reproducible offline information system for:
 
 * General reference
 * Emergency preparedness
 * Medical and first-aid reference
+* Water, food production, and preservation
 * Repair and maintenance
-* Food production and preservation
 * Education
 * Books and literature
+* Faith and Scripture
 * Radio and communications
 * Equipment documentation
 * Regional maps and geographic information
-* User-supplied documents
+* User-supplied local documents
 * Optional offline entertainment and morale resources
 
-The system should remain useful during internet outages, remote travel, grid failures, natural disasters, or other situations where normal online resources are unavailable.
+## 3. Design principles
 
-## 3. Intended users
+### Offline-first
 
-Offgrid Pi is intended for:
+Installed services and content must remain functional without internet access.
 
-* Individuals building an emergency knowledge library
-* Families preparing for extended internet or power outages
-* Rural or remote users with unreliable internet access
-* Amateur radio operators
-* Campers, overlanders, and remote travelers
-* Homesteaders
-* Community preparedness groups
-* Schools or organizations that need offline reference materials
-* Raspberry Pi users who want a structured offline-content platform
+### Local control
 
-The system should be usable by people with limited Linux experience after the initial installation is complete.
+Users retain control of software, content, storage, networking, updates, backups, and personal documents.
 
-## 4. Core design principles
+### Simple operation
 
-### 4.1 Offline-first
+A user should be able to start the device and reach the dashboard without opening a terminal.
 
-The system must remain functional without internet access after content and software have been installed.
+### Reproducible installation
 
-Internet access may be required during initial setup, software updates, and content downloads.
+Validated manual steps should be converted into scripts and tested on clean installations.
 
-### 4.2 Local control
+### Modular design
 
-Users should retain control over:
+Kiwix, documents, maps, media, administration, and future content packs should remain separable.
 
-* Installed software
-* Downloaded content
-* Storage location
-* Network configuration
-* Personal documents
-* Updates
-* Backups
+### Repairability
 
-The project should not depend on a cloud account for normal operation.
+The project favors understandable files, native packages, standard paths, and `systemd` services.
 
-### 4.3 Simple operation
+### Efficient operation
 
-A user should be able to start the Raspberry Pi and access the primary dashboard without opening a terminal.
+The initial system should avoid unnecessary background services, cloud dependencies, and resource-heavy abstractions.
 
-The local interface should use clear categories, large controls, and plain language.
+### Public/private separation
 
-### 4.4 Reproducible installation
+Public software and documentation must remain separate from personal content, credentials, and private commercialization material.
 
-The installation process should be documented and automated wherever practical.
+## 4. Validated development baseline
 
-Another user should be able to begin with a supported Raspberry Pi and a clean Raspberry Pi OS installation, follow the documented procedure, and produce a comparable system.
+| Item | Validated configuration |
+|---|---|
+| Device | Raspberry Pi 4B, 4 GB RAM |
+| Operating system | Raspberry Pi OS 64-bit Desktop, Debian 13 Trixie |
+| Kernel recorded | `6.18.34+rpt-rpi-v8` |
+| Boot media | Patriot LX Series 64 GB microSDXC |
+| Display | GeeekPi 10.1-inch HDMI, 1024 × 600 |
+| Network | Wi-Fi; local hostname `offgridpi.local` |
+| Kiwix | `kiwix-tools` 3.7.0 on TCP 8080 |
+| Dashboard | Local static dashboard on TCP 8081 |
+| Browser behavior | Chromium launches automatically in a maximized window |
+| Offline test | Kiwix and dashboard passed |
 
-### 4.5 Modular design
+## 5. Current scope
 
-Major functions should be divided into modules so that users can choose what they need.
+The active software scope includes:
 
-Potential modules include:
-
-* Kiwix knowledge library
-* Local document library
-* Offline maps
-* Emergency reference pack
-* Medical reference pack
-* Education pack
-* Radio reference pack
-* Local Wi-Fi access point
-* Offline media playback
-* Backup and recovery tools
-
-### 4.6 Repairability
-
-The project should favor components that can be understood, replaced, or repaired without requiring a complete rebuild.
-
-Configuration files, scripts, service definitions, and documentation should be stored in the GitHub repository.
-
-### 4.7 Efficient operation
-
-The system should minimize unnecessary processor, memory, and power usage.
-
-The initial version should avoid unnecessary background services and overly complex dependencies.
-
-## 5. Current project scope
-
-The current development phase focuses on building and documenting the software platform.
-
-The active scope includes:
-
-* Raspberry Pi OS installation
 * Raspberry Pi configuration
-* Kiwix installation
-* Local ZIM-file hosting
-* Local document hosting
-* A customized Offgrid Pi dashboard
-* Automatic service startup
-* Automatic dashboard launch
-* Local hostname access
-* Local-network browser access
+* Kiwix and ZIM hosting
+* Custom dashboard
+* Automatic startup
+* Local-network access
+* Local document library
+* Public/private document separation
 * Content folder standards
 * Content-pack definitions
-* Installation scripts
-* Health-check scripts
+* Installation automation
+* Health checks
 * Troubleshooting documentation
-* GitHub repository structure
-* Clean installation testing
+* Clean-install testing
 
-### 5.1 Approved optional module: Offline entertainment
+## 6. Current architecture
 
-Offgrid Pi will include an optional offline entertainment module after the core platform is stable. The module will support local playback of user-supplied, legally owned movies, television programs, music, audiobooks, and similar media without requiring internet access.
+### Operating-system layer
 
-Kodi will provide the primary media-library interface. VLC will provide a lightweight fallback for individual files and troubleshooting. The module will run on Raspberry Pi OS rather than replacing the system with a dedicated media-center operating system.
+Raspberry Pi OS provides hardware support, desktop access, networking, package management, user management, and service supervision.
 
-The module must remain separate from essential knowledge content. Media files must not reduce the reliability, accessibility, or reserved storage needed for Kiwix libraries, maps, medical information, repair manuals, communications references, local documents, system backups, or future emergency-content expansion.
+### Kiwix layer
 
-Primary functions include:
+Kiwix serves ZIM-format content through a local web service on TCP port `8080`.
 
-* Browse and play movies and television programs without internet access.
-* Play locally stored music and audiobooks.
-* Maintain separate general, family, and children’s media folders.
-* Retain permitted metadata and artwork locally when practical.
-* Launch Kodi from the Offgrid Pi dashboard or desktop.
-* Return cleanly to the dashboard or desktop after Kodi closes.
-* Open individual files through VLC when Kodi is unavailable or unsuitable.
+### Dashboard layer
 
-Design priorities include:
+The dashboard is stored under `/opt/offgridpi/dashboard` and is served locally on TCP port `8081`.
 
-* Fully offline operation after installation and library preparation
-* Simple operation for nontechnical users
-* Raspberry Pi 4 compatibility
-* Direct local playback without required transcoding
-* No dependency on cloud accounts or streaming services
-* Media storage outside the operating-system microSD card
-* Storage priority for emergency and reference content
-* Validation of heat, stability, drive behavior, and power consumption
+The prototype uses Python's built-in static HTTP server. This is accepted for development and must be reviewed before a stable release.
 
-## 6. Deferred scope
+### Document-library layer
 
-The following subjects are important but are intentionally deferred until the core software platform is working:
+The planned browser-accessible document root is:
 
-* Long-term storage selection
-* Storage redundancy
-* External-drive performance testing
-* Backup-drive rotation
-* EMP protection
-* Faraday bags or Faraday enclosures
-* Hardened electronics storage
-* Solar runtime testing
-* Battery runtime testing
-* EcoFlow integration
-* Voltaic V72 integration
-* Renogy solar-panel testing
-* Arc solar-panel testing
-* Custom carrying cases
-* Waterproof storage
-* Complete downloadable Raspberry Pi images
-* Advanced offline-map implementation
-* Automatic Wi-Fi hotspot mode
-* Emergency communications hardware integration
+```text
+/srv/offgridpi/content/documents/public
+```
 
-These items may be added to later project phases without changing the initial software architecture.
+The private document root is:
 
-## 7. Hardware baseline
+```text
+/srv/offgridpi/content/documents/personal
+```
 
-### 7.1 Development hardware
+The private root must not be served or included in generated indexes.
 
-The current development system consists of:
+### Media layer
 
-* Raspberry Pi 4B
-* Miuzei Raspberry Pi 4 case
-* Cooling fan
-* Heatsinks
-* 5V 3A USB-C power supply
-* GeeekPi 10.1-inch HDMI display
-* 1024 × 600 display resolution
-* Keyboard
-* Mouse
-* Micro-HDMI-to-HDMI cable
-* Network connection
-* MicroSD cards
-* USB flash drives
-* USB hard drives
-* Windows computer for imaging and repository work
+Kodi and VLC remain an optional later module. Media must not displace reserved knowledge-library storage.
 
-### 7.2 Minimum supported development configuration
+### Service layer
 
-The initial project should target:
-
-* Raspberry Pi 4B
-* 4 GB RAM or greater preferred
-* 32 GB microSD card minimum
-* 64 GB or larger microSD card recommended for development
-* Raspberry Pi-compatible power supply
-* Ethernet or Wi-Fi during installation
-* HDMI display for direct local access
-
-Support for other Raspberry Pi models may be evaluated after the Raspberry Pi 4 build is stable.
-
-## 8. Operating-system baseline
-
-The planned operating system is:
-
-**Raspberry Pi OS 64-bit with Desktop**
-
-The Desktop edition is preferred because the system is intended to support direct use through an attached display.
-
-The initial installation should avoid unnecessary preinstalled applications. Additional packages should be installed only when they support a defined Offgrid Pi function.
-
-## 9. Proposed software architecture
-
-### 9.1 Operating-system layer
-
-Raspberry Pi OS will provide:
-
-* Hardware support
-* Desktop environment
-* Networking
-* Package management
-* System services
-* User management
-* Browser access
-* File-system access
-
-### 9.2 Offline-content layer
-
-Kiwix will provide access to ZIM-format content such as:
-
-* Wikipedia
-* Wiktionary
-* Wikibooks
-* WikiMed
-* Project Gutenberg collections
-* Other compatible offline archives
-
-Kiwix content should be served through a local web service.
-
-### 9.3 Document-library layer
-
-Non-ZIM content will be stored in a separate document library.
-
-Supported content may include:
-
-* PDF files
-* Text files
-* HTML documents
-* Images
-* Equipment manuals
-* Checklists
-* Locally created documentation
-
-### 9.4 Media-playback layer
-
-The optional media module will provide direct local playback through:
-
-* Kodi as the primary library and full-screen playback interface
-* VLC as a fallback player for individual files
-* User-managed media stored under the Offgrid Pi content structure or on external storage mounted into that structure
-
-The first implementation will not require a media server, remote streaming, or video transcoding.
-
-### 9.5 Dashboard layer
-
-A custom Offgrid Pi dashboard will act as the system’s primary interface.
-
-The dashboard should link to:
-
-* Kiwix libraries
-* Document categories
-* Offline maps
-* Optional offline entertainment
-* System status
-* Storage information
-* Administration tools
-* Shutdown and restart functions
-* Project documentation
-
-### 9.6 Service layer
-
-The project is expected to use standard Linux services managed by `systemd`.
-
-Proposed services include:
+Validated services:
 
 ```text
 kiwix-serve.service
 offgridpi-dashboard.service
-offgridpi-indexer.service
 ```
 
-Final service names may change during development.
+Planned service:
 
-### 9.7 Network layer
+```text
+offgridpi-documents.service
+```
 
-The system should support:
-
-* Access from the Raspberry Pi itself
-* Access from devices on the same local network
-* Local hostname resolution when practical
-* Direct IP-address access as a fallback
-
-A future phase may add automatic Wi-Fi hotspot functionality.
-
-## 10. Proposed file-system structure
-
-The planned application structure is:
+## 7. File-system structure
 
 ```text
 /opt/offgridpi/
@@ -336,52 +154,36 @@ The planned application structure is:
 ├── scripts/
 ├── config/
 └── tools/
-```
 
-The planned content structure is:
-
-```text
 /srv/offgridpi/
 ├── content/
 │   ├── kiwix/
 │   ├── documents/
+│   │   ├── public/
+│   │   │   ├── emergency/
+│   │   │   ├── first-aid/
+│   │   │   ├── food/
+│   │   │   ├── gardening/
+│   │   │   ├── communications/
+│   │   │   ├── radio/
+│   │   │   ├── repair/
+│   │   │   ├── equipment-manuals/
+│   │   │   ├── education/
+│   │   │   ├── books/
+│   │   │   └── faith/
+│   │   └── personal/
 │   ├── maps/
 │   └── media/
-│       ├── movies/
-│       ├── television/
-│       ├── family/
-│       ├── kids/
-│       ├── music/
-│       └── audiobooks/
 ├── indexes/
 ├── logs/
 └── backups/
 ```
 
-The document library may use the following categories:
+## 8. Dashboard categories
 
-```text
-documents/
-├── emergency/
-├── first-aid/
-├── food/
-├── gardening/
-├── communications/
-├── radio/
-├── repair/
-├── equipment-manuals/
-├── education/
-├── books/
-└── personal/
-```
+The dashboard should eventually provide configurable entries for:
 
-The `personal` directory must not be included in public releases or committed to GitHub.
-
-## 11. Proposed dashboard categories
-
-The initial dashboard may contain:
-
-* Encyclopedia
+* Knowledge Library
 * Medical and First Aid
 * Emergency Preparedness
 * Food and Agriculture
@@ -389,6 +191,7 @@ The initial dashboard may contain:
 * Radio and Communications
 * Books and Literature
 * Education
+* Faith and Scripture
 * Maps
 * Equipment Manuals
 * Local Documents
@@ -396,215 +199,68 @@ The initial dashboard may contain:
 * System Status
 * Administration
 
-Categories should be configurable rather than permanently hardcoded.
+## 9. Content profiles
 
-## 12. Content-pack model
+Planned profiles include:
 
-Offgrid Pi should eventually support optional content packs.
-
-A content pack should define:
-
-* Pack name
-* Description
-* Category
-* Source
-* Download location
-* File type
-* Approximate size
-* License
-* Version or release date
-* Installation destination
-* Required disk space
-* Optional or required status
-
-Possible packs include:
-
-* Starter
-* Medical
+* Core
 * Preparedness
-* Education
-* Agriculture
+* Medical
+* Agriculture and Food
 * Repair
-* Radio
+* Radio and Communications
 * Pacific Northwest
-* United States maps
+* Family Education
+* Faith and Scripture
+* Offline Entertainment
 
-Content files should generally not be stored directly in the GitHub repository because of their size.
+Every manifest must record source, approximate size, license, version or date, destination, and checksum when available.
 
-The repository should instead contain manifests and download instructions. User-supplied entertainment media will not be treated as a public content pack and must not be committed to the repository.
+## 10. Optional faith content
 
-## 13. GitHub repository structure
+The document library will include a `faith` category capable of holding multiple Bible translations and other user-selected faith resources.
 
-The planned repository structure is:
+The project may document how to add such files, but it must not redistribute copyrighted translations unless the license explicitly permits it. Public-domain and openly licensed editions may be referenced through manifests or setup instructions.
 
-```text
-offgrid-pi/
-├── README.md
-├── LICENSE
-├── CHANGELOG.md
-├── install.sh
-├── uninstall.sh
-├── config/
-│   ├── offgridpi.conf
-│   └── content-manifest.yml
-├── dashboard/
-│   ├── index.html
-│   ├── css/
-│   ├── js/
-│   ├── icons/
-│   └── templates/
-├── scripts/
-│   ├── install-kiwix.sh
-│   ├── configure-dashboard.sh
-│   ├── index-documents.py
-│   ├── check-system.sh
-│   └── update-content-catalog.sh
-├── systemd/
-│   ├── kiwix-serve.service
-│   ├── offgridpi-dashboard.service
-│   └── offgridpi-indexer.service
-├── content-packs/
-│   ├── starter.yml
-│   ├── medical.yml
-│   ├── preparedness.yml
-│   └── education.yml
-├── docs/
-│   ├── PROJECT_BLUEPRINT.md
-│   ├── BUILD_LOG.md
-│   ├── DECISIONS.md
-│   ├── INSTALLATION.md
-│   ├── ROADMAP.md
-│   ├── CUSTOMIZATION.md
-│   ├── CONTENT_MANAGEMENT.md
-│   └── TROUBLESHOOTING.md
-└── tests/
-    └── verify-installation.sh
-```
+## 11. Deferred scope
 
-This structure is provisional and may change as development progresses.
+Deferred work includes:
 
-## 14. Proposed installation experience
+* Final storage selection and redundancy
+* Offline maps implementation
+* Local Wi-Fi hotspot mode
+* Kodi and VLC integration
+* Battery and solar runtime testing
+* Backup and recovery automation
+* Prebuilt release images
+* Physical protection and long-term storage
+* Support for additional hardware platforms
 
-The long-term installation goal is:
+Private market, packaging, pricing, brand, rugged-tablet, and commercial product plans are intentionally excluded from this public blueprint.
 
-```bash
-git clone https://github.com/REPLACE-WITH-OWNER/offgrid-pi.git
-cd offgrid-pi
-sudo ./install.sh
-```
+## 12. Initial public-release criteria
 
-The installation script should eventually:
+A first public release should:
 
-1. Confirm that the script is running with appropriate permissions.
-2. Detect the operating system.
-3. Detect the Raspberry Pi model.
-4. Check available disk space.
-5. Check network connectivity.
-6. Install required packages.
-7. Create application directories.
-8. Create content directories.
-9. Install Kiwix.
-10. Configure the Kiwix service.
-11. Install the Offgrid Pi dashboard.
-12. Configure the local hostname.
-13. Enable required services.
-14. Offer optional starter content.
-15. Offer installation of the optional Kodi and VLC media module.
-16. Run a system health check.
-17. Display access instructions.
-18. Record installation results in a log.
+* Install on a clean supported Raspberry Pi OS system
+* Start required services automatically
+* Open a usable local dashboard
+* Serve at least one Kiwix library
+* Serve a local public document library
+* Keep personal documents unexposed
+* Work without internet access after setup
+* Support attached-display and local-network access
+* Include installation, troubleshooting, health-check, and uninstall guidance
+* Avoid embedding personal data or credentials
+* Be reproducible from the repository
 
-The first release may use multiple scripts before these functions are combined into one installer.
+## 13. Project workflow
 
-## 15. Security considerations
-
-The system is intended primarily for local and offline use.
-
-Development should account for:
-
-* Avoiding unnecessary exposed network services
-* Restricting administrative functions
-* Preventing unauthenticated remote shutdown
-* Separating public content from personal content
-* Avoiding hardcoded passwords
-* Documenting default credentials
-* Allowing users to change the hostname
-* Allowing users to change service ports
-* Keeping administrative logs
-* Validating downloaded content where practical
-
-The project should not assume that a local network is automatically trustworthy.
-
-## 16. Licensing considerations
-
-The project must identify:
-
-* The software license for Offgrid Pi
-* Licenses for included scripts or code
-* Licenses for icons and design assets
-* Licenses for content catalogs
-* Licenses for recommended third-party content
-* Restrictions on redistributing downloaded ZIM, map, PDF, or media files
-* The requirement that users provide and manage their own legally obtained entertainment media
-
-The GitHub repository should not redistribute third-party content unless redistribution is clearly permitted.
-
-## 17. Initial release criteria
-
-A first usable release should meet the following requirements:
-
-* Installs on a clean Raspberry Pi OS 64-bit Desktop installation
-* Runs on the Raspberry Pi 4B
-* Starts required services automatically
-* Opens a usable local dashboard
-* Serves at least one Kiwix library
-* Provides access to local documents
-* Works without internet access after setup
-* Can be accessed from the attached monitor
-* Can be accessed from another device on the local network
-* Includes installation instructions
-* Includes troubleshooting instructions
-* Includes an uninstall or rollback procedure
-* Includes a health-check script
-* Does not expose personal content by default
-* Can be reproduced from the public repository
-* When the optional media module is selected, launches Kodi locally and plays at least one test file without internet access
-
-## 18. Project workflow
-
-The project will use the following workflow:
-
-1. Discuss the next task.
-2. Document the decision.
+1. Discuss and define the next checkpoint.
+2. Record the decision.
 3. Perform the configuration.
-4. Record commands and results in the build log.
+4. Record commands, results, errors, and fixes.
 5. Add or update scripts.
-6. Test the change.
-7. Update user-facing installation instructions.
-8. Commit the change to GitHub.
-9. Repeat the test on a clean installation when appropriate.
-
-Conversations may be used for planning and troubleshooting, but the repository documentation will remain the official source of truth.
-
-## 19. Current project status
-
-The project is currently in the planning and initial-build stage.
-
-Completed planning decisions include:
-
-* Raspberry Pi 4B selected as the initial platform.
-* Raspberry Pi OS 64-bit with Desktop selected as the operating-system baseline.
-* Direct monitor use is a core requirement.
-* Kiwix selected as the initial offline-content engine.
-* A custom browser-based dashboard will be developed.
-* Native Linux services are preferred over Docker for the first release.
-* Installation scripts will be developed before a downloadable disk image.
-* Storage architecture will be finalized after the core software is functional.
-* EMP and Faraday-storage planning are deferred.
-* Power-system integration is deferred until software development is further along.
-* Kodi and VLC have been selected for an optional offline media-playback module.
-* Final media-drive selection and off-grid runtime testing remain deferred to the storage and power phases.
-
-## 20. Next milestone
-
-The next milestone is to create a clean development installation of Raspberry Pi OS, document the imaging process, complete the initial operating-system configuration, install Kiwix, and serve one small test ZIM file successfully.
+6. Test locally, across the local network, after reboot, and offline.
+7. Update public documentation.
+8. Commit and synchronize the repository.
