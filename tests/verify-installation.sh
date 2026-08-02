@@ -79,6 +79,8 @@ for path in \
   /opt/offgridpi/dashboard/documents/index.html \
   /opt/offgridpi/scripts/launch-dashboard.sh \
   /etc/systemd/system/offgridpi-dashboard.service \
+  /opt/offgridpi/scripts/start-kiwix.sh \
+  /etc/systemd/system/kiwix-serve.service \
   /opt/offgridpi/scripts/index-documents.py \
   /opt/offgridpi/scripts/watch-documents.sh \
   /srv/offgridpi/content/kiwix \
@@ -122,6 +124,67 @@ echo "=== Local HTTP ==="
 check_http "Kiwix" "http://127.0.0.1:8080/"
 check_http "Dashboard" "http://127.0.0.1:8081/"
 check_http "Document library" "http://127.0.0.1:8082/"
+
+
+echo
+echo "=== Kiwix content ==="
+
+if command -v kiwix-serve >/dev/null 2>&1; then
+  printf 'Kiwix version: %s\n' \
+    "$(kiwix-serve --version 2>/dev/null | head -n 1)"
+  pass "kiwix-serve is installed."
+else
+  fail "kiwix-serve is unavailable."
+fi
+
+mapfile -d '' -t KIWIX_ZIMS < <(
+  find /srv/offgridpi/content/kiwix \
+    -type d -name rejected -prune -o \
+    -type f \
+    -name '*.zim' \
+    -print0 2>/dev/null |
+    sort -z
+)
+
+if [[ "${#KIWIX_ZIMS[@]}" -gt 0 ]]; then
+  pass "${#KIWIX_ZIMS[@]} approved ZIM file(s) detected."
+
+  for zim in "${KIWIX_ZIMS[@]}"; do
+    printf '  %s\n' "$zim"
+  done
+else
+  fail "No approved ZIM files were detected."
+fi
+
+if [[ -x /opt/offgridpi/scripts/start-kiwix.sh ]]; then
+  pass "Kiwix discovery launcher is executable."
+else
+  fail "Kiwix discovery launcher is not executable."
+fi
+
+if grep -qF \
+  'ExecStart=/opt/offgridpi/scripts/start-kiwix.sh' \
+  /etc/systemd/system/kiwix-serve.service 2>/dev/null
+then
+  pass "Kiwix service uses automatic ZIM discovery."
+else
+  fail "Kiwix service does not use the discovery launcher."
+fi
+
+if grep '^ExecStart=' \
+    /etc/systemd/system/kiwix-serve.service 2>/dev/null |
+    grep -q '\.zim'
+then
+  fail "Kiwix service still contains a hardcoded ZIM filename."
+else
+  pass "Kiwix service has no hardcoded ZIM filename."
+fi
+
+if pgrep -af '[k]iwix-serve' | grep -q '/rejected/'; then
+  fail "The running Kiwix process includes a rejected ZIM file."
+else
+  pass "Rejected ZIM files are excluded from Kiwix."
+fi
 
 echo
 echo "=== Document catalog ==="

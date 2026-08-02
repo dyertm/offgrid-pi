@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-VERSION="0.2.0"
+VERSION="0.3.0"
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOCUMENT_PUBLIC="/srv/offgridpi/content/documents/public"
 DOCUMENT_PERSONAL="/srv/offgridpi/content/documents/personal"
 DASHBOARD_ROOT="/opt/offgridpi/dashboard"
+KIWIX_ROOT="/srv/offgridpi/content/kiwix"
 CATEGORIES=(
   emergency first-aid food gardening communications radio repair
   equipment-manuals education books faith
@@ -22,12 +23,14 @@ Usage:
   sudo ./install.sh check
   sudo ./install.sh install-documents
   sudo ./install.sh install-dashboard
+  sudo ./install.sh install-kiwix
   sudo ./install.sh verify
 
 Commands:
   check              Validate the host and required repository payload.
   install-documents  Idempotently install the validated document module.
   install-dashboard  Idempotently install the dashboard and desktop autostart.
+  install-kiwix      Idempotently install Kiwix and discover approved ZIM files.
   verify             Run the repository verification script.
 
 Environment:
@@ -74,6 +77,8 @@ check_payload() {
     "$PROJECT_ROOT/scripts/launch-dashboard.sh" \
     "$PROJECT_ROOT/systemd/offgridpi-dashboard.service" \
     "$PROJECT_ROOT/desktop/offgridpi-dashboard.desktop" \
+    "$PROJECT_ROOT/scripts/start-kiwix.sh" \
+    "$PROJECT_ROOT/systemd/kiwix-serve.service" \
     "$PROJECT_ROOT/tests/verify-installation.sh"
   do
     if [[ -e "$path" ]]; then
@@ -278,6 +283,136 @@ install_dashboard_module() {
 }
 
 
+
+install_kiwix_module() {
+  require_root
+  check_host
+
+  local admin_user attempt zim
+  local -a zim_files=()
+
+  admin_user="$(resolve_admin_user)"
+
+  log "Administrator: $admin_user"
+  log "Installing Kiwix packages."
+
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    kiwix-tools \
+    zim-tools \
+    curl
+
+  ensure_service_account
+
+  install -d \
+    -o "$admin_user" \
+    -g offgridpi \
+    -m 2750 \
+    "$KIWIX_ROOT"
+
+  install -d \
+    -o root \
+    -g root \
+    -m 0755 \
+    /opt/offgridpi/scripts
+
+  find "$KIWIX_ROOT" \
+    -type d \
+    -exec chown "$admin_user:offgridpi" {} + \
+    -exec chmod 2750 {} +
+
+  find "$KIWIX_ROOT" \
+    -type f \
+    -name '*.zim' \
+    -exec chown "$admin_user:offgridpi" {} + \
+    -exec chmod 0640 {} +
+
+  install \
+    -o root \
+    -g root \
+    -m 0755 \
+    "$PROJECT_ROOT/scripts/start-kiwix.sh" \
+    /opt/offgridpi/scripts/start-kiwix.sh
+
+  install \
+    -o root \
+    -g root \
+    -m 0644 \
+    "$PROJECT_ROOT/systemd/kiwix-serve.service" \
+    /etc/systemd/system/kiwix-serve.service
+
+  mapfile -d '' -t zim_files < <(
+    find "$KIWIX_ROOT" \
+      -type d -name rejected -prune -o \
+      -type f \
+      -name '*.zim' \
+      -print0 |
+      sort -z
+  )
+
+  systemd-analyze verify \
+    /etc/systemd/system/kiwix-serve.service
+
+  systemctl daemon-reload
+
+  if [[ "${#zim_files[@]}" -eq 0 ]]; then
+    systemctl disable --now \
+      kiwix-serve.service \
+      2>/dev/null || true
+
+    log "Kiwix software and service were installed."
+    log "No approved ZIM files were found."
+    log "The Kiwix service was not started."
+    log "Add ZIM files under: $KIWIX_ROOT"
+    return 0
+  fi
+
+  for zim in "${zim_files[@]}"; do
+    runuser -u offgridpi -- test -r "$zim" \
+      || die "The Kiwix service account cannot read: $zim"
+  done
+
+  (
+    cd /
+    runuser -u offgridpi -- \
+      /opt/offgridpi/scripts/start-kiwix.sh \
+      --check
+  )
+
+  systemctl enable kiwix-serve.service
+  systemctl restart kiwix-serve.service
+
+  for attempt in $(seq 1 30); do
+    if curl \
+      --silent \
+      --fail \
+      --output /dev/null \
+      http://127.0.0.1:8080/
+    then
+      log "Kiwix answered on TCP port 8080."
+      break
+    fi
+
+    sleep 1
+  done
+
+  curl \
+    --silent \
+    --fail \
+    --output /dev/null \
+    http://127.0.0.1:8080/ \
+    || die "Kiwix did not become available."
+
+  if pgrep -af '[k]iwix-serve' | grep -q '/rejected/'; then
+    die "A rejected ZIM file appears in the running Kiwix command."
+  fi
+
+  log "Kiwix module installation completed."
+  log "Approved ZIM files: ${#zim_files[@]}"
+  log "Kiwix URL: http://$(hostname):8080/"
+}
+
+
 run_verifier() {
   [[ -x "$PROJECT_ROOT/tests/verify-installation.sh" ]] \
     || die "Verification script is missing or not executable."
@@ -293,6 +428,9 @@ case "${1:-}" in
     ;;
   install-dashboard)
     install_dashboard_module
+    ;;
+  install-kiwix)
+    install_kiwix_module
     ;;
   verify)
     run_verifier
