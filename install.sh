@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-INSTALLER_VERSION="0.5.2"
+INSTALLER_VERSION="0.6.0"
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOCUMENT_PUBLIC="/srv/offgridpi/content/documents/public"
 DOCUMENT_PERSONAL="/srv/offgridpi/content/documents/personal"
@@ -24,6 +24,8 @@ Usage:
   sudo ./install.sh backup-config
   sudo ./install.sh list-backups
   sudo ./install.sh rollback-config SNAPSHOT --confirm
+  sudo ./install.sh uninstall --dry-run
+  sudo ./install.sh uninstall --confirm
   sudo ./install.sh install-all
   sudo ./install.sh install-documents
   sudo ./install.sh install-dashboard
@@ -35,6 +37,7 @@ Commands:
   backup-config      Create a content-preserving configuration snapshot.
   list-backups       List available configuration snapshots.
   rollback-config    Restore a snapshot; requires --confirm.
+  uninstall          Remove installed components while preserving content.
   install-all        Snapshot, then install all supported modules.
   install-documents  Idempotently install the validated document module.
   install-dashboard  Idempotently install the dashboard and desktop autostart.
@@ -493,6 +496,10 @@ case "${1:-}" in
 
   rollback-config)
     "$PROJECT_ROOT/scripts/manage-installation.sh"       rollback       "${2:-latest}"       "${3:-}"
+    ;;
+
+  uninstall)
+    "$PROJECT_ROOT/scripts/manage-installation.sh"       uninstall       "${2:-}"
     ;;
 
   install-all)

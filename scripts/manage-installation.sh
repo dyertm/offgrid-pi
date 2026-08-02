@@ -30,19 +30,26 @@ Usage:
   sudo ./scripts/manage-installation.sh backup
   sudo ./scripts/manage-installation.sh list
   sudo ./scripts/manage-installation.sh rollback SNAPSHOT --confirm
+  sudo ./scripts/manage-installation.sh uninstall --dry-run
+  sudo ./scripts/manage-installation.sh uninstall --confirm
 
 Commands:
   backup    Create a configuration snapshot without copying user content.
   list      List available configuration snapshots.
   rollback  Restore configuration and service state from a snapshot.
+  uninstall Remove installed components while preserving all user content.
 
 Use "latest" as the snapshot name to restore the newest snapshot:
 
   sudo ./scripts/manage-installation.sh rollback latest --confirm
 
-Preserved during every operation:
+Preserved during uninstall:
 
   /srv/offgridpi/content
+  /srv/offgridpi/backups
+  The source repository
+  Installed operating-system packages
+  The offgridpi service account
 USAGE
 }
 
@@ -436,6 +443,148 @@ rollback_snapshot() {
   log "Content remains at: /srv/offgridpi/content"
 }
 
+
+assert_safe_uninstall_path() {
+  local path="$1"
+
+  [[ "$path" == /* ]] \
+    || die "Refusing to remove a non-absolute path: $path"
+
+  case "$path" in
+    /srv/offgridpi/content|/srv/offgridpi/content/*)
+      die "Refusing to remove user content: $path"
+      ;;
+
+    /srv/offgridpi/backups|/srv/offgridpi/backups/*)
+      die "Refusing to remove configuration backups: $path"
+      ;;
+
+    /|/etc|/opt|/home|/srv|/srv/offgridpi)
+      die "Refusing to remove protected system path: $path"
+      ;;
+  esac
+}
+
+show_uninstall_plan() {
+  require_root
+
+  local admin_user admin_home
+  local service enabled_state active_state
+  local path state
+
+  admin_user="$(resolve_admin_user)"
+  admin_home="$(resolve_admin_home "$admin_user")"
+
+  build_managed_paths "$admin_home"
+
+  log "Uninstall dry-run only."
+  log "No files or services will be changed."
+
+  printf '\nServices that would be disabled and stopped:\n'
+
+  for service in "${SERVICES[@]}"; do
+    enabled_state="$(
+      systemctl is-enabled "$service" 2>/dev/null ||
+        true
+    )"
+
+    active_state="$(
+      systemctl is-active "$service" 2>/dev/null ||
+        true
+    )"
+
+    printf '  %-42s enabled=%-12s active=%s\n' \
+      "$service" \
+      "${enabled_state:-unknown}" \
+      "${active_state:-unknown}"
+  done
+
+  printf '\nManaged paths that would be removed:\n'
+
+  for path in "${MANAGED_PATHS[@]}"; do
+    assert_safe_uninstall_path "$path"
+
+    if [[ -e "$path" || -L "$path" ]]; then
+      state="present"
+    else
+      state="missing"
+    fi
+
+    printf '  %-8s %s\n' "$state" "$path"
+  done
+
+  printf '\nPreserved paths and resources:\n'
+  printf '  /srv/offgridpi/content\n'
+  printf '  /srv/offgridpi/backups\n'
+  printf '  Source repository and Git history\n'
+  printf '  Installed operating-system packages\n'
+  printf '  offgridpi service account\n'
+
+  log "Run uninstall --confirm only after reviewing this plan."
+}
+
+uninstall_managed_components() {
+  require_root
+
+  local mode="${1:-}"
+  local admin_user admin_home
+  local service path
+  local removed_count=0
+
+  case "$mode" in
+    ""|--dry-run)
+      show_uninstall_plan
+      return 0
+      ;;
+
+    --confirm)
+      ;;
+
+    *)
+      die \
+        "Uninstall accepts only --dry-run or --confirm."
+      ;;
+  esac
+
+  admin_user="$(resolve_admin_user)"
+  admin_home="$(resolve_admin_home "$admin_user")"
+
+  build_managed_paths "$admin_home"
+
+  log "Creating safety snapshot before uninstall."
+  create_snapshot
+  log "Uninstall safety snapshot: $LAST_SNAPSHOT"
+
+  for service in "${SERVICES[@]}"; do
+    systemctl disable --now "$service" \
+      >/dev/null 2>&1 || true
+  done
+
+  for path in "${MANAGED_PATHS[@]}"; do
+    assert_safe_uninstall_path "$path"
+
+    if [[ -e "$path" || -L "$path" ]]; then
+      rm -rf -- "$path"
+      removed_count=$((removed_count + 1))
+    fi
+  done
+
+  systemctl daemon-reload
+  systemctl reset-failed
+
+  rmdir /opt/offgridpi/scripts \
+    >/dev/null 2>&1 || true
+
+  rmdir /opt/offgridpi \
+    >/dev/null 2>&1 || true
+
+  log "Managed Offgrid Pi components were removed."
+  log "Removed managed paths: $removed_count"
+  log "User content was preserved: /srv/offgridpi/content"
+  log "Backups were preserved: /srv/offgridpi/backups"
+  log "Packages and service account were preserved."
+}
+
 case "${1:-}" in
   backup)
     create_snapshot
@@ -447,6 +596,10 @@ case "${1:-}" in
 
   rollback)
     rollback_snapshot "${2:-latest}" "${3:-}"
+    ;;
+
+  uninstall)
+    uninstall_managed_components "${2:-}"
     ;;
 
   -h|--help|help|"")
