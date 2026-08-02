@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-INSTALLER_VERSION="0.6.0"
+INSTALLER_VERSION="0.6.1"
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOCUMENT_PUBLIC="/srv/offgridpi/content/documents/public"
 DOCUMENT_PERSONAL="/srv/offgridpi/content/documents/personal"

@@ -351,7 +351,7 @@ Design choices:
 
 **Status:** Completed on the development Raspberry Pi
 
-Installer `0.6.0` now supports:
+Installer `0.6.1` now supports:
 
 * Modular and unified installation
 * Independent verification
@@ -366,6 +366,8 @@ Commits:
 
 * `85fb4dc` — Add configuration backup and rollback
 * `8f97f74` — Add content-preserving uninstall
+
+The verifier was also updated to accept an empty approved-ZIM library as a valid clean-install state. In that state, the Kiwix package and discovery service definition remain installed, while the Kiwix service, TCP port 8080, and HTTP endpoint are not required until an approved ZIM is added.
 
 Clean-install validation on a separate Raspberry Pi OS card remains required before Phase 5 is marked complete.
 

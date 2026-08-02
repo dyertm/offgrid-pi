@@ -103,10 +103,35 @@ else
   fail "Dashboard desktop autostart file is missing."
 fi
 
+mapfile -d '' -t KIWIX_ZIMS < <(
+  find /srv/offgridpi/content/kiwix \
+    -type d -name rejected -prune -o \
+    -type f \
+    -name '*.zim' \
+    -print0 2>/dev/null |
+    sort -z
+)
+
 echo
 echo "=== Services ==="
+
+if [[ "${#KIWIX_ZIMS[@]}" -gt 0 ]]; then
+  check_service kiwix-serve.service
+else
+  if systemctl is-enabled --quiet kiwix-serve.service 2>/dev/null; then
+    warn "Kiwix is enabled even though no approved ZIM files exist."
+  else
+    pass "Kiwix is disabled because no approved ZIM files exist."
+  fi
+
+  if systemctl is-active --quiet kiwix-serve.service 2>/dev/null; then
+    warn "Kiwix is active even though no approved ZIM files exist."
+  else
+    pass "Kiwix is inactive because no approved ZIM files exist."
+  fi
+fi
+
 for service in \
-  kiwix-serve.service \
   offgridpi-dashboard.service \
   offgridpi-documents.service \
   offgridpi-document-indexer.service
@@ -116,13 +141,25 @@ done
 
 echo
 echo "=== Network listeners ==="
-for port in 8080 8081 8082; do
-  check_port "$port"
-done
+
+if [[ "${#KIWIX_ZIMS[@]}" -gt 0 ]]; then
+  check_port 8080
+else
+  pass "TCP port 8080 is not required without approved ZIM files."
+fi
+
+check_port 8081
+check_port 8082
 
 echo
 echo "=== Local HTTP ==="
-check_http "Kiwix" "http://127.0.0.1:8080/"
+
+if [[ "${#KIWIX_ZIMS[@]}" -gt 0 ]]; then
+  check_http "Kiwix" "http://127.0.0.1:8080/"
+else
+  pass "Kiwix HTTP is not required without approved ZIM files."
+fi
+
 check_http "Dashboard" "http://127.0.0.1:8081/"
 check_http "Document library" "http://127.0.0.1:8082/"
 
@@ -138,15 +175,6 @@ else
   fail "kiwix-serve is unavailable."
 fi
 
-mapfile -d '' -t KIWIX_ZIMS < <(
-  find /srv/offgridpi/content/kiwix \
-    -type d -name rejected -prune -o \
-    -type f \
-    -name '*.zim' \
-    -print0 2>/dev/null |
-    sort -z
-)
-
 if [[ "${#KIWIX_ZIMS[@]}" -gt 0 ]]; then
   pass "${#KIWIX_ZIMS[@]} approved ZIM file(s) detected."
 
@@ -154,7 +182,7 @@ if [[ "${#KIWIX_ZIMS[@]}" -gt 0 ]]; then
     printf '  %s\n' "$zim"
   done
 else
-  fail "No approved ZIM files were detected."
+  pass "No approved ZIM files were detected; Kiwix remains available for future content."
 fi
 
 if [[ -x /opt/offgridpi/scripts/start-kiwix.sh ]]; then

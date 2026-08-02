@@ -18,7 +18,7 @@ The development prototype currently provides:
 * Public document library with automatic indexing on TCP port `8082`
 * Protected personal-document storage that is neither served nor indexed
 * Confirmed reboot persistence and operation with internet connectivity disabled
-* Reproducible installer `0.6.0` with unified installation, verification, configuration snapshots, rollback, and content-preserving uninstall
+* Reproducible installer `0.6.1` with unified installation, verification, configuration snapshots, rollback, and content-preserving uninstall
 
 The current services use:
 
@@ -68,7 +68,7 @@ Potential content includes:
 | Reproducible installer | In progress — clean-install validation remaining |
 | Content-pack system | Not started |
 
-Installer `0.6.0` now packages the Kiwix, dashboard, Chromium autostart, and document-library modules. It supports `install-all`, independent verification, configuration snapshots, rollback, and content-preserving uninstall. Validation on a separate clean Raspberry Pi OS installation is the remaining Phase 5 requirement.
+Installer `0.6.1` now packages the Kiwix, dashboard, Chromium autostart, and document-library modules. It supports `install-all`, independent verification, configuration snapshots, rollback, and content-preserving uninstall. Validation on a separate clean Raspberry Pi OS installation is the remaining Phase 5 requirement.
 
 ## Public and private content boundary
 
