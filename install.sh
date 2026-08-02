@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-VERSION="0.3.0"
+INSTALLER_VERSION="0.4.1"
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOCUMENT_PUBLIC="/srv/offgridpi/content/documents/public"
 DOCUMENT_PERSONAL="/srv/offgridpi/content/documents/personal"
@@ -17,10 +17,11 @@ die() { printf '[offgridpi] ERROR: %s\n' "$*" >&2; exit 1; }
 
 usage() {
   cat <<USAGE
-Offgrid Pi installer checkpoint $VERSION
+Offgrid Pi installer checkpoint $INSTALLER_VERSION
 
 Usage:
   sudo ./install.sh check
+  sudo ./install.sh install-all
   sudo ./install.sh install-documents
   sudo ./install.sh install-dashboard
   sudo ./install.sh install-kiwix
@@ -28,6 +29,7 @@ Usage:
 
 Commands:
   check              Validate the host and required repository payload.
+  install-all        Install all currently supported Offgrid Pi modules.
   install-documents  Idempotently install the validated document module.
   install-dashboard  Idempotently install the dashboard and desktop autostart.
   install-kiwix      Idempotently install Kiwix and discover approved ZIM files.
@@ -93,7 +95,7 @@ check_payload() {
 
 check_host() {
   local architecture model
-  log "Installer version: $VERSION"
+  log "Installer version: $INSTALLER_VERSION"
 
   architecture="$(uname -m)"
   log "Architecture: $architecture"
@@ -413,6 +415,32 @@ install_kiwix_module() {
 }
 
 
+
+install_all_modules() {
+  require_root
+  check_host
+
+  log "Starting complete Offgrid Pi installation."
+  log "Step 1 of 3: Kiwix module."
+  install_kiwix_module
+
+  log "Step 2 of 3: Document module."
+  install_document_module
+
+  log "Step 3 of 3: Dashboard module."
+  install_dashboard_module
+
+  log "Running complete installation verification."
+
+  "$PROJECT_ROOT/tests/verify-installation.sh" \
+    || die "Installation completed, but verification failed."
+
+  log "Complete Offgrid Pi installation succeeded."
+  log "Dashboard URL: http://$(hostname):8081/"
+  log "Kiwix URL: http://$(hostname):8080/"
+  log "Document URL: http://$(hostname):8082/"
+}
+
 run_verifier() {
   [[ -x "$PROJECT_ROOT/tests/verify-installation.sh" ]] \
     || die "Verification script is missing or not executable."
@@ -422,6 +450,9 @@ run_verifier() {
 case "${1:-}" in
   check)
     check_host
+    ;;
+  install-all)
+    install_all_modules
     ;;
   install-documents)
     install_document_module
