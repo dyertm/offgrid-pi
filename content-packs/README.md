@@ -27,4 +27,15 @@ A pack is READY only when all required items are installed and each item has com
 ```bash
 content-packs/test-validator.sh
 content-packs/test-status.sh
+content-packs/test-plan.sh
 ```
+
+## Plan a content-pack installation
+
+The planner performs read-only checks for metadata completeness, HTTPS sources, destination conflicts, and available storage.
+
+```bash
+content-packs/content-pack-plan.py content-packs/manifests/starter.json
+```
+
+A BLOCKED result prevents installation planning from proceeding when required metadata or safety checks are incomplete.
