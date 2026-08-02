@@ -347,6 +347,28 @@ Design choices:
 * Existing user documents are preserved
 * The document module can be installed and tested independently before the remaining modules are combined
 
+## August 2, 2026 — Installer recovery validation
+
+**Status:** Completed on the development Raspberry Pi
+
+Installer `0.6.0` now supports:
+
+* Modular and unified installation
+* Independent verification
+* Configuration snapshots
+* Checksum-validated rollback
+* Content-preserving uninstall
+* Complete reinstall from the repository
+
+Rollback restored the dashboard to its exact original checksum while preserving all user content. The uninstall and reinstall drill preserved the Kiwix archive and public documents, rebuilt all four services, restored TCP ports `8080`, `8081`, and `8082`, and finished with zero verification failures and no thermal throttling.
+
+Commits:
+
+* `85fb4dc` — Add configuration backup and rollback
+* `8f97f74` — Add content-preserving uninstall
+
+Clean-install validation on a separate Raspberry Pi OS card remains required before Phase 5 is marked complete.
+
 ## Current known issues
 
 * `zimcheck` 3.5.0 disagrees with functional Kiwix behavior on the tested archives.

@@ -11,7 +11,7 @@
 | 2 — Kiwix proof of concept | Completed |
 | 3 — Dashboard prototype | Completed |
 | 4 — Local document library | Completed |
-| 5 — Reproducible installer | In progress |
+| 5 — Reproducible installer | In progress — clean-install validation remaining |
 | 6 — Content-pack system | Not started |
 | 7 — System status and administration | Not started |
 | 8 — Offline maps | Deferred |
@@ -127,7 +127,7 @@ Known follow-up:
 
 ## Phase 5 — Reproducible installer
 
-**Status:** In progress
+**Status:** In progress — clean-install validation remaining
 
 Objectives:
 

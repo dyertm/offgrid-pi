@@ -1,7 +1,7 @@
 # Offgrid Pi Installation Guide
 
-**Document status:** Working prototype procedure  
-**Validation status:** Raspberry Pi foundation, Kiwix, dashboard, reboot, local-network, and offline tests completed on the development Raspberry Pi. Document-library and full installer steps remain in development.
+**Document status:** Development installation and recovery guide
+**Validation status:** Installer 0.6.0, unified installation, verification, configuration backup, rollback, uninstall, reinstall, reboot persistence, local-network access, and offline operation have passed on the development Raspberry Pi. Clean-install validation on a separate Raspberry Pi OS installation remains required.
 
 ## 1. Validated development target
 
