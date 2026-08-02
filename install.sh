@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-VERSION="0.1.0"
+VERSION="0.2.0"
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOCUMENT_PUBLIC="/srv/offgridpi/content/documents/public"
 DOCUMENT_PERSONAL="/srv/offgridpi/content/documents/personal"
+DASHBOARD_ROOT="/opt/offgridpi/dashboard"
 CATEGORIES=(
   emergency first-aid food gardening communications radio repair
   equipment-manuals education books faith
@@ -20,11 +21,13 @@ Offgrid Pi installer checkpoint $VERSION
 Usage:
   sudo ./install.sh check
   sudo ./install.sh install-documents
+  sudo ./install.sh install-dashboard
   sudo ./install.sh verify
 
 Commands:
   check              Validate the host and required repository payload.
-  install-documents  Idempotently install the validated Phase 4 document module.
+  install-documents  Idempotently install the validated document module.
+  install-dashboard  Idempotently install the dashboard and desktop autostart.
   verify             Run the repository verification script.
 
 Environment:
@@ -44,6 +47,18 @@ resolve_admin_user() {
   printf '%s\n' "$candidate"
 }
 
+resolve_admin_home() {
+  local account="$1"
+  local home_directory
+
+  home_directory="$(getent passwd "$account" | cut -d: -f6)"
+
+  [[ -n "$home_directory" && -d "$home_directory" ]] \
+    || die "Unable to determine the home directory for $account."
+
+  printf '%s\n' "$home_directory"
+}
+
 check_payload() {
   local missing=0
   local path
@@ -52,6 +67,13 @@ check_payload() {
     "$PROJECT_ROOT/scripts/watch-documents.sh" \
     "$PROJECT_ROOT/systemd/offgridpi-documents.service" \
     "$PROJECT_ROOT/systemd/offgridpi-document-indexer.service.in" \
+    "$PROJECT_ROOT/dashboard/index.html" \
+    "$PROJECT_ROOT/dashboard/css/styles.css" \
+    "$PROJECT_ROOT/dashboard/js/app.js" \
+    "$PROJECT_ROOT/dashboard/documents/index.html" \
+    "$PROJECT_ROOT/scripts/launch-dashboard.sh" \
+    "$PROJECT_ROOT/systemd/offgridpi-dashboard.service" \
+    "$PROJECT_ROOT/desktop/offgridpi-dashboard.desktop" \
     "$PROJECT_ROOT/tests/verify-installation.sh"
   do
     if [[ -e "$path" ]]; then
@@ -160,6 +182,102 @@ install_document_module() {
   log "Library URL: http://$(hostname):8082/"
 }
 
+
+install_dashboard_module() {
+  require_root
+  check_host
+
+  local admin_user admin_group admin_home
+  local autostart_dir attempt
+
+  admin_user="$(resolve_admin_user)"
+  admin_group="$(id -gn "$admin_user")"
+  admin_home="$(resolve_admin_home "$admin_user")"
+  autostart_dir="$admin_home/.config/autostart"
+
+  log "Administrator: $admin_user"
+  log "Installing dashboard packages."
+
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    python3 \
+    curl \
+    rsync \
+    chromium
+
+  ensure_service_account
+
+  install -d -o root -g root -m 0755 \
+    "$DASHBOARD_ROOT" \
+    /opt/offgridpi/scripts
+
+  systemctl stop offgridpi-dashboard.service 2>/dev/null || true
+
+  log "Installing dashboard files."
+  rsync \
+    --archive \
+    --delete \
+    "$PROJECT_ROOT/dashboard/" \
+    "$DASHBOARD_ROOT/"
+
+  chown -R root:root "$DASHBOARD_ROOT"
+  find "$DASHBOARD_ROOT" -type d -exec chmod 0755 {} +
+  find "$DASHBOARD_ROOT" -type f -exec chmod 0644 {} +
+
+  install -o root -g root -m 0755 \
+    "$PROJECT_ROOT/scripts/launch-dashboard.sh" \
+    /opt/offgridpi/scripts/launch-dashboard.sh
+
+  install -o root -g root -m 0644 \
+    "$PROJECT_ROOT/systemd/offgridpi-dashboard.service" \
+    /etc/systemd/system/offgridpi-dashboard.service
+
+  install -d \
+    -o "$admin_user" \
+    -g "$admin_group" \
+    -m 0755 \
+    "$autostart_dir"
+
+  install \
+    -o "$admin_user" \
+    -g "$admin_group" \
+    -m 0644 \
+    "$PROJECT_ROOT/desktop/offgridpi-dashboard.desktop" \
+    "$autostart_dir/offgridpi-dashboard.desktop"
+
+  systemd-analyze verify \
+    /etc/systemd/system/offgridpi-dashboard.service
+
+  systemctl daemon-reload
+  systemctl enable --now offgridpi-dashboard.service
+
+  for attempt in $(seq 1 30); do
+    if curl \
+      --silent \
+      --fail \
+      --output /dev/null \
+      http://127.0.0.1:8081/
+    then
+      log "Dashboard service answered on TCP port 8081."
+      break
+    fi
+
+    sleep 1
+  done
+
+  curl \
+    --silent \
+    --fail \
+    --output /dev/null \
+    http://127.0.0.1:8081/ \
+    || die "Dashboard service did not become available."
+
+  log "Dashboard module installation completed."
+  log "Dashboard URL: http://$(hostname):8081/"
+  log "Chromium autostart installed for: $admin_user"
+}
+
+
 run_verifier() {
   [[ -x "$PROJECT_ROOT/tests/verify-installation.sh" ]] \
     || die "Verification script is missing or not executable."
@@ -172,6 +290,9 @@ case "${1:-}" in
     ;;
   install-documents)
     install_document_module
+    ;;
+  install-dashboard)
+    install_dashboard_module
     ;;
   verify)
     run_verifier

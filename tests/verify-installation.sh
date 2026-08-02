@@ -4,6 +4,15 @@ set -u
 FAILURES=0
 WARNINGS=0
 
+ADMIN_USER="${OFFGRIDPI_ADMIN_USER:-${SUDO_USER:-${USER:-}}}"
+ADMIN_HOME=""
+
+if [[ -n "$ADMIN_USER" ]]; then
+  ADMIN_HOME="$(getent passwd "$ADMIN_USER" 2>/dev/null | cut -d: -f6)"
+fi
+
+AUTOSTART_FILE="${ADMIN_HOME:+$ADMIN_HOME/.config/autostart/offgridpi-dashboard.desktop}"
+
 pass() { printf 'PASS: %s\n' "$*"; }
 fail() { printf 'FAIL: %s\n' "$*"; FAILURES=$((FAILURES + 1)); }
 warn() { printf 'REVIEW: %s\n' "$*"; WARNINGS=$((WARNINGS + 1)); }
@@ -65,6 +74,11 @@ echo
 echo "=== Required paths ==="
 for path in \
   /opt/offgridpi/dashboard/index.html \
+  /opt/offgridpi/dashboard/css/styles.css \
+  /opt/offgridpi/dashboard/js/app.js \
+  /opt/offgridpi/dashboard/documents/index.html \
+  /opt/offgridpi/scripts/launch-dashboard.sh \
+  /etc/systemd/system/offgridpi-dashboard.service \
   /opt/offgridpi/scripts/index-documents.py \
   /opt/offgridpi/scripts/watch-documents.sh \
   /srv/offgridpi/content/kiwix \
@@ -79,6 +93,12 @@ do
     fail "$path is missing."
   fi
 done
+
+if [[ -n "$AUTOSTART_FILE" && -f "$AUTOSTART_FILE" ]]; then
+  pass "$AUTOSTART_FILE exists."
+else
+  fail "Dashboard desktop autostart file is missing."
+fi
 
 echo
 echo "=== Services ==="
@@ -143,11 +163,33 @@ fi
 
 echo
 echo "=== Dashboard integration ==="
+
+if grep -qF 'id="kiwix-link"' /opt/offgridpi/dashboard/index.html \
+  && grep -qF 'window.location.hostname' /opt/offgridpi/dashboard/js/app.js; then
+  pass "Kiwix uses the dashboard visitor hostname."
+else
+  fail "Dynamic Kiwix routing was not detected."
+fi
+
 if curl --max-time 5 -fsS http://127.0.0.1:8081/documents/ 2>/dev/null \
   | grep -qF 'window.location.hostname'; then
   pass "Local Documents uses a dynamic hostname redirect."
 else
-  warn "Dynamic Local Documents redirect was not detected."
+  fail "Dynamic Local Documents routing was not detected."
+fi
+
+if [[ -x /opt/offgridpi/scripts/launch-dashboard.sh ]]; then
+  pass "Dashboard launcher is executable."
+else
+  fail "Dashboard launcher is not executable."
+fi
+
+if [[ -n "$AUTOSTART_FILE" ]] \
+  && grep -qF 'Exec=/opt/offgridpi/scripts/launch-dashboard.sh' \
+    "$AUTOSTART_FILE" 2>/dev/null; then
+  pass "Desktop autostart launches the Offgrid Pi dashboard."
+else
+  fail "Dashboard desktop autostart is not configured correctly."
 fi
 
 echo
