@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "pack_id": "example-pack",
+  "name": "Example Content Pack",
+  "version": "1.0.0",
+  "description": "Template for an optional Offgrid Pi content pack.",
+  "category": "example",
+  "status": "draft",
+  "language": "en",
+  "region": "global",
+  "estimated_download_bytes": 0,
+  "estimated_installed_bytes": 0,
+  "items": [
+    {
+      "item_id": "example-resource",
+      "title": "Example Resource",
+      "content_type": "document",
+      "source_url": "https://example.invalid/resource.pdf",
+      "source_page": "https://example.invalid/",
+      "source_version": "unknown",
+      "license": "License must be documented",
+      "redistribution": "unknown",
+      "size_bytes": 0,
+      "sha256": "",
+      "destination": "/srv/offgridpi/content/documents/public/example/resource.pdf",
+      "required": false,
+      "notes": "Replace this placeholder before publishing a real pack."
+    }
+  ]
+}
