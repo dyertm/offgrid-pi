@@ -1,6 +1,6 @@
 # Offgrid Pi Decision Record
 
-**Reconciled:** August 1, 2026
+**Reconciled:** August 2, 2026
 
 ## Decision 001 — Build a reusable public project
 
@@ -169,3 +169,52 @@ The public document structure will include a `faith` category. It may contain mu
 Market analysis, pricing, product tiers, complete-kit concepts, rugged-tablet research, packaging, branding, and sales strategy will be maintained outside the public GitHub repository.
 
 **Reason:** These ideas are useful private source material but are not required to reproduce the open software project.
+
+## Decision 021 — Serve public documents on a separate port
+
+**Date:** August 1, 2026  
+**Status:** Accepted for prototype
+
+The public document library is served from `/srv/offgridpi/content/documents/public` on TCP port `8082`.
+
+**Reason:** A separate web root prevents the parent document directory and protected personal directory from being exposed by the dashboard server.
+
+## Decision 022 — Automatically rebuild the document catalog
+
+**Date:** August 1, 2026  
+**Status:** Accepted
+
+`offgridpi-document-indexer.service` uses `inotifywait` to monitor only the public document tree and rerun `index-documents.py` after file changes.
+
+**Consequences:**
+
+* Users do not need to run a manual indexing command after routine file additions or removals.
+* Generated catalog files are excluded from the watch events to prevent rebuild loops.
+* The watcher must remain recursive and restart after directory-tree changes.
+
+## Decision 023 — Use dynamic hostname routing for dashboard services
+
+**Date:** August 1, 2026  
+**Status:** Accepted
+
+The dashboard's Local Documents route derives the target hostname from the browser and redirects to port `8082`.
+
+**Reason:** The same dashboard must work through `localhost`, `offgridpi.local`, or a direct IP address.
+
+## Decision 024 — Treat direct IP access as the `.local` fallback
+
+**Date:** August 1, 2026  
+**Status:** Accepted
+
+If a client temporarily cannot resolve `offgridpi.local`, the documented fallback is the Pi's local IPv4 address.
+
+**Reason:** One Windows reboot test showed delayed `.local` resolution even though SSH, Avahi, hostname configuration, and network connectivity were healthy.
+
+## Decision 025 — Build the installer incrementally by module
+
+**Date:** August 2, 2026  
+**Status:** Accepted
+
+The reproducible installer will first package and verify individual validated modules before combining the complete build. The document module is the first installer checkpoint.
+
+**Reason:** Small idempotent modules are easier to test, rerun, diagnose, and validate on the active prototype without risking unrelated working services.

@@ -15,12 +15,15 @@ The development prototype currently provides:
 * Automatic Chromium launch after desktop login
 * Local access through the attached 1024 × 600 display
 * Browser access from another device on the local network
-* Confirmed operation with internet connectivity disabled
+* Public document library with automatic indexing on TCP port `8082`
+* Protected personal-document storage that is neither served nor indexed
+* Confirmed reboot persistence and operation with internet connectivity disabled
 
 The current services use:
 
 * Kiwix: TCP port `8080`
 * Dashboard: TCP port `8081`
+* Public documents: TCP port `8082`
 
 ## Project goals
 
@@ -60,11 +63,11 @@ Potential content includes:
 | Raspberry Pi foundation | Completed |
 | Kiwix proof of concept | Completed |
 | Dashboard prototype | Completed |
-| Local document library | In progress |
-| Reproducible installer | Not started |
+| Local document library | Completed |
+| Reproducible installer | In progress |
 | Content-pack system | Not started |
 
-The current focus is the local document library. Public documents will be separated from personal material, indexed locally, and linked from the dashboard.
+The current focus is the reproducible installer. The first installer checkpoint packages the validated document-library module and adds a reusable verification script.
 
 ## Public and private content boundary
 

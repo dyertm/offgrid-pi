@@ -1,6 +1,6 @@
 # Offgrid Pi Roadmap
 
-**Reconciled:** August 1, 2026
+**Reconciled:** August 2, 2026
 
 ## Phase status summary
 
@@ -10,8 +10,8 @@
 | 1 — Raspberry Pi foundation | Completed |
 | 2 — Kiwix proof of concept | Completed |
 | 3 — Dashboard prototype | Completed |
-| 4 — Local document library | In progress |
-| 5 — Reproducible installer | Not started |
+| 4 — Local document library | Completed |
+| 5 — Reproducible installer | In progress |
 | 6 — Content-pack system | Not started |
 | 7 — System status and administration | Not started |
 | 8 — Offline maps | Deferred |
@@ -93,44 +93,68 @@ Known follow-up:
 
 ## Phase 4 — Local document library
 
-**Status:** In progress
+**Status:** Completed
 
-Objectives:
+Validated outcomes:
 
-* Create separate public and personal document roots
-* Create approved public category folders
-* Add the `faith` category for multiple Bible versions and related resources
-* Support PDF, text, HTML, and common image formats
-* Generate browser-accessible indexes
-* Record display name, file type, size, and modification date
-* Add search or filtering when practical
-* Serve the public library on a separate local port
-* Link Local Documents from the dashboard
-* Verify local, network, reboot, and offline access
-* Confirm that the personal path cannot be reached through the browser
-* Document file naming, import, indexing, removal, and licensing
+* Separate public and personal document roots created with restrictive permissions
+* Eleven approved public categories created, including `faith`
+* Existing format-test and reference files migrated from the legacy `library` path
+* Legacy content backed up and verified before removal of the old path
+* Public catalog generated as HTML and JSON
+* PDF, text, Markdown, HTML, SVG, and common document/image formats indexed
+* Public document service enabled on TCP port `8082`
+* Dashboard Local Documents card connected through a dynamic hostname redirect
+* Automatic recursive indexing enabled through `inotifywait` and `systemd`
+* Add and remove tests passed
+* Personal content proved unserved and unindexed
+* Local, network, reboot, and offline operation passed
 
-Planned paths:
+Validated paths and services:
 
 ```text
 /srv/offgridpi/content/documents/public
 /srv/offgridpi/content/documents/personal
 /opt/offgridpi/scripts/index-documents.py
+/opt/offgridpi/scripts/watch-documents.sh
+offgridpi-documents.service
+offgridpi-document-indexer.service
 ```
 
-Completion criteria:
+Known follow-up:
 
-* Files copied into approved public folders appear in the generated library
-* Public files open from the dashboard
-* Personal files remain unserved and unindexed
-* Index generation is repeatable
-* The library works without internet access
+* Windows `.local` hostname resolution may be temporarily unavailable after a reboot even when SSH, Avahi, and networking are healthy. Direct IP access is the documented fallback.
 
 ## Phase 5 — Reproducible installer
 
-**Status:** Not started
+**Status:** In progress
 
-Combine validated steps into installation, verification, upgrade-safe, and uninstall scripts. The installer must detect the supported environment, set safe permissions, install services, and preserve user content.
+Objectives:
+
+* Convert validated manual procedures into idempotent scripts
+* Detect the supported operating system, architecture, Raspberry Pi model, and administrator account
+* Install packages, directories, permissions, scripts, and services safely
+* Preserve existing user content during installation and upgrades
+* Avoid hardcoded development usernames in public release files
+* Add reusable verification and health-check scripts
+* Add useful error handling and rerun safety
+* Test each module independently before combining the complete installer
+* Produce uninstall and rollback procedures
+* Validate the finished installer on a clean Raspberry Pi OS installation
+
+First checkpoint:
+
+* Added `install.sh` with `check`, `install-documents`, and `verify` commands
+* Added an administrator placeholder to the document-indexer service template
+* Packaged the validated indexer, watcher, and document service
+* Added `tests/verify-installation.sh` for repeatable platform, service, port, HTTP, catalog, and isolation checks
+
+Completion criteria:
+
+* A clean Raspberry Pi OS installation can be converted into Offgrid Pi without undocumented manual changes
+* Re-running the installer does not damage services or user content
+* Failures produce actionable messages
+* Verification can be run independently after installation or upgrade
 
 ## Phase 6 — Content-pack system
 

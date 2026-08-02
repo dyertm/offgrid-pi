@@ -278,24 +278,107 @@ sudo nmcli networking on
 nmcli general status
 ```
 
-## 16. Phase 4 document-library paths
+## 16. Install the public document library
 
-Create public categories and a private root:
+The validated document model uses:
 
-```bash
-sudo install -d -o piadmin -g piadmin -m 0755 \
-  /srv/offgridpi/content/documents/public/{emergency,first-aid,food,gardening,communications,radio,repair,equipment-manuals,education,books,faith}
-
-sudo install -d -o piadmin -g piadmin -m 0700 \
-  /srv/offgridpi/content/documents/personal
+```text
+/srv/offgridpi/content/documents/public
+/srv/offgridpi/content/documents/personal
 ```
 
-The document service and indexer must never use the `personal` path as a web root or index source.
+The public root is indexed and served. The personal root must never be used as an index source or web root.
 
-## 17. Known prototype limitations
+Approved public categories:
 
-* The dashboard uses Python's built-in server and requires later release review.
-* The current service points to a specific ZIM filename rather than a generated library definition.
-* `zimcheck` 3.5.0 reported a structural error on the tested official archives even though the selected archive worked through Kiwix.
-* Document-library installation is not yet validated.
-* The combined installer, upgrade path, and uninstall script do not yet exist.
+```text
+emergency
+first-aid
+food
+gardening
+communications
+radio
+repair
+equipment-manuals
+education
+books
+faith
+```
+
+The Phase 5 installer checkpoint can install this module from the repository root:
+
+```bash
+sudo ./install.sh check
+sudo ./install.sh install-documents
+```
+
+The installer:
+
+* Detects the administrator account rather than hardcoding the development username
+* Creates the protected public and personal roots
+* Installs the document indexer and watcher
+* Renders the indexer service template with the selected administrator account
+* Generates the initial catalog
+* Enables `offgridpi-document-indexer.service`
+* Enables `offgridpi-documents.service` on TCP port `8082`
+* Preserves existing user documents
+
+Manual service verification:
+
+```bash
+systemctl is-enabled offgridpi-document-indexer.service
+systemctl is-active offgridpi-document-indexer.service
+systemctl is-enabled offgridpi-documents.service
+systemctl is-active offgridpi-documents.service
+ss -ltn | grep ':8082'
+curl -I http://localhost:8082/
+```
+
+The Local Documents dashboard route uses the current browser hostname and redirects to the same host on port `8082`. This supports `localhost`, `offgridpi.local`, and direct IP access without hardcoding one address.
+
+## 17. Run the reusable verification script
+
+From the repository root:
+
+```bash
+./tests/verify-installation.sh
+```
+
+Or through the installer entry point:
+
+```bash
+sudo ./install.sh verify
+```
+
+The verifier checks:
+
+* Required files and directories
+* Enabled and active services
+* TCP ports `8080`, `8081`, and `8082`
+* Local HTTP responses
+* Document catalog integrity
+* Public/private isolation
+* Dynamic dashboard document routing
+* Failed systemd units
+* Chromium presence when a graphical session is active
+* Raspberry Pi temperature and throttle state when `vcgencmd` is available
+
+## 18. Verify offline operation
+
+Keep the local router or Wi-Fi network running while disconnecting its internet/WAN connection. Confirm that the following remain available:
+
+```text
+http://localhost:8080
+http://localhost:8081
+http://localhost:8082
+```
+
+From another device, use either `offgridpi.local` or the Pi's local IP address. Direct IP access is the fallback when Windows temporarily fails to resolve the `.local` hostname.
+
+## 19. Known prototype limitations
+
+* The dashboard and document library use Python's built-in server and require later release review.
+* The current Kiwix service points to a specific ZIM filename rather than a generated library definition.
+* `zimcheck` 3.5.0 reported a structural error on tested official archives even though functional Kiwix tests passed.
+* The Phase 5 installer currently packages the document module first; Kiwix, dashboard, browser autostart, upgrade, and uninstall modules are still being added.
+* Clean-install testing is still required before a release is considered reproducible.

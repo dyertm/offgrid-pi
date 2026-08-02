@@ -1,0 +1,21 @@
+[Unit]
+Description=Offgrid Pi Public Document Library
+After=local-fs.target
+ConditionPathExists=/srv/offgridpi/content/documents/public/index.html
+
+[Service]
+Type=simple
+User=offgridpi
+Group=offgridpi
+WorkingDirectory=/srv/offgridpi/content/documents/public
+ExecStart=/usr/bin/python3 -m http.server 8082 --directory /srv/offgridpi/content/documents/public
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadOnlyPaths=/srv/offgridpi/content/documents/public
+
+[Install]
+WantedBy=multi-user.target

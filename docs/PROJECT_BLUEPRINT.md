@@ -1,6 +1,6 @@
 # Offgrid Pi Project Blueprint
 
-**Reconciled:** August 1, 2026
+**Reconciled:** August 2, 2026
 
 ## 1. Project overview
 
@@ -74,8 +74,10 @@ Public software and documentation must remain separate from personal content, cr
 | Network | Wi-Fi; local hostname `offgridpi.local` |
 | Kiwix | `kiwix-tools` 3.7.0 on TCP 8080 |
 | Dashboard | Local static dashboard on TCP 8081 |
+| Documents | Public document library on TCP 8082 with automatic indexing |
+| Privacy boundary | Personal document root is unserved and unindexed |
 | Browser behavior | Chromium launches automatically in a maximized window |
-| Offline test | Kiwix and dashboard passed |
+| Offline test | Kiwix, dashboard, and documents passed |
 
 ## 5. Current scope
 
@@ -113,7 +115,7 @@ The prototype uses Python's built-in static HTTP server. This is accepted for de
 
 ### Document-library layer
 
-The planned browser-accessible document root is:
+The validated browser-accessible document root is:
 
 ```text
 /srv/offgridpi/content/documents/public
@@ -138,13 +140,11 @@ Validated services:
 ```text
 kiwix-serve.service
 offgridpi-dashboard.service
-```
-
-Planned service:
-
-```text
 offgridpi-documents.service
+offgridpi-document-indexer.service
 ```
+
+The document indexer watches the public tree recursively and regenerates the HTML and JSON catalogs after approved files are added, changed, moved, or removed.
 
 ## 7. File-system structure
 

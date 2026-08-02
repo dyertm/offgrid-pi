@@ -1,6 +1,6 @@
 # Offgrid Pi Build Log
 
-**Reconciled:** August 1, 2026
+**Reconciled:** August 2, 2026
 
 ## Build environment
 
@@ -245,22 +245,122 @@ No document-library service, indexer, or browser validation has yet been recorde
 * Updated hardware records with confirmed device, RAM, card, OS, and baseline results.
 * Explicitly separated commercialization and future product-platform notes into private source material.
 
+## August 1, 2026 — Local document library completed
+
+**Status:** Completed
+
+Created protected document roots:
+
+```text
+/srv/offgridpi/content/documents/public
+/srv/offgridpi/content/documents/personal
+```
+
+Public directory permissions were set to allow the administrative account to manage files while the restricted `offgridpi` service account could read them. The personal directory was set to mode `0700` and remained unreadable to the service account.
+
+Created public categories:
+
+```text
+emergency
+first-aid
+food
+gardening
+communications
+radio
+repair
+equipment-manuals
+education
+books
+faith
+```
+
+An older `/srv/offgridpi/content/documents/library` tree was discovered. Before removal:
+
+* A timestamped compressed backup was created under `/srv/offgridpi/backups`
+* Existing sample and README files were copied into the new public tree
+* All eight legacy files passed byte-for-byte comparison
+* The legacy path was removed only after verification
+
+Installed:
+
+```text
+/opt/offgridpi/scripts/index-documents.py
+/opt/offgridpi/scripts/watch-documents.sh
+/etc/systemd/system/offgridpi-documents.service
+/etc/systemd/system/offgridpi-document-indexer.service
+```
+
+Service allocation:
+
+* Kiwix: TCP `8080`
+* Dashboard: TCP `8081`
+* Public documents: TCP `8082`
+
+Validation results:
+
+* Initial catalog indexed nine public test/reference files: passed
+* Private test file excluded from catalog: passed
+* Public HTTP access: passed
+* Parent traversal to the personal path returned HTTP 404: passed
+* Dashboard Local Documents redirect worked locally: passed
+* Dashboard Local Documents redirect worked from another device: passed
+* Automatic file-add indexing: passed
+* Automatic file-removal indexing: passed
+* Reboot persistence for all four core services: passed
+* Chromium automatic launch after reboot: passed
+* Offline Kiwix, dashboard, and document access: passed
+
+Permanent format-test files were retained for regression testing. Temporary public and private validation files were removed at Phase 4 closeout.
+
+Known observation:
+
+Windows briefly failed to resolve `offgridpi.local` after one reboot even though the Pi hostname, SSH service, Avahi service, and network were healthy. Direct IP access worked and is the recommended fallback when `.local` resolution is delayed.
+
+## August 2, 2026 — Reproducible installer started
+
+**Status:** In progress
+
+Created the first Phase 5 installer checkpoint:
+
+```text
+install.sh
+scripts/index-documents.py
+scripts/watch-documents.sh
+systemd/offgridpi-documents.service
+systemd/offgridpi-document-indexer.service.in
+tests/verify-installation.sh
+```
+
+The initial installer supports:
+
+```text
+check
+install-documents
+verify
+```
+
+Design choices:
+
+* Installation is modular and idempotent
+* The administrative username is detected from `sudo` or supplied through `OFFGRIDPI_ADMIN_USER`
+* The public service template does not hardcode `piadmin`
+* Existing user documents are preserved
+* The document module can be installed and tested independently before the remaining modules are combined
+
 ## Current known issues
 
 * `zimcheck` 3.5.0 disagrees with functional Kiwix behavior on the tested archives.
 * Dashboard HTTP serving uses a prototype Python server.
 * SSH success from the Windows development computer should be explicitly recorded if not already documented elsewhere.
 * Repository address remains to be added.
-* Phase 4 implementation and tests remain incomplete.
 
 ## Next action
 
-Begin the first Phase 4 implementation checkpoint:
+Validate the Phase 5 starter package on the development Pi:
 
-1. Create public category folders and the private root.
-2. Add one harmless test document.
-3. Build `index-documents.py`.
-4. Serve only the public document tree.
-5. Link the dashboard card.
-6. Test local, network, reboot, and offline behavior.
-7. Prove that the personal directory is inaccessible.
+1. Copy the starter files into the Git repository.
+2. Run `sudo ./install.sh check`.
+3. Run `./tests/verify-installation.sh` against the existing prototype.
+4. Compare the script results with the manually validated baseline.
+5. Add Kiwix, dashboard, browser-autostart, and full foundation installation modules.
+6. Test the completed installer on a clean Raspberry Pi OS card.
