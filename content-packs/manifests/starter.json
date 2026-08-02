@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "pack_id": "starter",
+  "name": "Offgrid Pi Starter Pack",
+  "version": "1.0.0",
+  "description": "Compact general-reference content for a new Offgrid Pi installation.",
+  "category": "general-reference",
+  "status": "draft",
+  "language": "en",
+  "region": "global",
+  "estimated_download_bytes": 331350016,
+  "estimated_installed_bytes": 331350016,
+  "items": [
+    {
+      "item_id": "wikipedia-en-top-mini",
+      "title": "Wikipedia English Top Articles — Mini",
+      "content_type": "zim",
+      "source_url": "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top_mini_2026-06.zim",
+      "source_page": "https://download.kiwix.org/zim/wikipedia/",
+      "source_version": "2026-06",
+      "license": "Wikipedia text: CC BY-SA 4.0 and GFDL; non-text media may use separate licenses.",
+      "redistribution": "permitted",
+      "size_bytes": 0,
+      "sha256": "",
+      "destination": "/srv/offgridpi/content/kiwix/wikipedia_en_top_mini_2026-06.zim",
+      "required": true,
+      "notes": "Exact size and SHA-256 will be recorded after the archive is downloaded and verified."
+    }
+  ]
+}
