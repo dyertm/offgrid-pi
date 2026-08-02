@@ -29,6 +29,7 @@ content-packs/test-validator.sh
 content-packs/test-status.sh
 content-packs/test-plan.sh
 content-packs/test-stage.sh
+content-packs/test-install.sh
 ```
 
 ## Plan a content-pack installation
@@ -54,3 +55,21 @@ content-packs/content-pack-stage.py content-packs/manifests/starter.json --dry-r
 Verified content is staged under `/srv/offgridpi/staging/content-packs` and is never written directly into the live content directories.
 
 The command refuses incomplete metadata, non-HTTPS sources, conflicting paths, corrupted staged files, and mismatched checksums.
+
+## Install verified staged content
+
+The installation command verifies staged content again and refuses to overwrite existing files.
+
+Preview an installation:
+
+```bash
+content-packs/content-pack-install.py content-packs/manifests/starter.json
+```
+
+Install after reviewing the preview:
+
+```bash
+sudo content-packs/content-pack-install.py content-packs/manifests/starter.json --confirm
+```
+
+Live installation requires root privileges. Files are copied atomically, verified after installation, and assigned mode `0640`.
