@@ -380,11 +380,44 @@ Clean-install validation on a separate Raspberry Pi OS card remains required bef
 
 ## Next action
 
-Validate the Phase 5 starter package on the development Pi:
+Continue Phase 6 by adding a staged download-and-verification workflow. Complete Phase 5 clean-install validation on a separate microSD card when available.
 
-1. Copy the starter files into the Git repository.
-2. Run `sudo ./install.sh check`.
-3. Run `./tests/verify-installation.sh` against the existing prototype.
-4. Compare the script results with the manually validated baseline.
-5. Add Kiwix, dashboard, browser-autostart, and full foundation installation modules.
-6. Test the completed installer on a clean Raspberry Pi OS card.
+## August 2, 2026 — Content-pack foundation and read-only planning
+
+**Status:** In progress
+
+Added the initial content-pack framework:
+
+```text
+content-packs/README.md
+content-packs/schema/content-pack.schema.json
+content-packs/examples/example-pack.json
+content-packs/manifests/starter.json
+content-packs/validate-manifest.py
+content-packs/content-pack-status.py
+content-packs/content-pack-plan.py
+content-packs/test-validator.sh
+content-packs/test-status.sh
+content-packs/test-plan.sh
+```
+
+Validated behavior:
+
+* Valid manifests are accepted.
+* Unsafe personal-content destinations are rejected.
+* Malformed SHA-256 values are rejected.
+* Duplicate item identifiers are rejected.
+* Starter-pack status is reported without modifying content.
+* Installation planning is read-only.
+* Planning checks metadata, HTTPS transport, destination conflicts, storage, and required missing items.
+* The incomplete starter manifest produces a blocked plan and exit code 1.
+* The unrelated Alpine Linux test ZIM is ignored.
+* All validator, status, and planner tests passed.
+
+Repository milestones:
+
+* `69684b6` — Add content pack manifest foundation
+* `0e23980` — Add starter content pack status tooling
+* `b3a9f9d` — Add read-only content pack planner
+
+The Alpine Linux ZIM remains temporary Kiwix validation content and is not part of the starter pack.

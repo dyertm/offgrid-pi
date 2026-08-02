@@ -12,7 +12,7 @@
 | 3 — Dashboard prototype | Completed |
 | 4 — Local document library | Completed |
 | 5 — Reproducible installer | In progress — clean-install validation remaining |
-| 6 — Content-pack system | Not started |
+| 6 — Content-pack system | In progress — foundation and read-only planning complete |
 | 7 — System status and administration | Not started |
 | 8 — Offline maps | Deferred |
 | 9 — Offline entertainment | Planned |
@@ -158,9 +158,34 @@ Completion criteria:
 
 ## Phase 6 — Content-pack system
 
-**Status:** Not started
+**Status:** In progress — foundation and read-only planning complete
 
-Create manifests for starter, medical, preparedness, agriculture, repair, radio, education, Pacific Northwest, maps, and faith content. Every item must include source, size, version, license, destination, and checksum when available.
+Completed outcomes:
+
+* Added a versioned JSON manifest format and formal JSON Schema
+* Added manifest validation for required fields, identifiers, checksums, licenses, duplicate item IDs, and safe destinations
+* Added automated validator tests
+* Added a draft starter content-pack manifest
+* Added a read-only pack-status command
+* Added a read-only installation planner
+* Added checks for metadata completeness, HTTPS sources, destination conflicts, available storage, and required missing content
+* Confirmed unrelated temporary Kiwix test content is ignored by pack status and planning
+* Added automated status and planner tests
+
+Current limitations:
+
+* The starter manifest still requires authoritative size and SHA-256 metadata
+* No content-pack downloader or installer has been implemented
+* The temporary Alpine Linux ZIM remains installed only for Kiwix validation
+* Medical, preparedness, agriculture, repair, radio, education, Pacific Northwest, maps, and faith manifests remain to be created
+
+Completion criteria:
+
+* Every published item records its source, size, version, license, destination, and checksum
+* Downloads are staged and verified before installation
+* Existing files are never silently overwritten
+* Content installation can be rerun safely
+* Kiwix and document indexes are refreshed after successful installation
 
 ## Phase 7 — System status and administration
 
@@ -224,12 +249,12 @@ Publish a documented, reproducible, sanitized release with contribution and supp
 
 ## Immediate next actions
 
-1. Create the public and personal document roots.
-2. Add all approved public categories, including `faith`.
-3. Add a harmless sample document.
-4. Build the first index generator.
-5. Serve the generated library locally.
-6. Link the dashboard card.
-7. Test local, network, reboot, and offline behavior.
-8. Verify that personal content is inaccessible.
-9. Update the build log and installation guide.
+1. Add a safe content-pack download and staging workflow.
+2. Require exact size and SHA-256 metadata before installation.
+3. Verify downloads before moving them into approved content directories.
+4. Prevent silent replacement of existing content.
+5. Refresh Kiwix or document indexes after successful installation.
+6. Add automated installer tests using temporary directories.
+7. Select and document the first useful starter-pack resource.
+8. Remove the temporary Alpine Linux ZIM after useful replacement content is validated.
+9. Complete clean-install testing on a separate microSD card when available.
