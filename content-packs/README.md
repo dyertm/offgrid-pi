@@ -28,6 +28,7 @@ A pack is READY only when all required items are installed and each item has com
 content-packs/test-validator.sh
 content-packs/test-status.sh
 content-packs/test-plan.sh
+content-packs/test-stage.sh
 ```
 
 ## Plan a content-pack installation
@@ -39,3 +40,17 @@ content-packs/content-pack-plan.py content-packs/manifests/starter.json
 ```
 
 A BLOCKED result prevents installation planning from proceeding when required metadata or safety checks are incomplete.
+
+## Stage content safely
+
+The staging command downloads content into a separate staging area and verifies its exact size and SHA-256 checksum before it can be considered for installation.
+
+Dry-run example:
+
+```bash
+content-packs/content-pack-stage.py content-packs/manifests/starter.json --dry-run
+```
+
+Verified content is staged under `/srv/offgridpi/staging/content-packs` and is never written directly into the live content directories.
+
+The command refuses incomplete metadata, non-HTTPS sources, conflicting paths, corrupted staged files, and mismatched checksums.
