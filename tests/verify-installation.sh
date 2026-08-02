@@ -80,6 +80,7 @@ for path in \
   /opt/offgridpi/scripts/launch-dashboard.sh \
   /etc/systemd/system/offgridpi-dashboard.service \
   /opt/offgridpi/scripts/start-kiwix.sh \
+  /opt/offgridpi/scripts/manage-installation.sh \
   /etc/systemd/system/kiwix-serve.service \
   /opt/offgridpi/scripts/index-documents.py \
   /opt/offgridpi/scripts/watch-documents.sh \
@@ -253,6 +254,63 @@ if [[ -n "$AUTOSTART_FILE" ]] \
   pass "Desktop autostart launches the Offgrid Pi dashboard."
 else
   fail "Dashboard desktop autostart is not configured correctly."
+fi
+
+
+echo
+echo "=== Installation management ==="
+
+BACKUP_ROOT="/srv/offgridpi/backups/configuration"
+
+if [[ -x /opt/offgridpi/scripts/manage-installation.sh ]]; then
+  pass "Installation management tool is executable."
+else
+  fail "Installation management tool is unavailable."
+fi
+
+if [[ -d "$BACKUP_ROOT" ]]; then
+  pass "Configuration backup directory exists."
+else
+  fail "Configuration backup directory is missing."
+fi
+
+LATEST_SNAPSHOT="$(
+  find "$BACKUP_ROOT" \
+    -mindepth 1 \
+    -maxdepth 1 \
+    -type d \
+    -name 'snapshot-*' \
+    -printf '%p\n' 2>/dev/null |
+    sort |
+    tail -n 1
+)"
+
+if [[ -n "$LATEST_SNAPSHOT" ]]; then
+  pass "At least one configuration snapshot exists."
+
+  if [[ -f "$LATEST_SNAPSHOT/manifest.txt" ]]; then
+    pass "Latest snapshot contains a manifest."
+  else
+    fail "Latest snapshot manifest is missing."
+  fi
+
+  if [[ -f "$LATEST_SNAPSHOT/service-states.tsv" ]]; then
+    pass "Latest snapshot contains service states."
+  else
+    fail "Latest snapshot service-state record is missing."
+  fi
+
+  if find "$LATEST_SNAPSHOT/rootfs" \
+      -path '*/srv/offgridpi/content*' \
+      -print -quit 2>/dev/null |
+      grep -q .
+  then
+    fail "Configuration snapshot contains user content."
+  else
+    pass "Configuration snapshots exclude user content."
+  fi
+else
+  fail "No configuration snapshot was found."
 fi
 
 echo

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-INSTALLER_VERSION="0.4.1"
+INSTALLER_VERSION="0.5.2"
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOCUMENT_PUBLIC="/srv/offgridpi/content/documents/public"
 DOCUMENT_PERSONAL="/srv/offgridpi/content/documents/personal"
@@ -21,6 +21,9 @@ Offgrid Pi installer checkpoint $INSTALLER_VERSION
 
 Usage:
   sudo ./install.sh check
+  sudo ./install.sh backup-config
+  sudo ./install.sh list-backups
+  sudo ./install.sh rollback-config SNAPSHOT --confirm
   sudo ./install.sh install-all
   sudo ./install.sh install-documents
   sudo ./install.sh install-dashboard
@@ -29,7 +32,10 @@ Usage:
 
 Commands:
   check              Validate the host and required repository payload.
-  install-all        Install all currently supported Offgrid Pi modules.
+  backup-config      Create a content-preserving configuration snapshot.
+  list-backups       List available configuration snapshots.
+  rollback-config    Restore a snapshot; requires --confirm.
+  install-all        Snapshot, then install all supported modules.
   install-documents  Idempotently install the validated document module.
   install-dashboard  Idempotently install the dashboard and desktop autostart.
   install-kiwix      Idempotently install Kiwix and discover approved ZIM files.
@@ -81,6 +87,7 @@ check_payload() {
     "$PROJECT_ROOT/desktop/offgridpi-dashboard.desktop" \
     "$PROJECT_ROOT/scripts/start-kiwix.sh" \
     "$PROJECT_ROOT/systemd/kiwix-serve.service" \
+    "$PROJECT_ROOT/scripts/manage-installation.sh" \
     "$PROJECT_ROOT/tests/verify-installation.sh"
   do
     if [[ -e "$path" ]]; then
@@ -416,11 +423,35 @@ install_kiwix_module() {
 
 
 
+
+install_management_tool() {
+  install -d \
+    -o root \
+    -g root \
+    -m 0755 \
+    /opt/offgridpi/scripts
+
+  install \
+    -o root \
+    -g root \
+    -m 0755 \
+    "$PROJECT_ROOT/scripts/manage-installation.sh" \
+    /opt/offgridpi/scripts/manage-installation.sh
+
+  log "Installation management tool installed."
+}
+
 install_all_modules() {
   require_root
   check_host
 
   log "Starting complete Offgrid Pi installation."
+  log "Creating pre-install configuration snapshot."
+
+  "$PROJECT_ROOT/scripts/manage-installation.sh" backup
+
+  install_management_tool
+
   log "Step 1 of 3: Kiwix module."
   install_kiwix_module
 
@@ -451,6 +482,19 @@ case "${1:-}" in
   check)
     check_host
     ;;
+
+  backup-config)
+    "$PROJECT_ROOT/scripts/manage-installation.sh" backup
+    ;;
+
+  list-backups)
+    "$PROJECT_ROOT/scripts/manage-installation.sh" list
+    ;;
+
+  rollback-config)
+    "$PROJECT_ROOT/scripts/manage-installation.sh"       rollback       "${2:-latest}"       "${3:-}"
+    ;;
+
   install-all)
     install_all_modules
     ;;
