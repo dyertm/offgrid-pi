@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-INSTALLER_VERSION="0.6.1"
+INSTALLER_VERSION="0.7.0"
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOCUMENT_PUBLIC="/srv/offgridpi/content/documents/public"
 DOCUMENT_PERSONAL="/srv/offgridpi/content/documents/personal"
@@ -27,6 +27,7 @@ Usage:
   sudo ./install.sh uninstall --dry-run
   sudo ./install.sh uninstall --confirm
   sudo ./install.sh install-all
+  sudo ./install.sh install-management
   sudo ./install.sh install-documents
   sudo ./install.sh install-dashboard
   sudo ./install.sh install-kiwix
@@ -39,6 +40,7 @@ Commands:
   rollback-config    Restore a snapshot; requires --confirm.
   uninstall          Remove installed components while preserving content.
   install-all        Snapshot, then install all supported modules.
+  install-management Install the status and administration tools.
   install-documents  Idempotently install the validated document module.
   install-dashboard  Idempotently install the dashboard and desktop autostart.
   install-kiwix      Idempotently install Kiwix and discover approved ZIM files.
@@ -90,6 +92,8 @@ check_payload() {
     "$PROJECT_ROOT/desktop/offgridpi-dashboard.desktop" \
     "$PROJECT_ROOT/scripts/start-kiwix.sh" \
     "$PROJECT_ROOT/systemd/kiwix-serve.service" \
+    "$PROJECT_ROOT/scripts/offgridpi-status.py" \
+    "$PROJECT_ROOT/scripts/offgridpi-admin.py" \
     "$PROJECT_ROOT/scripts/manage-installation.sh" \
     "$PROJECT_ROOT/tests/verify-installation.sh"
   do
@@ -441,7 +445,21 @@ install_management_tool() {
     "$PROJECT_ROOT/scripts/manage-installation.sh" \
     /opt/offgridpi/scripts/manage-installation.sh
 
-  log "Installation management tool installed."
+  install \
+    -o root \
+    -g root \
+    -m 0755 \
+    "$PROJECT_ROOT/scripts/offgridpi-status.py" \
+    /opt/offgridpi/scripts/offgridpi-status.py
+
+  install \
+    -o root \
+    -g root \
+    -m 0755 \
+    "$PROJECT_ROOT/scripts/offgridpi-admin.py" \
+    /opt/offgridpi/scripts/offgridpi-admin.py
+
+  log "Installation management and system administration tools installed."
 }
 
 install_all_modules() {
@@ -502,6 +520,10 @@ case "${1:-}" in
     "$PROJECT_ROOT/scripts/manage-installation.sh"       uninstall       "${2:-}"
     ;;
 
+  install-management)
+    require_root
+    install_management_tool
+    ;;
   install-all)
     install_all_modules
     ;;

@@ -1,6 +1,6 @@
 # Offgrid Pi Build Log
 
-**Reconciled:** August 2, 2026
+**Reconciled:** August 3, 2026
 
 ## Build environment
 
@@ -480,3 +480,54 @@ SHA-256: 2bcb45123f661b26ea6f1b1bf9d6b52caef6d2fb777507a0de3072b0c8df30ee
 ### Current Phase 6 state
 
 The core Phase 6 content-pack system is complete and validated with its first production starter pack. Future work will add additional curated manifests using the same verified workflow.
+
+## August 3, 2026 — Phase 7 system status and administration checkpoint
+
+**Status:** In progress — core local tools validated
+
+### Components added
+
+```text
+scripts/offgridpi-status.py
+scripts/offgridpi-admin.py
+tests/test-system-status.sh
+tests/test-system-admin.sh
+tests/test-system-admin-confirm.sh
+tests/test-system-admin-reindex.sh
+tests/test-system-admin-actions.sh
+tests/run-phase7-tests.sh
+```
+
+### Implemented behavior
+
+* Added a read-only human-readable and JSON system-health report.
+* Added service, listener, HTTP, storage, temperature, throttling, content, document-catalog, backup, and failed-unit reporting.
+* Added preview-only administration as the default behavior.
+* Added explicitly confirmed service restarts with readiness validation.
+* Added protected public-document reindexing and catalog validation.
+* Added protected reboot and power-off requests requiring root and the exact `OFFGRIDPI` confirmation phrase.
+* Added injected fake dependencies for testing confirmed actions without restarting, rebooting, or powering off the development system.
+* Added installer `0.7.0` and the independent `install-management` command.
+* Extended the installation verifier to require and test the installed Phase 7 tools.
+
+### Validation results
+
+* Complete Phase 7 automated test suite exit code: `0`
+* Installed system-status command exit code: `0`
+* Complete installed-system verifier exit code: `0`
+* Installed-system overall health: healthy
+* Administration preview safeguards: passed
+* Invalid confirmation handling: passed
+* Simulated accepted and rejected service actions: passed
+* Simulated valid, invalid, and failed document reindexing: passed
+* Simulated reboot and power-off request handling: passed
+
+No automated Phase 7 test issued a live reboot or power-off request.
+
+### Remaining Phase 7 work
+
+* Add dashboard-based status and administration views.
+* Add safe local log viewing.
+* Define authorization for browser-exposed administration.
+* Perform controlled live reboot and power-off acceptance tests later.
+* Validate installation on the separate clean-test microSD card.

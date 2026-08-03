@@ -81,6 +81,8 @@ for path in \
   /etc/systemd/system/offgridpi-dashboard.service \
   /opt/offgridpi/scripts/start-kiwix.sh \
   /opt/offgridpi/scripts/manage-installation.sh \
+  /opt/offgridpi/scripts/offgridpi-status.py \
+  /opt/offgridpi/scripts/offgridpi-admin.py \
   /etc/systemd/system/kiwix-serve.service \
   /opt/offgridpi/scripts/index-documents.py \
   /opt/offgridpi/scripts/watch-documents.sh \
@@ -339,6 +341,72 @@ if [[ -n "$LATEST_SNAPSHOT" ]]; then
   fi
 else
   fail "No configuration snapshot was found."
+fi
+
+echo
+echo "=== System administration ==="
+
+if [[ -x /opt/offgridpi/scripts/offgridpi-status.py ]]; then
+  pass "System-status command is executable."
+else
+  fail "System-status command is unavailable."
+fi
+
+if [[ -x /opt/offgridpi/scripts/offgridpi-admin.py ]]; then
+  pass "Administration command is executable."
+else
+  fail "Administration command is unavailable."
+fi
+
+if /opt/offgridpi/scripts/offgridpi-status.py --json 2>/dev/null |
+    python3 -c '
+import json
+import sys
+
+report = json.load(sys.stdin)
+if report.get("overall") not in {"HEALTHY", "ATTENTION"}:
+    raise SystemExit(1)
+' 2>/dev/null
+then
+  pass "System-status command returned valid JSON."
+else
+  fail "System-status command did not return valid JSON."
+fi
+
+if /opt/offgridpi/scripts/offgridpi-admin.py \
+    restart-service kiwix 2>/dev/null |
+    grep -qF "No changes were made."
+then
+  pass "Administration restart defaults to preview mode."
+else
+  fail "Administration restart preview validation failed."
+fi
+
+if /opt/offgridpi/scripts/offgridpi-admin.py \
+    reindex-documents 2>/dev/null |
+    grep -qF "No changes were made."
+then
+  pass "Document reindexing defaults to preview mode."
+else
+  fail "Document reindex preview validation failed."
+fi
+
+if /opt/offgridpi/scripts/offgridpi-admin.py \
+    system-action reboot 2>/dev/null |
+    grep -qF "No changes were made."
+then
+  pass "System reboot defaults to preview mode."
+else
+  fail "System reboot preview validation failed."
+fi
+
+if /opt/offgridpi/scripts/offgridpi-admin.py \
+    system-action poweroff 2>/dev/null |
+    grep -qF "No changes were made."
+then
+  pass "System power-off defaults to preview mode."
+else
+  fail "System power-off preview validation failed."
 fi
 
 echo

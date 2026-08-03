@@ -13,7 +13,7 @@
 | 4 — Local document library | Completed |
 | 5 — Reproducible installer | In progress — clean-install validation remaining |
 | 6 — Content-pack system | Completed — starter workflow validated |
-| 7 — System status and administration | Not started |
+| 7 — System status and administration | In progress — core local tools validated |
 | 8 — Offline maps | Deferred |
 | 9 — Offline entertainment | Planned |
 | 10 — Local Wi-Fi hotspot | Deferred |
@@ -197,9 +197,40 @@ Completion validation:
 
 ## Phase 7 — System status and administration
 
-**Status:** Not started
+**Status:** In progress — core local tools validated
 
-Add local health information, storage usage, service status, content status, safe shutdown, safe restart, reindexing, and protected administrative actions.
+Completed checkpoint:
+
+* Added a read-only system-status command with human-readable and JSON output
+* Added service state, TCP listener, and local HTTP health reporting
+* Added storage, temperature, throttling, content, catalog, backup, and failed-unit reporting
+* Accepted an inactive Kiwix service as healthy when no approved ZIM files exist
+* Added a protected administration command that defaults to preview-only behavior
+* Added explicitly confirmed service restarts with post-restart validation
+* Added protected public-document reindexing with generated-catalog validation
+* Added protected reboot and power-off requests requiring root and the exact `OFFGRIDPI` confirmation phrase
+* Added fake-systemctl and fake-indexer tests so destructive paths can be tested without live system changes
+* Added a unified Phase 7 automated test runner
+* Added installer `0.7.0` support for installing the management tools independently
+* Added installed-system verification for command availability, JSON status, and preview safeguards
+* Installed the commands on the development Raspberry Pi
+* Confirmed the Phase 7 test suite, installed status command, and installation verifier all returned exit code `0`
+
+Remaining work:
+
+* Add a local system-status and administration page to the dashboard
+* Add safe local log viewing
+* Define authorization for any administrative functions exposed through the browser
+* Perform controlled live reboot and power-off acceptance tests at an appropriate maintenance point
+* Include the Phase 7 tools in the separate-card clean-install validation
+
+Completion criteria:
+
+* Users can identify common service, storage, content, and hardware problems without internet access
+* Administrative actions require appropriate authorization and explicit confirmation
+* Document reindexing validates its generated output
+* Shutdown and restart actions use systemd and do not bypass normal file-system shutdown procedures
+* Status and administration functions are accessible through the intended local interface
 
 ## Phase 8 — Offline maps
 
@@ -257,9 +288,9 @@ Publish a documented, reproducible, sanitized release with contribution and supp
 
 ## Immediate next actions
 
-1. Complete clean-install testing on a separate microSD card when available.
-2. Create the medical and first-aid content-pack manifest.
-3. Create the emergency-preparedness content-pack manifest.
-4. Review additional agriculture, repair, radio, education, faith, and regional resources.
-5. Begin Phase 7 system-status and administration design.
+1. Add the Phase 7 system-status and administration dashboard page.
+2. Add safe local log viewing and define browser authorization.
+3. Complete clean-install testing on a separate microSD card when available.
+4. Create the medical and first-aid content-pack manifest.
+5. Create the emergency-preparedness content-pack manifest.
 6. Select and add the project license.
