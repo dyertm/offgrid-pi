@@ -421,3 +421,62 @@ Repository milestones:
 * `b3a9f9d` — Add read-only content pack planner
 
 The Alpine Linux ZIM remains temporary Kiwix validation content and is not part of the starter pack.
+
+## Phase 6 — First production content pack completed
+
+**Date:** August 3, 2026
+**Status:** Completed
+
+### Work performed
+
+* Completed the end-to-end content-pack workflow:
+  * Manifest validation
+  * Installed-content status
+  * Read-only installation planning
+  * Verified download staging
+  * Protected no-overwrite installation
+  * Installed-content verification
+  * Affected-service refresh
+* Added dedicated incomplete test fixtures so production manifests can contain complete metadata.
+* Recorded authoritative metadata for the first starter-pack resource.
+* Downloaded and staged the Wikipedia English Top Articles Mini ZIM.
+* Verified the exact archive size and official SHA-256 checksum before installation.
+* Installed the verified archive into the approved Kiwix content directory.
+* Refreshed Kiwix only after installed-content verification passed.
+* Confirmed Wikipedia loaded successfully through the local Kiwix interface.
+* Quarantined the temporary Alpine Linux validation archive.
+* Confirmed Kiwix worked with Wikipedia as the only approved archive.
+* Permanently removed the retired Alpine validation archive.
+
+### Starter content installed
+
+```text
+Title: Wikipedia English Top Articles — Mini
+Version: 2026-06
+File: wikipedia_en_top_mini_2026-06.zim
+Destination: /srv/offgridpi/content/kiwix/wikipedia_en_top_mini_2026-06.zim
+Exact size: 331421691 bytes
+SHA-256: 2bcb45123f661b26ea6f1b1bf9d6b52caef6d2fb777507a0de3072b0c8df30ee
+```
+
+### Validation results
+
+* Manifest validation passed.
+* Planner reported complete metadata and ready status.
+* Staging preview made no filesystem changes.
+* Downloaded content passed exact-size and SHA-256 verification.
+* Repeated staging reused the verified archive without redownloading.
+* Installation preview made no live-content changes.
+* Confirmed installation copied the archive atomically with mode `0640`.
+* Repeated installation was idempotent.
+* Existing conflicting files were not overwritten.
+* Service refresh was blocked whenever installed-content verification failed.
+* Kiwix restarted successfully after verified installation.
+* Kiwix remained enabled and active on TCP port `8080`.
+* Wikipedia opened successfully through the local browser.
+* Rejected and retired archives were excluded from the running Kiwix command.
+* The temporary Alpine validation archive was permanently removed.
+
+### Current Phase 6 state
+
+The core Phase 6 content-pack system is complete and validated with its first production starter pack. Future work will add additional curated manifests using the same verified workflow.

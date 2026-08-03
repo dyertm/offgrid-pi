@@ -1,6 +1,6 @@
 # Offgrid Pi Roadmap
 
-**Reconciled:** August 2, 2026
+**Reconciled:** August 3, 2026
 
 ## Phase status summary
 
@@ -12,7 +12,7 @@
 | 3 — Dashboard prototype | Completed |
 | 4 — Local document library | Completed |
 | 5 — Reproducible installer | In progress — clean-install validation remaining |
-| 6 — Content-pack system | In progress — foundation and read-only planning complete |
+| 6 — Content-pack system | Completed — starter workflow validated |
 | 7 — System status and administration | Not started |
 | 8 — Offline maps | Deferred |
 | 9 — Offline entertainment | Planned |
@@ -158,7 +158,7 @@ Completion criteria:
 
 ## Phase 6 — Content-pack system
 
-**Status:** In progress — foundation and read-only planning complete
+**Status:** Completed — starter workflow validated
 
 Completed outcomes:
 
@@ -171,21 +171,29 @@ Completed outcomes:
 * Added checks for metadata completeness, HTTPS sources, destination conflicts, available storage, and required missing content
 * Confirmed unrelated temporary Kiwix test content is ignored by pack status and planning
 * Added automated status and planner tests
+* Added verified download staging with exact size and SHA-256 enforcement
+* Added protected installation with atomic copying and no silent overwrites
+* Added installed-content verification and service refresh handling
+* Added automated staging, installation, and refresh safety tests
+* Separated deliberately incomplete test fixtures from production manifests
+* Recorded authoritative metadata for the first starter-pack archive
+* Downloaded, verified, installed, and served the Wikipedia English Top Articles Mini archive
+* Confirmed the complete manifest-to-service workflow is safe and repeatable
+* Retired and permanently removed the temporary Alpine Linux validation archive
 
-Current limitations:
+Remaining content expansion:
 
-* The starter manifest still requires authoritative size and SHA-256 metadata
-* No content-pack downloader or installer has been implemented
-* The temporary Alpine Linux ZIM remains installed only for Kiwix validation
 * Medical, preparedness, agriculture, repair, radio, education, Pacific Northwest, maps, and faith manifests remain to be created
+* Additional content sources require individual licensing and checksum review
 
-Completion criteria:
+Completion validation:
 
 * Every published item records its source, size, version, license, destination, and checksum
 * Downloads are staged and verified before installation
 * Existing files are never silently overwritten
 * Content installation can be rerun safely
-* Kiwix and document indexes are refreshed after successful installation
+* Kiwix and document indexes refresh only after successful verification
+* The first production starter pack passed the complete workflow
 
 ## Phase 7 — System status and administration
 
@@ -249,12 +257,9 @@ Publish a documented, reproducible, sanitized release with contribution and supp
 
 ## Immediate next actions
 
-1. Add a safe content-pack download and staging workflow.
-2. Require exact size and SHA-256 metadata before installation.
-3. Verify downloads before moving them into approved content directories.
-4. Prevent silent replacement of existing content.
-5. Refresh Kiwix or document indexes after successful installation.
-6. Add automated installer tests using temporary directories.
-7. Select and document the first useful starter-pack resource.
-8. Remove the temporary Alpine Linux ZIM after useful replacement content is validated.
-9. Complete clean-install testing on a separate microSD card when available.
+1. Complete clean-install testing on a separate microSD card when available.
+2. Create the medical and first-aid content-pack manifest.
+3. Create the emergency-preparedness content-pack manifest.
+4. Review additional agriculture, repair, radio, education, faith, and regional resources.
+5. Begin Phase 7 system-status and administration design.
+6. Select and add the project license.
