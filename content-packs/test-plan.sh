@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PLANNER="$ROOT/content-pack-plan.py"
-MANIFEST="$ROOT/manifests/starter.json"
+MANIFEST="$ROOT/fixtures/incomplete-pack.json"
 OUTPUT="$(mktemp)"
 
 trap 'rm -f "$OUTPUT"' EXIT
@@ -14,12 +14,12 @@ RESULT=$?
 set -e
 
 if [[ "$RESULT" -ne 1 ]]; then
-  echo "FAIL: Incomplete starter plan returned exit code $RESULT."
+  echo "FAIL: Incomplete fixture plan returned exit code $RESULT."
   cat "$OUTPUT"
   exit 1
 fi
 
-echo "PASS: Incomplete starter plan returned exit code 1."
+echo "PASS: Incomplete fixture plan returned exit code 1."
 
 check_line() {
   local expected="$1"
@@ -47,7 +47,7 @@ check_line "Required items missing: 1"
 check_line "Plan readiness: BLOCKED"
 
 if grep -Fq "alpinelinux_en_all_maxi" "$OUTPUT"; then
-  echo "FAIL: Unrelated Alpine test content appeared in starter plan."
+  echo "FAIL: Unrelated Alpine test content appeared in fixture plan."
   exit 1
 fi
 

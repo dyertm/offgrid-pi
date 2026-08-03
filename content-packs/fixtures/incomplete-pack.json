@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "pack_id": "incomplete-test",
+  "name": "Incomplete Content-Pack Test Fixture",
+  "version": "1.0.0",
+  "description": "Deliberately incomplete manifest used to test blocked safety states.",
+  "category": "testing",
+  "status": "draft",
+  "language": "en",
+  "region": "global",
+  "estimated_download_bytes": 0,
+  "estimated_installed_bytes": 0,
+  "items": [
+    {
+      "item_id": "incomplete-resource",
+      "title": "Incomplete Test Resource",
+      "content_type": "document",
+      "source_url": "https://example.invalid/incomplete.bin",
+      "source_page": "https://example.invalid/",
+      "source_version": "test",
+      "license": "Test fixture; not for redistribution",
+      "redistribution": "prohibited",
+      "size_bytes": 0,
+      "sha256": "",
+      "destination": "/srv/offgridpi/content/documents/public/test/incomplete.bin",
+      "required": true,
+      "notes": "Size and checksum are intentionally absent."
+    }
+  ]
+}

@@ -8,8 +8,8 @@
   "status": "draft",
   "language": "en",
   "region": "global",
-  "estimated_download_bytes": 331350016,
-  "estimated_installed_bytes": 331350016,
+  "estimated_download_bytes": 331421691,
+  "estimated_installed_bytes": 331421691,
   "items": [
     {
       "item_id": "wikipedia-en-top-mini",
@@ -20,11 +20,11 @@
       "source_version": "2026-06",
       "license": "Wikipedia text: CC BY-SA 4.0 and GFDL; non-text media may use separate licenses.",
       "redistribution": "permitted",
-      "size_bytes": 0,
-      "sha256": "",
+      "size_bytes": 331421691,
+      "sha256": "2bcb45123f661b26ea6f1b1bf9d6b52caef6d2fb777507a0de3072b0c8df30ee",
       "destination": "/srv/offgridpi/content/kiwix/wikipedia_en_top_mini_2026-06.zim",
       "required": true,
-      "notes": "Exact size and SHA-256 will be recorded after the archive is downloaded and verified."
+      "notes": "Exact size obtained from the archive Content-Range header and SHA-256 obtained from the official Kiwix checksum file on August 2, 2026."
     }
   ]
 }

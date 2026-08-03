@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 STAGER="$ROOT/content-pack-stage.py"
-STARTER="$ROOT/manifests/starter.json"
+FIXTURE="$ROOT/fixtures/incomplete-pack.json"
 TEMP_DIR="$(mktemp -d)"
 
 trap 'rm -rf "$TEMP_DIR"' EXIT
@@ -25,7 +25,7 @@ BLOCK_OUTPUT="$TEMP_DIR/blocked.out"
 
 set +e
 "$STAGER" \
-  "$STARTER" \
+  "$FIXTURE" \
   --staging-root "$TEMP_DIR/blocked-stage" \
   --dry-run \
   >"$BLOCK_OUTPUT" 2>&1
@@ -58,7 +58,7 @@ SIZE="$(stat -c '%s' "$PAYLOAD")"
 HASH="$(sha256sum "$PAYLOAD" | awk '{print $1}')"
 
 python3 - \
-  "$STARTER" \
+  "$FIXTURE" \
   "$MANIFEST" \
   "$SIZE" \
   "$HASH" <<'PY'

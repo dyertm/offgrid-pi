@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REFRESHER="$ROOT/content-pack-refresh.py"
-STARTER="$ROOT/manifests/starter.json"
+FIXTURE="$ROOT/fixtures/incomplete-pack.json"
 TEMP_DIR="$(mktemp -d)"
 
 trap 'rm -rf "$TEMP_DIR"' EXIT
@@ -25,7 +25,7 @@ BLOCK_OUTPUT="$TEMP_DIR/blocked.out"
 
 set +e
 "$REFRESHER" \
-  "$STARTER" \
+  "$FIXTURE" \
   --destination-root "$TEMP_DIR/empty-content" \
   >"$BLOCK_OUTPUT" 2>&1
 BLOCK_RESULT=$?
@@ -61,7 +61,7 @@ DOC_SIZE="$(stat -c '%s' "$DOC_PAYLOAD")"
 DOC_HASH="$(sha256sum "$DOC_PAYLOAD" | awk '{print $1}')"
 
 python3 - \
-  "$STARTER" \
+  "$FIXTURE" \
   "$MANIFEST" \
   "$ZIM_SIZE" \
   "$ZIM_HASH" \
@@ -86,6 +86,7 @@ manifest["estimated_download_bytes"] = zim_size + doc_size
 manifest["estimated_installed_bytes"] = zim_size + doc_size
 
 zim = manifest["items"][0]
+zim["content_type"] = "zim"
 zim["item_id"] = "verified-zim"
 zim["title"] = "Verified Test ZIM"
 zim["source_url"] = "https://example.invalid/test.zim"
