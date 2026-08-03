@@ -30,6 +30,7 @@ content-packs/test-status.sh
 content-packs/test-plan.sh
 content-packs/test-stage.sh
 content-packs/test-install.sh
+content-packs/test-refresh.sh
 ```
 
 ## Plan a content-pack installation
@@ -73,3 +74,23 @@ sudo content-packs/content-pack-install.py content-packs/manifests/starter.json 
 ```
 
 Live installation requires root privileges. Files are copied atomically, verified after installation, and assigned mode `0640`.
+
+## Refresh services after installation
+
+The refresh command verifies every installed pack item before restarting any affected service.
+
+Preview the required refresh actions:
+
+```bash
+content-packs/content-pack-refresh.py content-packs/manifests/starter.json
+```
+
+Perform the refresh after reviewing the preview:
+
+```bash
+sudo content-packs/content-pack-refresh.py content-packs/manifests/starter.json --confirm
+```
+
+Verified ZIM content causes Kiwix to restart and rediscover approved archives. Verified document content causes the document indexer to restart and rebuild the public catalog.
+
+No refresh action is performed if required content is missing, metadata is incomplete, or any installed file fails size or checksum verification.
