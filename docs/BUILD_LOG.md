@@ -662,3 +662,56 @@ Standardized secondary-page navigation and improved the System Status header.
 The updated pages were deployed and visually validated. The health badge is
 visible immediately when the System Status page loads, while the Dashboard
 navigation remains clear and unobstructed.
+
+## Phase 7 — Localhost Management Viewer
+
+**Date:** August 4, 2026
+**Status:** Completed and validated
+
+Implemented a separate read-only management viewer for protected Offgrid Pi
+service logs.
+
+### Architecture
+
+- Service: `offgridpi-management.service`
+- Address: `127.0.0.1`
+- Port: `8083`
+- Account: `offgridpi`
+- Protected data:
+  `/var/lib/offgridpi/management/system-logs.json`
+- Public dashboard, Kiwix, and document services remain unchanged.
+- Remote access requires SSH port forwarding.
+
+### Security controls
+
+- The service cannot bind to a public address.
+- Protected logs remain outside all public web roots.
+- Raw log JSON is not exposed through the viewer.
+- Only `GET` and `HEAD` requests are accepted.
+- Write methods return HTTP 405.
+- Unknown routes return HTTP 404.
+- Browser caching is disabled.
+- Content Security Policy and frame protections are enabled.
+- The service provides no privileged system actions.
+- Application and management-data paths are mounted read-only by systemd.
+
+### Deployment validation
+
+A configuration snapshot was created before deployment:
+
+`/srv/offgridpi/backups/configuration/snapshot-20260804-003133-344207294`
+
+The management service was installed, enabled, and started successfully.
+
+Validation confirmed:
+
+- Service is enabled and active.
+- Listener is restricted to `127.0.0.1:8083`.
+- Management page returns HTTP 200.
+- All required security headers are present.
+- Protected logs are rendered server-side.
+- Raw protected-log JSON returns HTTP 404.
+- Write methods return HTTP 405.
+- No failed systemd units were detected.
+- Installed-system verification completed with zero failures and zero review
+  items.

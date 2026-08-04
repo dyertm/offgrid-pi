@@ -641,6 +641,196 @@ else
   fail "Unexpected public log endpoint response: HTTP $public_code"
 fi
 
+printf '\n=== Local management viewer ===\n'
+
+for path in \
+  /opt/offgridpi/scripts/offgridpi-management-server.py \
+  /etc/systemd/system/offgridpi-management.service
+do
+  if [[ -s "$path" ]]; then
+    pass "Local management component exists: $path"
+  else
+    fail "Local management component is missing: $path"
+  fi
+done
+
+if systemctl is-enabled --quiet \
+  offgridpi-management.service
+then
+  pass "Local management service is enabled."
+else
+  fail "Local management service is not enabled."
+fi
+
+if systemctl is-active --quiet \
+  offgridpi-management.service
+then
+  pass "Local management service is active."
+else
+  fail "Local management service is not active."
+fi
+
+management_user="$(
+  systemctl show \
+    offgridpi-management.service \
+    --property=User \
+    --value \
+    2>/dev/null || true
+)"
+
+management_group="$(
+  systemctl show \
+    offgridpi-management.service \
+    --property=Group \
+    --value \
+    2>/dev/null || true
+)"
+
+if [[ "$management_user" == "offgridpi" ]]; then
+  pass "Local management service uses the restricted account."
+else
+  fail "Unexpected management service user: ${management_user:-unknown}"
+fi
+
+if [[ "$management_group" == "offgridpi" ]]; then
+  pass "Local management service uses the restricted group."
+else
+  fail "Unexpected management service group: ${management_group:-unknown}"
+fi
+
+management_listener="$(
+  ss -ltnH 'sport = :8083' \
+    2>/dev/null || true
+)"
+
+if grep -qE \
+  '(^|[[:space:]])127\.0\.0\.1:8083([[:space:]]|$)' \
+  <<< "$management_listener"
+then
+  pass "Local management viewer listens on 127.0.0.1:8083."
+else
+  fail "Local management viewer is not listening on localhost."
+fi
+
+if grep -Eq \
+  '(^|[[:space:]])(0\.0\.0\.0|\*|\[::\]):8083([[:space:]]|$)' \
+  <<< "$management_listener"
+then
+  fail "Local management viewer is exposed beyond localhost."
+else
+  pass "Local management viewer has no public listener."
+fi
+
+management_temp="$(
+  mktemp -d
+)"
+
+management_headers="$management_temp/headers.txt"
+management_body="$management_temp/body.html"
+
+if curl \
+  --silent \
+  --show-error \
+  --dump-header "$management_headers" \
+  --output "$management_body" \
+  http://127.0.0.1:8083/
+then
+  if grep -qE \
+    '^HTTP/[^ ]+ 200([[:space:]]|$)' \
+    "$management_headers"
+  then
+    pass "Local management page returns HTTP 200."
+  else
+    fail "Local management page did not return HTTP 200."
+  fi
+
+  if grep -qF \
+    'Protected System Logs' \
+    "$management_body"
+  then
+    pass "Local management page content is valid."
+  else
+    fail "Local management page returned unexpected content."
+  fi
+
+  if grep -qi \
+    '^Cache-Control: no-store' \
+    "$management_headers"
+  then
+    pass "Local management responses disable browser caching."
+  else
+    fail "Local management no-store protection is missing."
+  fi
+
+  if grep -qi \
+    '^X-Frame-Options: DENY' \
+    "$management_headers"
+  then
+    pass "Local management frame protection is enabled."
+  else
+    fail "Local management frame protection is missing."
+  fi
+
+  if grep -qi \
+    '^Content-Security-Policy:' \
+    "$management_headers"
+  then
+    pass "Local management Content Security Policy is present."
+  else
+    fail "Local management Content Security Policy is missing."
+  fi
+else
+  fail "Unable to retrieve the local management page."
+fi
+
+management_unknown_code="$(
+  curl \
+    --silent \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    http://127.0.0.1:8083/unknown \
+    2>/dev/null || true
+)"
+
+if [[ "$management_unknown_code" == "404" ]]; then
+  pass "Unknown management routes return HTTP 404."
+else
+  fail "Unexpected unknown-route response: HTTP ${management_unknown_code:-000}"
+fi
+
+management_raw_code="$(
+  curl \
+    --silent \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    http://127.0.0.1:8083/system-logs.json \
+    2>/dev/null || true
+)"
+
+if [[ "$management_raw_code" == "404" ]]; then
+  pass "Raw protected-log JSON is not exposed."
+else
+  fail "Unexpected raw-log response: HTTP ${management_raw_code:-000}"
+fi
+
+management_post_code="$(
+  curl \
+    --silent \
+    --request POST \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    http://127.0.0.1:8083/ \
+    2>/dev/null || true
+)"
+
+if [[ "$management_post_code" == "405" ]]; then
+  pass "Local management viewer rejects write methods."
+else
+  fail "Unexpected POST response: HTTP ${management_post_code:-000}"
+fi
+
+rm -rf "$management_temp"
+
 echo "=== System health ==="
 FAILED_UNITS="$(systemctl --failed --no-legend 2>/dev/null || true)"
 if [[ -z "$FAILED_UNITS" ]]; then

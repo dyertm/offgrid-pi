@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-INSTALLER_VERSION="0.7.2"
+INSTALLER_VERSION="0.7.3"
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOCUMENT_PUBLIC="/srv/offgridpi/content/documents/public"
 DOCUMENT_PERSONAL="/srv/offgridpi/content/documents/personal"
@@ -40,7 +40,8 @@ Commands:
   rollback-config    Restore a snapshot; requires --confirm.
   uninstall          Remove installed components while preserving content.
   install-all        Snapshot, then install all supported modules.
-  install-management Install the status and administration tools.
+  install-management Install status, administration, protected logs,
+                     and the localhost management viewer.
   install-documents  Idempotently install the validated document module.
   install-dashboard  Idempotently install the dashboard and desktop autostart.
   install-kiwix      Idempotently install Kiwix and discover approved ZIM files.
@@ -104,6 +105,8 @@ check_payload() {
     "$PROJECT_ROOT/scripts/publish-system-logs.py" \
     "$PROJECT_ROOT/systemd/offgridpi-log-publisher.service" \
     "$PROJECT_ROOT/systemd/offgridpi-log-publisher.timer" \
+    "$PROJECT_ROOT/scripts/offgridpi-management-server.py" \
+    "$PROJECT_ROOT/systemd/offgridpi-management.service" \
     "$PROJECT_ROOT/scripts/manage-installation.sh" \
     "$PROJECT_ROOT/tests/verify-installation.sh"
   do
@@ -533,6 +536,13 @@ install_management_tool() {
     "$PROJECT_ROOT/scripts/publish-system-logs.py" \
     /opt/offgridpi/scripts/publish-system-logs.py
 
+  install \
+    -o root \
+    -g root \
+    -m 0755 \
+    "$PROJECT_ROOT/scripts/offgridpi-management-server.py" \
+    /opt/offgridpi/scripts/offgridpi-management-server.py
+
   install -d \
     -o root \
     -g offgridpi \
@@ -553,9 +563,17 @@ install_management_tool() {
     "$PROJECT_ROOT/systemd/offgridpi-log-publisher.timer" \
     /etc/systemd/system/offgridpi-log-publisher.timer
 
+  install \
+    -o root \
+    -g root \
+    -m 0644 \
+    "$PROJECT_ROOT/systemd/offgridpi-management.service" \
+    /etc/systemd/system/offgridpi-management.service
+
   systemd-analyze verify \
     /etc/systemd/system/offgridpi-log-publisher.service \
-    /etc/systemd/system/offgridpi-log-publisher.timer
+    /etc/systemd/system/offgridpi-log-publisher.timer \
+    /etc/systemd/system/offgridpi-management.service
 
   systemctl daemon-reload
   systemctl enable --now offgridpi-log-publisher.timer
@@ -582,7 +600,55 @@ if not isinstance(report.get("sources"), list):
 
   log "Protected system-log publishing enabled."
 
-  log "Management, administration, status, and protected log-publishing tools installed."
+  systemctl enable --now offgridpi-management.service
+  systemctl restart offgridpi-management.service
+
+  management_ready=0
+
+  for attempt in $(seq 1 30); do
+    if curl \
+      --silent \
+      --fail \
+      --output /dev/null \
+      http://127.0.0.1:8083/
+    then
+      management_ready=1
+      break
+    fi
+
+    sleep 1
+  done
+
+  [[ "$management_ready" -eq 1 ]] ||
+    die "Local management viewer did not become available."
+
+  management_page="$(
+    curl \
+      --silent \
+      --fail \
+      http://127.0.0.1:8083/
+  )" ||
+    die "Unable to retrieve the local management page."
+
+  grep -q 'Protected System Logs' <<< "$management_page" ||
+    die "Local management page returned unexpected content."
+
+  management_listener="$(
+    ss -ltnH 'sport = :8083'
+  )"
+
+  grep -q '127.0.0.1:8083' <<< "$management_listener" ||
+    die "Management viewer is not listening on localhost."
+
+  if grep -Eq \
+    '0\.0\.0\.0:8083|\*:8083|\[::\]:8083' \
+    <<< "$management_listener"
+  then
+    die "Management viewer is exposed beyond localhost."
+  fi
+
+  log "Localhost-only management viewer enabled: http://127.0.0.1:8083/"
+  log "Management, administration, status, protected log-publishing, and local viewer tools installed."
 }
 
 install_all_modules() {

@@ -218,3 +218,62 @@ If a client temporarily cannot resolve `offgridpi.local`, the documented fallbac
 The reproducible installer will first package and verify individual validated modules before combining the complete build. The document module is the first installer checkpoint.
 
 **Reason:** Small idempotent modules are easier to test, rerun, diagnose, and validate on the active prototype without risking unrelated working services.
+
+## Local Management Authorization Boundary
+
+**Date:** August 3, 2026
+**Status:** Approved for implementation
+
+### Decision
+
+Offgrid Pi management features will use a separate localhost-only web service.
+
+The management service will:
+
+- Bind only to `127.0.0.1`.
+- Use TCP port `8083`.
+- Run as the restricted `offgridpi` service account and group.
+- Read protected management data from `/var/lib/offgridpi/management`.
+- Provide read-only functionality during the initial implementation.
+- Reject unsupported HTTP methods and unknown routes.
+- Include restrictive browser security headers.
+- Perform no privileged system actions.
+- Remain separate from the public dashboard, Kiwix, and document services.
+
+### Local access
+
+The browser running directly on the Offgrid Pi may access:
+
+`http://127.0.0.1:8083/`
+
+Physical access to the device is treated as the authorization boundary for this
+local management view.
+
+### Development-computer access
+
+Remote access will use SSH port forwarding:
+
+    ssh -L 8083:127.0.0.1:8083 piadmin@offgridpi.local
+
+The development computer may then open:
+
+`http://127.0.0.1:8083/`
+
+SSH authentication provides the remote authorization boundary.
+
+### Rejected alternatives
+
+The following approaches are not approved:
+
+- Publishing protected logs through the public dashboard on port 8081.
+- Publishing protected logs through the document service on port 8082.
+- Binding the management service to `0.0.0.0`.
+- Sending management passwords over unencrypted LAN HTTP.
+- Adding privileged browser actions before a separate authorization and
+  request-validation design is completed.
+
+### Future privileged actions
+
+Any future restart, reboot, power-off, reindex, or configuration action must use
+a separate privileged execution boundary. Read access to the management viewer
+must not automatically grant permission to perform system changes.

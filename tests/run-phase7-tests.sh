@@ -19,6 +19,8 @@ TESTS=(
   "tests/test-secondary-navigation.sh"
   "tests/test-system-log-publisher.sh"
   "tests/test-system-log-service.sh"
+  "tests/test-management-server.sh"
+  "tests/test-management-service.sh"
 )
 
 echo "=== Offgrid Pi Phase 7 tests ==="
