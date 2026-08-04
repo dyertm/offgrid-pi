@@ -1,6 +1,6 @@
 # Offgrid Pi Roadmap
 
-**Reconciled:** August 3, 2026
+**Reconciled:** August 4, 2026
 
 ## Phase status summary
 
@@ -13,7 +13,7 @@
 | 4 — Local document library | Completed |
 | 5 — Reproducible installer | In progress — clean-install validation remaining |
 | 6 — Content-pack system | Completed — starter workflow validated |
-| 7 — System status and administration | In progress — read-only status dashboard validated |
+| 7 — System status and administration | In progress — local interface validated; live action and clean-install testing remaining |
 | 8 — Offline maps | Deferred |
 | 9 — Offline entertainment | Planned |
 | 10 — Local Wi-Fi hotspot | Deferred |
@@ -197,40 +197,55 @@ Completion validation:
 
 ## Phase 7 — System status and administration
 
-**Status:** In progress — core local tools validated
+**Status:** In progress — local interface validated; live action and clean-install testing remaining
 
-Completed checkpoint:
+Completed outcomes:
 
 * Added a read-only system-status command with human-readable and JSON output
-* Added service state, TCP listener, and local HTTP health reporting
-* Added storage, temperature, throttling, content, catalog, backup, and failed-unit reporting
-* Accepted an inactive Kiwix service as healthy when no approved ZIM files exist
+* Added service, TCP listener, HTTP, storage, temperature, throttling, content, catalog, backup, and failed-unit reporting
 * Added a protected administration command that defaults to preview-only behavior
 * Added explicitly confirmed service restarts with post-restart validation
 * Added protected public-document reindexing with generated-catalog validation
 * Added protected reboot and power-off requests requiring root and the exact `OFFGRIDPI` confirmation phrase
-* Added fake-systemctl and fake-indexer tests so destructive paths can be tested without live system changes
-* Added a unified Phase 7 automated test runner
-* Added installer `0.7.0` support for installing the management tools independently
-* Added installed-system verification for command availability, JSON status, and preview safeguards
-* Installed the commands on the development Raspberry Pi
-* Confirmed the Phase 7 test suite, installed status command, and installation verifier all returned exit code `0`
+* Added fake service-manager and indexer tests so destructive paths can be exercised without live system changes
+* Added a read-only System Status dashboard page and automatic status publishing
+* Visually validated the System Status page at 1024 × 600 and from the development computer
+* Added protected publication of sanitized logs from five approved services
+* Kept protected log data outside the public dashboard and document web roots
+* Defined the management authorization boundary around physical access or authenticated SSH forwarding
+* Added a separate read-only management viewer bound only to `127.0.0.1:8083`
+* Added restrictive browser security headers, disabled caching, rejected write methods, and withheld raw JSON access
+* Kept browser-based privileged administration disabled
+* Added installer `0.7.3` support for the status tools, protected log publisher, and localhost management viewer
+* Added automated server, service, installer, listener, route, permissions, and installed-system verification
+* Deployed the management viewer successfully on the development Raspberry Pi
+* Confirmed the complete Phase 7 suite and installed-system verifier passed with zero failures and zero review items
+
+Current access model:
+
+* Public dashboard: TCP port `8081`
+* Public document library: TCP port `8082`
+* Protected read-only log viewer: `127.0.0.1:8083`
+* Administrative actions: protected command line only
+* Remote protected-log access: authenticated SSH port forwarding
 
 Remaining work:
 
-* Add a local system-status and administration page to the dashboard
-* Add safe local log viewing
-* Define authorization for any administrative functions exposed through the browser
-* Perform controlled live reboot and power-off acceptance tests at an appropriate maintenance point
-* Include the Phase 7 tools in the separate-card clean-install validation
+* Perform controlled live reboot acceptance testing at an appropriate maintenance point
+* Perform controlled live power-off acceptance testing at an appropriate maintenance point
+* Include all Phase 7 components in the separate-card clean-install validation
+* Decide whether privileged browser administration belongs in a future phase; the currently approved browser interface remains read-only
 
 Completion criteria:
 
-* Users can identify common service, storage, content, and hardware problems without internet access
-* Administrative actions require appropriate authorization and explicit confirmation
+* Common service, storage, content, and hardware problems can be identified without internet access
+* System status is available through the local dashboard
+* Protected logs are available only through the localhost authorization boundary
+* Administrative actions require root access and explicit confirmation
 * Document reindexing validates its generated output
-* Shutdown and restart actions use systemd and do not bypass normal file-system shutdown procedures
-* Status and administration functions are accessible through the intended local interface
+* Shutdown and restart actions use systemd and preserve normal file-system shutdown procedures
+* Destructive actions pass controlled live acceptance testing
+* Phase 7 components pass clean-install validation on separate boot media
 
 ## Phase 8 — Offline maps
 
@@ -288,9 +303,8 @@ Publish a documented, reproducible, sanitized release with contribution and supp
 
 ## Immediate next actions
 
-1. Add the Phase 7 system-status and administration dashboard page.
-2. Add safe local log viewing and define browser authorization.
-3. Complete clean-install testing on a separate microSD card when available.
-4. Create the medical and first-aid content-pack manifest.
-5. Create the emergency-preparedness content-pack manifest.
-6. Select and add the project license.
+1. Perform controlled live reboot and power-off acceptance testing during an appropriate maintenance window.
+2. Complete clean-install testing on a separate microSD card.
+3. Create the medical and first-aid content-pack manifest.
+4. Create the emergency-preparedness content-pack manifest.
+5. Select and add the project license.
