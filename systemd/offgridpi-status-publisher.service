@@ -1,0 +1,27 @@
+[Unit]
+Description=Publish Offgrid Pi dashboard system status
+After=local-fs.target
+ConditionFileIsExecutable=/opt/offgridpi/scripts/publish-system-status.sh
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/opt/offgridpi/scripts/publish-system-status.sh
+SuccessExitStatus=1
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/opt/offgridpi/dashboard/data
+
+UMask=0022
+TimeoutStartSec=30

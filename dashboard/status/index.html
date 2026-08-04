@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+  <meta
+    name="description"
+    content="Read-only Offgrid Pi system status"
+  >
+
+  <title>System Status | Offgrid Pi</title>
+
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="status.css">
+</head>
+
+<body>
+  <div class="page status-page">
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">Read-only system information</p>
+        <h1>System Status</h1>
+        <p class="subtitle">
+          Hardware, storage, content, and service health
+        </p>
+      </div>
+
+      <div
+        class="status-badge"
+        id="overall-status"
+      >
+        Loading
+      </div>
+    </header>
+
+    <main>
+      <p
+        class="status-message"
+        id="status-message"
+        role="status"
+      >
+        Loading the latest local status report…
+      </p>
+
+      <section
+        class="status-grid"
+        id="status-summary"
+        aria-label="System summary"
+        hidden
+      >
+      </section>
+
+      <section
+        class="service-panel"
+        id="service-panel"
+        hidden
+      >
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Local services</p>
+            <h2>Service Health</h2>
+          </div>
+        </div>
+
+        <div id="service-list"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a href="../">← Return to dashboard</a>
+      <span>
+        Read-only view • Refreshes automatically
+      </span>
+    </footer>
+  </div>
+
+  <script src="status.js"></script>
+</body>
+</html>

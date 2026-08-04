@@ -13,7 +13,7 @@
 | 4 — Local document library | Completed |
 | 5 — Reproducible installer | In progress — clean-install validation remaining |
 | 6 — Content-pack system | Completed — starter workflow validated |
-| 7 — System status and administration | In progress — core local tools validated |
+| 7 — System status and administration | In progress — read-only status dashboard validated |
 | 8 — Offline maps | Deferred |
 | 9 — Offline entertainment | Planned |
 | 10 — Local Wi-Fi hotspot | Deferred |

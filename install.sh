@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-INSTALLER_VERSION="0.7.0"
+INSTALLER_VERSION="0.7.1"
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOCUMENT_PUBLIC="/srv/offgridpi/content/documents/public"
 DOCUMENT_PERSONAL="/srv/offgridpi/content/documents/personal"
@@ -87,6 +87,10 @@ check_payload() {
     "$PROJECT_ROOT/dashboard/css/styles.css" \
     "$PROJECT_ROOT/dashboard/js/app.js" \
     "$PROJECT_ROOT/dashboard/documents/index.html" \
+    "$PROJECT_ROOT/dashboard/status/index.html" \
+    "$PROJECT_ROOT/dashboard/status/status.css" \
+    "$PROJECT_ROOT/dashboard/status/status.js" \
+    "$PROJECT_ROOT/dashboard/data/.gitkeep" \
     "$PROJECT_ROOT/scripts/launch-dashboard.sh" \
     "$PROJECT_ROOT/systemd/offgridpi-dashboard.service" \
     "$PROJECT_ROOT/desktop/offgridpi-dashboard.desktop" \
@@ -94,6 +98,9 @@ check_payload() {
     "$PROJECT_ROOT/systemd/kiwix-serve.service" \
     "$PROJECT_ROOT/scripts/offgridpi-status.py" \
     "$PROJECT_ROOT/scripts/offgridpi-admin.py" \
+    "$PROJECT_ROOT/scripts/publish-system-status.sh" \
+    "$PROJECT_ROOT/systemd/offgridpi-status-publisher.service" \
+    "$PROJECT_ROOT/systemd/offgridpi-status-publisher.timer" \
     "$PROJECT_ROOT/scripts/manage-installation.sh" \
     "$PROJECT_ROOT/tests/verify-installation.sh"
   do
@@ -244,6 +251,20 @@ install_dashboard_module() {
   chown -R root:root "$DASHBOARD_ROOT"
   find "$DASHBOARD_ROOT" -type d -exec chmod 0755 {} +
   find "$DASHBOARD_ROOT" -type f -exec chmod 0644 {} +
+
+  if [[ -x /opt/offgridpi/scripts/publish-system-status.sh ]]; then
+    if /opt/offgridpi/scripts/publish-system-status.sh; then
+      log "Dashboard system status republished."
+    else
+      publisher_result=$?
+
+      if [[ "$publisher_result" -eq 1 ]]; then
+        log "Dashboard system status republished with ATTENTION state."
+      else
+        die "Dashboard system-status publication failed."
+      fi
+    fi
+  fi
 
   install -o root -g root -m 0755 \
     "$PROJECT_ROOT/scripts/launch-dashboard.sh" \
@@ -459,7 +480,47 @@ install_management_tool() {
     "$PROJECT_ROOT/scripts/offgridpi-admin.py" \
     /opt/offgridpi/scripts/offgridpi-admin.py
 
-  log "Installation management and system administration tools installed."
+  install \
+    -o root \
+    -g root \
+    -m 0755 \
+    "$PROJECT_ROOT/scripts/publish-system-status.sh" \
+    /opt/offgridpi/scripts/publish-system-status.sh
+
+  install -d \
+    -o root \
+    -g root \
+    -m 0755 \
+    /opt/offgridpi/dashboard/data
+
+  install \
+    -o root \
+    -g root \
+    -m 0644 \
+    "$PROJECT_ROOT/systemd/offgridpi-status-publisher.service" \
+    /etc/systemd/system/offgridpi-status-publisher.service
+
+  install \
+    -o root \
+    -g root \
+    -m 0644 \
+    "$PROJECT_ROOT/systemd/offgridpi-status-publisher.timer" \
+    /etc/systemd/system/offgridpi-status-publisher.timer
+
+  systemd-analyze verify \
+    /etc/systemd/system/offgridpi-status-publisher.service \
+    /etc/systemd/system/offgridpi-status-publisher.timer
+
+  systemctl daemon-reload
+  systemctl enable --now offgridpi-status-publisher.timer
+  systemctl start offgridpi-status-publisher.service
+
+  [[ -s /opt/offgridpi/dashboard/data/system-status.json ]] \
+    || die "Dashboard status file was not published."
+
+  log "Dashboard system-status publishing enabled."
+
+  log "Management, administration, and status-publishing tools installed."
 }
 
 install_all_modules() {

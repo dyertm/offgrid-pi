@@ -531,3 +531,59 @@ No automated Phase 7 test issued a live reboot or power-off request.
 * Define authorization for browser-exposed administration.
 * Perform controlled live reboot and power-off acceptance tests later.
 * Validate installation on the separate clean-test microSD card.
+
+## Phase 7 — Read-Only System Status Dashboard
+
+**Date:** August 3, 2026  
+**Status:** Completed and validated
+
+Implemented the first browser-accessible Phase 7 management feature as a
+read-only local system-status dashboard.
+
+### Work completed
+
+- Added a read-only System Status page to the local dashboard.
+- Activated the System Status card on the main dashboard.
+- Kept browser-based Administration disabled.
+- Added status cards for:
+  - hostname
+  - uptime
+  - Raspberry Pi temperature and throttling
+  - storage usage
+  - approved Kiwix content
+  - indexed documents
+  - configuration backups
+  - failed systemd units
+- Added local service-health rows for Kiwix, dashboard, documents, and the
+  document indexer.
+- Added automatic browser refresh every 60 seconds.
+- Added a status publisher that writes validated JSON atomically.
+- Added a systemd timer that refreshes the dashboard report every 60 seconds.
+- Configured the publisher so an `ATTENTION` result is treated as a valid
+  completed service result rather than a systemd failure.
+- Updated the installer to deploy and enable the publisher safely.
+- Updated dashboard installation to republish status immediately after
+  `rsync --delete`.
+- Added regression tests for the publisher, status page, local-only assets,
+  safe DOM rendering, installer integration, and disabled Administration.
+- Extended the installed-system verifier with dashboard status checks.
+
+### Validation
+
+The page was visually validated on:
+
+- the attached 1024 × 600 Offgrid Pi display
+- the development PC browser
+
+The status page and JSON endpoint both returned HTTP 200. The status publisher
+timer was enabled and active. The live status report parsed successfully and
+reported a valid `HEALTHY` or `ATTENTION` state.
+
+No browser-accessible privileged actions were introduced.
+
+### Remaining Phase 7 work
+
+- Safe local log viewing
+- Browser authorization design
+- Controlled live reboot and power-off acceptance testing
+- Clean-card installation acceptance testing

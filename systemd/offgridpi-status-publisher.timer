@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh Offgrid Pi dashboard system status
+
+[Timer]
+OnBootSec=20s
+OnUnitActiveSec=60s
+AccuracySec=5s
+Unit=offgridpi-status-publisher.service
+
+[Install]
+WantedBy=timers.target

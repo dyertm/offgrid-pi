@@ -1,0 +1,151 @@
+.status-page {
+  width: min(1120px, 100%);
+}
+
+.status-message {
+  margin: 0 0 14px;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.status-message.error {
+  border-color: #9b4e4e;
+  color: #ffb6b6;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.status-card {
+  min-height: 112px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.status-card h2 {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status-value {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.status-detail {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.service-panel {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.section-heading {
+  padding: 15px 17px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.service-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 13px 17px;
+  align-items: center;
+}
+
+.service-row + .service-row {
+  border-top: 1px solid var(--border);
+}
+
+.service-name {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.service-detail {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  overflow-wrap: anywhere;
+}
+
+.service-state {
+  min-width: 92px;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.state-good,
+.status-badge.status-healthy {
+  border-color: var(--accent);
+  background: var(--accent-dark);
+  color: var(--accent);
+}
+
+.state-warning,
+.status-badge.status-attention {
+  border-color: #c89948;
+  background: #3b2d16;
+  color: #f0c676;
+}
+
+.state-muted,
+.status-badge.status-error {
+  color: var(--disabled);
+}
+
+.site-footer a {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (max-width: 860px) {
+  .status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 500px) {
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .service-row {
+    grid-template-columns: 1fr;
+  }
+
+  .service-state {
+    width: max-content;
+  }
+}

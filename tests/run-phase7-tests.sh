@@ -14,6 +14,8 @@ TESTS=(
   "tests/test-system-admin-confirm.sh"
   "tests/test-system-admin-reindex.sh"
   "tests/test-system-admin-actions.sh"
+  "tests/test-status-publisher.sh"
+  "tests/test-dashboard-status.sh"
 )
 
 echo "=== Offgrid Pi Phase 7 tests ==="

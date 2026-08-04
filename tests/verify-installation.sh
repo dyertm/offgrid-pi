@@ -410,6 +410,111 @@ else
 fi
 
 echo
+printf '\n=== Dashboard system status ===\n'
+
+for path in \
+  /opt/offgridpi/dashboard/status/index.html \
+  /opt/offgridpi/dashboard/status/status.css \
+  /opt/offgridpi/dashboard/status/status.js \
+  /opt/offgridpi/dashboard/data/system-status.json \
+  /opt/offgridpi/scripts/publish-system-status.sh \
+  /etc/systemd/system/offgridpi-status-publisher.service \
+  /etc/systemd/system/offgridpi-status-publisher.timer
+do
+  if [[ -s "$path" ]]; then
+    pass "Installed status component exists: $path"
+  else
+    fail "Installed status component is missing: $path"
+  fi
+done
+
+if systemctl is-enabled --quiet \
+  offgridpi-status-publisher.timer
+then
+  pass "Status publisher timer is enabled."
+else
+  fail "Status publisher timer is not enabled."
+fi
+
+if systemctl is-active --quiet \
+  offgridpi-status-publisher.timer
+then
+  pass "Status publisher timer is active."
+else
+  fail "Status publisher timer is not active."
+fi
+
+publisher_result="$(
+  systemctl show \
+    offgridpi-status-publisher.service \
+    --property=Result \
+    --value
+)"
+
+if [[ "$publisher_result" == "success" ]]; then
+  pass "Status publisher service completed successfully."
+else
+  fail "Status publisher service result: $publisher_result"
+fi
+
+if curl \
+  --silent \
+  --fail \
+  --output /dev/null \
+  http://127.0.0.1:8081/status/
+then
+  pass "Dashboard system-status page is available."
+else
+  fail "Dashboard system-status page is unavailable."
+fi
+
+if curl \
+  --silent \
+  --fail \
+  http://127.0.0.1:8081/data/system-status.json |
+  python3 -c '
+import json
+import sys
+
+report = json.load(sys.stdin)
+
+required = {
+    "hostname",
+    "uptime_seconds",
+    "hardware",
+    "storage",
+    "services",
+    "kiwix",
+    "documents",
+    "backups",
+    "overall",
+}
+
+missing = required - report.keys()
+
+if missing:
+    raise SystemExit(
+        "Missing fields: " + ", ".join(sorted(missing))
+    )
+
+if report["overall"] not in {"HEALTHY", "ATTENTION"}:
+    raise SystemExit("Invalid overall state.")
+'
+then
+  pass "Dashboard system-status JSON is valid."
+else
+  fail "Dashboard system-status JSON validation failed."
+fi
+
+if grep -qF \
+  'href="status/"' \
+  /opt/offgridpi/dashboard/index.html
+then
+  pass "Dashboard links to the System Status page."
+else
+  fail "Dashboard System Status link is missing."
+fi
+
 echo "=== System health ==="
 FAILED_UNITS="$(systemctl --failed --no-legend 2>/dev/null || true)"
 if [[ -z "$FAILED_UNITS" ]]; then
