@@ -791,3 +791,49 @@ failures and zero review items.
 
 The controlled reboot acceptance requirement is complete. Controlled power-off
 acceptance and separate-card clean-install validation remain outstanding.
+
+## Phase 7 — Controlled Power-Off Acceptance
+
+**Date:** August 4, 2026
+**Status:** Passed
+
+Completed a controlled live power-off using the protected administration command:
+
+```text
+sudo /opt/offgridpi/scripts/offgridpi-admin.py system-action poweroff --confirm OFFGRIDPI
+```
+
+The command requested the power-off through systemd and reported that the request
+was accepted. The active SSH session disconnected as expected.
+
+Power was subsequently restored and the Pi completed a fresh boot.
+
+### Boot validation
+
+Pre-power-off boot ID:
+
+```text
+ac2d411d-c5de-43c2-bb80-6c28573ff9e4
+```
+
+Post-power-restoration boot ID:
+
+```text
+3059fff7-0be8-452d-abcf-f369493e8354
+```
+
+The changed boot ID confirmed that a complete shutdown and new boot occurred.
+
+All required Offgrid Pi services recovered automatically. HTTP validation
+returned status 200 on ports `8080`, `8081`, `8082`, and `8083`. The protected
+management viewer remained restricted to `127.0.0.1:8083`.
+
+No failed systemd units or hardware throttling were detected. The complete
+installed-system verifier passed with zero failures and zero review items.
+
+Persistent journal storage was not enabled, so journal records from the previous
+boot were unavailable. Acceptance was established through the accepted systemd
+request, expected SSH disconnection, changed boot ID, and complete recovery tests.
+
+Controlled reboot and power-off acceptance are now complete. Separate-card
+clean-install validation is the remaining Phase 7 requirement.
