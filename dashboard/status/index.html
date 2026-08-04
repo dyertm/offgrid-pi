@@ -22,17 +22,27 @@
     <header class="site-header">
       <div>
         <p class="eyebrow">Read-only system information</p>
-        <h1>System Status</h1>
+
+        <div class="status-title-row">
+          <h1>System Status</h1>
+
+          <div
+            class="status-badge"
+            id="overall-status"
+          >
+            Loading
+          </div>
+        </div>
+
         <p class="subtitle">
           Hardware, storage, content, and service health
         </p>
       </div>
 
-      <div
-        class="status-badge"
-        id="overall-status"
-      >
-        Loading
+      <div class="header-actions">
+        <a class="dashboard-return" href="../">
+          ← Dashboard
+        </a>
       </div>
     </header>
 
@@ -70,7 +80,6 @@
     </main>
 
     <footer class="site-footer">
-      <a href="../">← Return to dashboard</a>
       <span>
         Read-only view • Refreshes automatically
       </span>

@@ -124,12 +124,6 @@
   color: var(--disabled);
 }
 
-.site-footer a {
-  color: var(--accent);
-  font-weight: 700;
-  text-decoration: none;
-}
-
 @media (max-width: 860px) {
   .status-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -148,4 +142,23 @@
   .service-state {
     width: max-content;
   }
+}
+
+.status-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.status-title-row h1 {
+  margin: 0;
+}
+
+.status-title-row .status-badge {
+  flex: 0 0 auto;
+}
+
+.status-page .header-actions {
+  align-self: flex-start;
 }
