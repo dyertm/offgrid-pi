@@ -13,7 +13,7 @@
 | 4 — Local document library | Completed |
 | 5 — Reproducible installer | In progress — clean-install validation remaining |
 | 6 — Content-pack system | Completed — starter workflow validated |
-| 7 — System status and administration | In progress — local interface validated; live action and clean-install testing remaining |
+| 7 — System status and administration | In progress — power-off and clean-install testing remaining |
 | 8 — Offline maps | Deferred |
 | 9 — Offline entertainment | Planned |
 | 10 — Local Wi-Fi hotspot | Deferred |
@@ -197,7 +197,7 @@ Completion validation:
 
 ## Phase 7 — System status and administration
 
-**Status:** In progress — local interface validated; live action and clean-install testing remaining
+**Status:** In progress — power-off and clean-install testing remaining
 
 Completed outcomes:
 
@@ -220,6 +220,10 @@ Completed outcomes:
 * Added automated server, service, installer, listener, route, permissions, and installed-system verification
 * Deployed the management viewer successfully on the development Raspberry Pi
 * Confirmed the complete Phase 7 suite and installed-system verifier passed with zero failures and zero review items
+* Completed controlled live reboot acceptance testing
+* Confirmed the protected administration command requested the reboot through systemd
+* Confirmed the boot ID changed and all required services, listeners, and HTTP endpoints recovered automatically
+* Confirmed post-reboot verification passed with zero failures and zero review items
 
 Current access model:
 
@@ -231,7 +235,6 @@ Current access model:
 
 Remaining work:
 
-* Perform controlled live reboot acceptance testing at an appropriate maintenance point
 * Perform controlled live power-off acceptance testing at an appropriate maintenance point
 * Include all Phase 7 components in the separate-card clean-install validation
 * Decide whether privileged browser administration belongs in a future phase; the currently approved browser interface remains read-only
@@ -303,7 +306,7 @@ Publish a documented, reproducible, sanitized release with contribution and supp
 
 ## Immediate next actions
 
-1. Perform controlled live reboot and power-off acceptance testing during an appropriate maintenance window.
+1. Perform controlled live power-off acceptance testing during an appropriate maintenance window.
 2. Complete clean-install testing on a separate microSD card.
 3. Create the medical and first-aid content-pack manifest.
 4. Create the emergency-preparedness content-pack manifest.

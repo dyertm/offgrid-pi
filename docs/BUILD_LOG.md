@@ -732,3 +732,62 @@ completed.
 Browser-based privileged administration remains intentionally disabled. The
 approved browser interface is read-only, while administrative actions remain
 protected behind root access and explicit command-line confirmation.
+
+## Phase 7 — Controlled Reboot Acceptance
+
+**Date:** August 4, 2026
+**Status:** Passed
+
+Completed a controlled live reboot using the protected administration command:
+
+```text
+sudo /opt/offgridpi/scripts/offgridpi-admin.py system-action reboot --confirm OFFGRIDPI
+```
+
+The command requested the reboot through systemd and reported that the request
+was accepted. The active SSH session disconnected as expected.
+
+### Boot validation
+
+Pre-reboot boot ID:
+
+```text
+05bd52a3-aef3-401e-b8f1-9ee0fa2748b1
+```
+
+Post-reboot boot ID:
+
+```text
+ac2d411d-c5de-43c2-bb80-6c28573ff9e4
+```
+
+The changed boot ID and post-login uptime confirmed that a complete reboot
+occurred.
+
+### Recovery validation
+
+The following components recovered automatically:
+
+- `kiwix-serve.service`
+- `offgridpi-dashboard.service`
+- `offgridpi-documents.service`
+- `offgridpi-document-indexer.service`
+- `offgridpi-status-publisher.timer`
+- `offgridpi-log-publisher.timer`
+- `offgridpi-management.service`
+
+HTTP validation returned status 200 on:
+
+- TCP port `8080` — Kiwix
+- TCP port `8081` — dashboard
+- TCP port `8082` — document library
+- TCP port `8083` — localhost management viewer
+
+The management viewer remained restricted to `127.0.0.1:8083`.
+
+No failed systemd units were detected. Hardware validation reported no
+throttling, and the complete installed-system verifier finished with zero
+failures and zero review items.
+
+The controlled reboot acceptance requirement is complete. Controlled power-off
+acceptance and separate-card clean-install validation remain outstanding.
