@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh protected Offgrid Pi service log snapshot
+
+[Timer]
+OnBootSec=90s
+OnUnitActiveSec=5min
+AccuracySec=15s
+Persistent=true
+Unit=offgridpi-log-publisher.service
+
+[Install]
+WantedBy=timers.target

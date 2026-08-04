@@ -1,0 +1,30 @@
+[Unit]
+Description=Publish protected Offgrid Pi service log snapshot
+After=local-fs.target systemd-journald.service
+ConditionFileIsExecutable=/opt/offgridpi/scripts/publish-system-logs.py
+
+[Service]
+Type=oneshot
+User=root
+Group=offgridpi
+ExecStart=/opt/offgridpi/scripts/publish-system-logs.py
+
+StateDirectory=offgridpi
+StateDirectoryMode=0750
+UMask=0027
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_UNIX
+
+TimeoutStartSec=45s

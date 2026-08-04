@@ -587,3 +587,55 @@ No browser-accessible privileged actions were introduced.
 - Browser authorization design
 - Controlled live reboot and power-off acceptance testing
 - Clean-card installation acceptance testing
+
+## Phase 7 — Protected Service-Log Publishing
+
+**Date:** August 3, 2026  
+**Status:** Completed and validated
+
+Implemented the protected log-collection foundation for future authorized local
+log viewing.
+
+### Work completed
+
+- Added a read-only service-log snapshot publisher.
+- Limited collection to these Offgrid Pi services:
+  - Kiwix
+  - dashboard
+  - document library
+  - document indexer
+  - system-status publisher
+- Limited each service snapshot to a configurable number of recent entries.
+- Added ANSI removal, control-character cleanup, message truncation, and
+  sensitive-value redaction.
+- Added atomic snapshot replacement so failed collection does not overwrite the
+  previous valid report.
+- Stored the snapshot outside the dashboard web root at:
+  `/var/lib/offgridpi/management/system-logs.json`
+- Restricted the management directory to `root:offgridpi` mode `0750`.
+- Restricted the snapshot to `root:offgridpi` mode `0640`.
+- Added a hardened oneshot systemd service.
+- Added a persistent five-minute systemd timer.
+- Updated `install-management` to deploy, validate, enable, and run the
+  protected publisher.
+- Added regression tests using a fake `journalctl`.
+- Added installed-system verification with privilege-aware protected-file
+  checks.
+- Added Python cache patterns to `.gitignore`.
+
+### Validation
+
+- All Phase 7 tests passed.
+- The full installed-system verifier passed with zero failures.
+- The publisher timer is enabled and active.
+- The latest publisher service result is successful.
+- The protected JSON snapshot passed schema and entry-count validation.
+- Directory and file ownership and permissions were validated.
+- The dashboard request for `/data/system-logs.json` returned HTTP 404.
+- No browser-accessible log interface was introduced.
+
+### Remaining work
+
+- Design an authorization boundary for browser-based management.
+- Add an authorized read-only log viewer.
+- Keep privileged administrative actions separate from public dashboard access.

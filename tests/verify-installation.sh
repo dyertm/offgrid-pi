@@ -515,6 +515,132 @@ else
   fail "Dashboard System Status link is missing."
 fi
 
+printf '\n=== Protected system logs ===\n'
+
+if [[ "$EUID" -eq 0 ]]; then
+  privileged=()
+elif sudo -v; then
+  privileged=(sudo)
+else
+  fail "Protected log verification requires administrative access."
+  privileged=(false)
+fi
+
+for path in \
+  /opt/offgridpi/scripts/publish-system-logs.py \
+  /etc/systemd/system/offgridpi-log-publisher.service \
+  /etc/systemd/system/offgridpi-log-publisher.timer \
+  /var/lib/offgridpi/management/system-logs.json
+do
+  if "${privileged[@]}" test -s "$path"; then
+    pass "Protected log component exists: $path"
+  else
+    fail "Protected log component is missing: $path"
+  fi
+done
+
+if systemctl is-enabled --quiet \
+  offgridpi-log-publisher.timer
+then
+  pass "Protected log publisher timer is enabled."
+else
+  fail "Protected log publisher timer is not enabled."
+fi
+
+if systemctl is-active --quiet \
+  offgridpi-log-publisher.timer
+then
+  pass "Protected log publisher timer is active."
+else
+  fail "Protected log publisher timer is not active."
+fi
+
+publisher_result="$(
+  systemctl show \
+    offgridpi-log-publisher.service \
+    --property=Result \
+    --value
+)"
+
+if [[ "$publisher_result" == "success" ]]; then
+  pass "Protected log publisher completed successfully."
+else
+  fail "Protected log publisher result: $publisher_result"
+fi
+
+log_directory_mode="$(
+  "${privileged[@]}" stat -c '%U:%G:%a' \
+    /var/lib/offgridpi/management \
+    2>/dev/null || true
+)"
+
+if [[ "$log_directory_mode" == "root:offgridpi:750" ]]; then
+  pass "Protected log directory permissions are correct."
+else
+  fail "Protected log directory permissions: $log_directory_mode"
+fi
+
+log_file_mode="$(
+  "${privileged[@]}" stat -c '%U:%G:%a' \
+    /var/lib/offgridpi/management/system-logs.json \
+    2>/dev/null || true
+)"
+
+if [[ "$log_file_mode" == "root:offgridpi:640" ]]; then
+  pass "Protected log snapshot permissions are correct."
+else
+  fail "Protected log snapshot permissions: $log_file_mode"
+fi
+
+if "${privileged[@]}" python3 - <<'PY'
+import json
+from pathlib import Path
+
+path = Path(
+    "/var/lib/offgridpi/management/system-logs.json"
+)
+report = json.loads(path.read_text(encoding="utf-8"))
+
+if report.get("schema_version") != 1:
+    raise SystemExit("Invalid schema version.")
+
+if report.get("source_count") != 5:
+    raise SystemExit("Unexpected source count.")
+
+sources = report.get("sources")
+
+if not isinstance(sources, list) or len(sources) != 5:
+    raise SystemExit("Invalid sources collection.")
+
+for source in sources:
+    entries = source.get("entries")
+
+    if not isinstance(entries, list):
+        raise SystemExit("Invalid log entries.")
+
+    if source.get("entry_count") != len(entries):
+        raise SystemExit("Entry count mismatch.")
+PY
+then
+  pass "Protected log snapshot structure is valid."
+else
+  fail "Protected log snapshot validation failed."
+fi
+
+public_code="$(
+  curl \
+    --silent \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    http://127.0.0.1:8081/data/system-logs.json
+)"
+
+if [[ "$public_code" == "404" ]]; then
+  pass "Protected logs are not exposed through the dashboard."
+else
+  fail "Unexpected public log endpoint response: HTTP $public_code"
+fi
+
 echo "=== System health ==="
 FAILED_UNITS="$(systemctl --failed --no-legend 2>/dev/null || true)"
 if [[ -z "$FAILED_UNITS" ]]; then

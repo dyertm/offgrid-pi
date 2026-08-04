@@ -28,3 +28,5 @@ tmp/
 .vscode/
 *.zim
 *.zim.sha256
+__pycache__/
+*.py[cod]

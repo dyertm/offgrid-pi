@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-INSTALLER_VERSION="0.7.1"
+INSTALLER_VERSION="0.7.2"
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOCUMENT_PUBLIC="/srv/offgridpi/content/documents/public"
 DOCUMENT_PERSONAL="/srv/offgridpi/content/documents/personal"
@@ -101,6 +101,9 @@ check_payload() {
     "$PROJECT_ROOT/scripts/publish-system-status.sh" \
     "$PROJECT_ROOT/systemd/offgridpi-status-publisher.service" \
     "$PROJECT_ROOT/systemd/offgridpi-status-publisher.timer" \
+    "$PROJECT_ROOT/scripts/publish-system-logs.py" \
+    "$PROJECT_ROOT/systemd/offgridpi-log-publisher.service" \
+    "$PROJECT_ROOT/systemd/offgridpi-log-publisher.timer" \
     "$PROJECT_ROOT/scripts/manage-installation.sh" \
     "$PROJECT_ROOT/tests/verify-installation.sh"
   do
@@ -520,7 +523,66 @@ install_management_tool() {
 
   log "Dashboard system-status publishing enabled."
 
-  log "Management, administration, and status-publishing tools installed."
+  getent group offgridpi >/dev/null ||
+    die "Required offgridpi group does not exist."
+
+  install \
+    -o root \
+    -g offgridpi \
+    -m 0755 \
+    "$PROJECT_ROOT/scripts/publish-system-logs.py" \
+    /opt/offgridpi/scripts/publish-system-logs.py
+
+  install -d \
+    -o root \
+    -g offgridpi \
+    -m 0750 \
+    /var/lib/offgridpi/management
+
+  install \
+    -o root \
+    -g root \
+    -m 0644 \
+    "$PROJECT_ROOT/systemd/offgridpi-log-publisher.service" \
+    /etc/systemd/system/offgridpi-log-publisher.service
+
+  install \
+    -o root \
+    -g root \
+    -m 0644 \
+    "$PROJECT_ROOT/systemd/offgridpi-log-publisher.timer" \
+    /etc/systemd/system/offgridpi-log-publisher.timer
+
+  systemd-analyze verify \
+    /etc/systemd/system/offgridpi-log-publisher.service \
+    /etc/systemd/system/offgridpi-log-publisher.timer
+
+  systemctl daemon-reload
+  systemctl enable --now offgridpi-log-publisher.timer
+  systemctl start offgridpi-log-publisher.service
+
+  [[ -s /var/lib/offgridpi/management/system-logs.json ]] ||
+    die "Protected system-log snapshot was not created."
+
+  python3 -c '
+import json
+from pathlib import Path
+
+path = Path(
+    "/var/lib/offgridpi/management/system-logs.json"
+)
+report = json.loads(path.read_text(encoding="utf-8"))
+
+if report.get("schema_version") != 1:
+    raise SystemExit("Invalid log-snapshot schema.")
+
+if not isinstance(report.get("sources"), list):
+    raise SystemExit("Invalid log-snapshot sources.")
+'
+
+  log "Protected system-log publishing enabled."
+
+  log "Management, administration, status, and protected log-publishing tools installed."
 }
 
 install_all_modules() {
