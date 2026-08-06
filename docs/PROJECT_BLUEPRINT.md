@@ -93,6 +93,7 @@ The active software scope includes:
 * Content folder standards
 * Content-pack definitions
 * Installation automation
+* Direct software-component and offline license-notice inventory
 * Health checks
 * Troubleshooting documentation
 * Clean-install testing
@@ -110,6 +111,8 @@ Kiwix serves ZIM-format content through a local web service on TCP port `8080`.
 ### Dashboard layer
 
 The dashboard is stored under `/opt/offgridpi/dashboard` and is served locally on TCP port `8081`.
+
+The dashboard includes a generated, read-only Legal & Notices page containing the MIT project license, direct software-component versions, and locally available Debian copyright records.
 
 The prototype uses Python's built-in static HTTP server. This is accepted for development and must be reviewed before a stable release.
 

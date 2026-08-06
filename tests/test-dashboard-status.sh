@@ -75,6 +75,11 @@ if "status/" not in dashboard.links:
         "Dashboard does not link to the status page."
     )
 
+if "legal/" not in dashboard.links:
+    raise SystemExit(
+        "Dashboard does not link to the Legal & Notices page."
+    )
+
 status = Inspector()
 status.feed(status_path.read_text(encoding="utf-8"))
 

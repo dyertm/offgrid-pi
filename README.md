@@ -17,14 +17,17 @@ The development prototype currently provides:
 * Browser access from another device on the local network
 * Public document library with automatic indexing on TCP port `8082`
 * Protected personal-document storage that is neither served nor indexed
+* Read-only System Status and localhost management views
+* Offline Legal & Notices page with local software-license records
 * Confirmed reboot persistence and operation with internet connectivity disabled
-* Reproducible installer `0.6.1` with unified installation, verification, configuration snapshots, rollback, and content-preserving uninstall
+* Reproducible installer `0.7.4` with unified installation, verification, configuration snapshots, rollback, content-preserving uninstall, and offline legal-notice generation
 
 The current services use:
 
 * Kiwix: TCP port `8080`
 * Dashboard: TCP port `8081`
 * Public documents: TCP port `8082`
+* Localhost management viewer: TCP port `8083`, bound only to `127.0.0.1`
 
 ## Project goals
 
@@ -66,9 +69,10 @@ Potential content includes:
 | Dashboard prototype | Completed |
 | Local document library | Completed |
 | Reproducible installer | In progress — clean-install validation remaining |
-| Content-pack system | Not started |
+| Content-pack system | Completed |
+| System status and administration | In progress — clean-install validation remaining |
 
-Installer `0.6.1` now packages the Kiwix, dashboard, Chromium autostart, and document-library modules. It supports `install-all`, independent verification, configuration snapshots, rollback, and content-preserving uninstall. Validation on a separate clean Raspberry Pi OS installation is the remaining Phase 5 requirement.
+Installer `0.7.4` packages the Kiwix, dashboard, Chromium autostart, document-library, management, status, and offline legal-notice components. It supports `install-all`, independent verification, configuration snapshots, rollback, and content-preserving uninstall. Validation on a separate clean Raspberry Pi OS installation remains required.
 
 ## Public and private content boundary
 
@@ -99,4 +103,4 @@ Offgrid Pi is an independent project. Kiwix, OpenStreetMap, Raspberry Pi OS, Kod
 
 ## License
 
-A project software license still needs to be selected and added before a formal public release.
+Offgrid Pi source code is licensed under the MIT License. Third-party software and content retain their own licenses and attribution requirements.

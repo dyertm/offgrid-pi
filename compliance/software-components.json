@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "register_id": "offgridpi-runtime-software",
+  "title": "Offgrid Pi Runtime Software Components",
+  "description": "Approved direct software dependencies used by the Offgrid Pi installer and runtime. Exact installed versions are resolved locally through dpkg-query.",
+  "project": {
+    "name": "Offgrid Pi",
+    "version": "development",
+    "license_expression": "MIT",
+    "license_file": "LICENSE",
+    "copyright_notice": "Copyright (c) 2026 Troy Dyer"
+  },
+  "packages": [
+    {
+      "component_id": "python3",
+      "display_name": "Python 3",
+      "package_name": "python3",
+      "purpose": "Runs the document indexer, status tools, management viewer, content-pack tools, and validation scripts.",
+      "homepage": "https://www.python.org/",
+      "version_source": "dpkg-query",
+      "license_summary": "The Debian package may contain material under multiple licenses. The installed Debian copyright record is the authoritative local notice.",
+      "copyright_file": "/usr/share/doc/python3/copyright",
+      "source_information": "Refer to the Debian package metadata and upstream project for corresponding source information.",
+      "required": true
+    },
+    {
+      "component_id": "inotify-tools",
+      "display_name": "inotify-tools",
+      "package_name": "inotify-tools",
+      "purpose": "Watches the public document library and triggers catalog regeneration after file changes.",
+      "homepage": "https://github.com/rvoicilas/inotify-tools/wiki/",
+      "version_source": "dpkg-query",
+      "license_summary": "The Debian package may contain material under multiple licenses. The installed Debian copyright record is the authoritative local notice.",
+      "copyright_file": "/usr/share/doc/inotify-tools/copyright",
+      "source_information": "Refer to the Debian package metadata and upstream project for corresponding source information.",
+      "required": true
+    },
+    {
+      "component_id": "curl",
+      "display_name": "curl",
+      "package_name": "curl",
+      "purpose": "Performs installer health checks and verified content downloads.",
+      "homepage": "https://curl.se/",
+      "version_source": "dpkg-query",
+      "license_summary": "The Debian package may contain material under multiple licenses. The installed Debian copyright record is the authoritative local notice.",
+      "copyright_file": "/usr/share/doc/curl/copyright",
+      "source_information": "Refer to the Debian package metadata and upstream project for corresponding source information.",
+      "required": true
+    },
+    {
+      "component_id": "rsync",
+      "display_name": "rsync",
+      "package_name": "rsync",
+      "purpose": "Deploys the static dashboard tree safely and removes obsolete dashboard files during upgrades.",
+      "homepage": "https://rsync.samba.org/",
+      "version_source": "dpkg-query",
+      "license_summary": "The Debian package may contain material under multiple licenses. The installed Debian copyright record is the authoritative local notice.",
+      "copyright_file": "/usr/share/doc/rsync/copyright",
+      "source_information": "Refer to the Debian package metadata and upstream project for corresponding source information.",
+      "required": true
+    },
+    {
+      "component_id": "chromium",
+      "display_name": "Chromium",
+      "package_name": "chromium",
+      "purpose": "Provides the local graphical browser used to display the Offgrid Pi dashboard.",
+      "homepage": "https://www.chromium.org/",
+      "version_source": "dpkg-query",
+      "license_summary": "Chromium contains components under multiple licenses. The installed Debian copyright record is the authoritative local notice.",
+      "copyright_file": "/usr/share/doc/chromium/copyright",
+      "source_information": "Refer to the Debian package metadata and Chromium upstream source information for corresponding source details.",
+      "required": true
+    },
+    {
+      "component_id": "kiwix-tools",
+      "display_name": "Kiwix Tools",
+      "package_name": "kiwix-tools",
+      "purpose": "Serves approved ZIM archives through the local Kiwix knowledge library.",
+      "homepage": "https://github.com/kiwix/kiwix-tools",
+      "version_source": "dpkg-query",
+      "license_summary": "The Debian package and its linked libraries may contain material under multiple licenses. The installed Debian copyright record is the authoritative local notice.",
+      "copyright_file": "/usr/share/doc/kiwix-tools/copyright",
+      "source_information": "Refer to the Debian package metadata and Kiwix upstream project for corresponding source information.",
+      "required": true
+    },
+    {
+      "component_id": "zim-tools",
+      "display_name": "ZIM Tools",
+      "package_name": "zim-tools",
+      "purpose": "Validates and inspects ZIM archive files before and during content management.",
+      "homepage": "https://github.com/openzim/zim-tools",
+      "version_source": "dpkg-query",
+      "license_summary": "The Debian package and its linked libraries may contain material under multiple licenses. The installed Debian copyright record is the authoritative local notice.",
+      "copyright_file": "/usr/share/doc/zim-tools/copyright",
+      "source_information": "Refer to the Debian package metadata and OpenZIM upstream project for corresponding source information.",
+      "required": true
+    }
+  ]
+}

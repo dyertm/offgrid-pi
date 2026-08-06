@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-INSTALLER_VERSION="0.7.3"
+INSTALLER_VERSION="0.7.4"
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOCUMENT_PUBLIC="/srv/offgridpi/content/documents/public"
 DOCUMENT_PERSONAL="/srv/offgridpi/content/documents/personal"
@@ -91,7 +91,13 @@ check_payload() {
     "$PROJECT_ROOT/dashboard/status/index.html" \
     "$PROJECT_ROOT/dashboard/status/status.css" \
     "$PROJECT_ROOT/dashboard/status/status.js" \
+    "$PROJECT_ROOT/dashboard/legal/legal.css" \
     "$PROJECT_ROOT/dashboard/data/.gitkeep" \
+    "$PROJECT_ROOT/compliance/software-components.json" \
+    "$PROJECT_ROOT/compliance/schema/software-components.schema.json" \
+    "$PROJECT_ROOT/compliance/validate-software-components.py" \
+    "$PROJECT_ROOT/scripts/generate-legal-notices.py" \
+    "$PROJECT_ROOT/LICENSE" \
     "$PROJECT_ROOT/scripts/launch-dashboard.sh" \
     "$PROJECT_ROOT/systemd/offgridpi-dashboard.service" \
     "$PROJECT_ROOT/desktop/offgridpi-dashboard.desktop" \
@@ -243,7 +249,29 @@ install_dashboard_module() {
 
   install -d -o root -g root -m 0755 \
     "$DASHBOARD_ROOT" \
-    /opt/offgridpi/scripts
+    /opt/offgridpi/scripts \
+    /opt/offgridpi/compliance \
+    /opt/offgridpi/compliance/schema
+
+  install -o root -g root -m 0755 \
+    "$PROJECT_ROOT/scripts/generate-legal-notices.py" \
+    /opt/offgridpi/scripts/generate-legal-notices.py
+
+  install -o root -g root -m 0755 \
+    "$PROJECT_ROOT/compliance/validate-software-components.py" \
+    /opt/offgridpi/compliance/validate-software-components.py
+
+  install -o root -g root -m 0644 \
+    "$PROJECT_ROOT/compliance/software-components.json" \
+    /opt/offgridpi/compliance/software-components.json
+
+  install -o root -g root -m 0644 \
+    "$PROJECT_ROOT/compliance/schema/software-components.schema.json" \
+    /opt/offgridpi/compliance/schema/software-components.schema.json
+
+  install -o root -g root -m 0644 \
+    "$PROJECT_ROOT/LICENSE" \
+    /opt/offgridpi/LICENSE
 
   systemctl stop offgridpi-dashboard.service 2>/dev/null || true
 
@@ -253,6 +281,12 @@ install_dashboard_module() {
     --delete \
     "$PROJECT_ROOT/dashboard/" \
     "$DASHBOARD_ROOT/"
+
+  log "Generating the offline Legal & Notices page."
+
+  /opt/offgridpi/scripts/generate-legal-notices.py \
+    --output-root "$DASHBOARD_ROOT/legal" \
+    --allow-missing
 
   chown -R root:root "$DASHBOARD_ROOT"
   find "$DASHBOARD_ROOT" -type d -exec chmod 0755 {} +

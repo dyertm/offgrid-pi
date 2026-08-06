@@ -837,3 +837,96 @@ request, expected SSH disconnection, changed boot ID, and complete recovery test
 
 Controlled reboot and power-off acceptance are now complete. Separate-card
 clean-install validation is the remaining Phase 7 requirement.
+
+## Phase 7 — Offline Legal & Notices
+
+**Date:** August 5, 2026
+**Status:** Completed and validated
+
+Implemented a public, read-only offline Legal & Notices module for the
+Offgrid Pi dashboard.
+
+### Components
+
+- Machine-readable direct software-component register:
+  `compliance/software-components.json`
+- Strict register validator:
+  `compliance/validate-software-components.py`
+- Offline page generator:
+  `scripts/generate-legal-notices.py`
+- Generated dashboard route:
+  `/legal/`
+- Project MIT license copied into the offline notice directory
+- Local Debian copyright records for:
+  - Python
+  - inotify-tools
+  - curl
+  - rsync
+  - Chromium
+  - Kiwix tools
+  - ZIM tools
+
+The generator records exact installed Debian package versions and creates
+separate local text notices rather than embedding approximately 370 KB of
+copyright data directly into the HTML page.
+
+The page uses no JavaScript or remote presentation assets. Upstream project
+links are informational and are not required for offline operation.
+
+### Installation behavior
+
+Installer version `0.7.4` installs the compliance register, schema, validator,
+generator, and project license.
+
+During a complete installation, all seven registered packages must be present.
+A standalone dashboard installation may use partial-generation mode, which
+truthfully marks unavailable packages as not installed rather than silently
+omitting them.
+
+Generation occurs after the dashboard source files are synchronized and before
+ownership and permission normalization.
+
+### Testing
+
+Automated tests validate:
+
+- JSON syntax and approved package registration
+- MIT project-license consistency
+- Duplicate and unapproved package rejection
+- Copyright-path restrictions
+- Exact package-version rendering
+- Local notice creation
+- HTML structure and standardized Dashboard navigation
+- Absence of JavaScript and remote executable assets
+- Strict and partial generation behavior
+- Preservation of the previous valid output after failed generation
+- Installer payload, ordering, and installed-system verification coverage
+
+The Legal & Notices tests were added to the Phase 7 test runner.
+
+### Deployment validation
+
+A configuration snapshot was created before deployment:
+
+`/srv/offgridpi/backups/configuration/snapshot-20260805-235130-520455497`
+
+The updated dashboard module was deployed successfully.
+
+Live validation confirmed:
+
+- Dashboard service enabled and active
+- `/legal/` returned HTTP 200
+- Seven registered components were displayed
+- No component was marked as missing
+- Eight local notice files were present
+- The installed software register validated successfully
+- The exact installed Kiwix package version was displayed
+- The page contained no JavaScript or remote presentation assets
+- Complete installed-system verification passed with zero failures and zero
+  review items
+- System status remained healthy with no failed units or hardware throttling
+
+This register currently covers the seven direct packages intentionally installed
+by Offgrid Pi. It is not a complete transitive software bill of materials.
+Corresponding-source and written-offer procedures must be prepared separately
+before distributing a commercial release image.

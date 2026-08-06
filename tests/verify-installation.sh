@@ -77,6 +77,13 @@ for path in \
   /opt/offgridpi/dashboard/css/styles.css \
   /opt/offgridpi/dashboard/js/app.js \
   /opt/offgridpi/dashboard/documents/index.html \
+  /opt/offgridpi/dashboard/legal/index.html \
+  /opt/offgridpi/dashboard/legal/legal.css \
+  /opt/offgridpi/scripts/generate-legal-notices.py \
+  /opt/offgridpi/compliance/software-components.json \
+  /opt/offgridpi/compliance/schema/software-components.schema.json \
+  /opt/offgridpi/compliance/validate-software-components.py \
+  /opt/offgridpi/LICENSE \
   /opt/offgridpi/scripts/launch-dashboard.sh \
   /etc/systemd/system/offgridpi-dashboard.service \
   /opt/offgridpi/scripts/start-kiwix.sh \
@@ -285,6 +292,125 @@ if [[ -n "$AUTOSTART_FILE" ]] \
 else
   fail "Dashboard desktop autostart is not configured correctly."
 fi
+
+if grep -qF 'href="legal/"' \
+  /opt/offgridpi/dashboard/index.html 2>/dev/null
+then
+  pass "Dashboard links to the Legal & Notices page."
+else
+  fail "Dashboard Legal & Notices link is missing."
+fi
+
+
+echo
+echo "=== Legal & Notices ==="
+
+LEGAL_ROOT="/opt/offgridpi/dashboard/legal"
+LEGAL_PAGE="$LEGAL_ROOT/index.html"
+LEGAL_TEMP="$(mktemp)"
+
+for notice in \
+  offgrid-pi-license.txt \
+  python3.txt \
+  inotify-tools.txt \
+  curl.txt \
+  rsync.txt \
+  chromium.txt \
+  kiwix-tools.txt \
+  zim-tools.txt
+do
+  notice_path="$LEGAL_ROOT/notices/$notice"
+
+  if [[ -s "$notice_path" ]]; then
+    pass "Local notice exists: $notice"
+  else
+    fail "Local notice is missing or empty: $notice"
+  fi
+done
+
+if /opt/offgridpi/compliance/validate-software-components.py \
+    /opt/offgridpi/compliance/software-components.json \
+    /opt/offgridpi/LICENSE \
+    >/dev/null 2>&1
+then
+  pass "Installed software-component register is valid."
+else
+  fail "Installed software-component register validation failed."
+fi
+
+if curl \
+    --max-time 5 \
+    --fail \
+    --silent \
+    --show-error \
+    --output "$LEGAL_TEMP" \
+    http://127.0.0.1:8081/legal/ \
+    2>/dev/null
+then
+  pass "Legal & Notices page returned HTTP 200."
+
+  if grep -qF \
+      'class="dashboard-return" href="../"' \
+      "$LEGAL_TEMP" \
+    && grep -qF '← Dashboard' "$LEGAL_TEMP"
+  then
+    pass "Legal page has standardized Dashboard navigation."
+  else
+    fail "Legal page Dashboard navigation is incomplete."
+  fi
+
+  component_count="$(
+    grep -cF '<article class="component">' \
+      "$LEGAL_TEMP" 2>/dev/null || true
+  )"
+
+  if [[ "$component_count" -eq 7 ]]; then
+    pass "Legal page lists all seven registered components."
+  else
+    fail "Legal page lists ${component_count:-0} component(s), expected 7."
+  fi
+
+  if grep -qF 'Not installed' "$LEGAL_TEMP"; then
+    fail "Legal page reports a missing registered component."
+  else
+    pass "All registered legal components are installed."
+  fi
+
+  if grep -qi '<script' "$LEGAL_TEMP"; then
+    fail "Legal page unexpectedly contains JavaScript."
+  else
+    pass "Legal page contains no JavaScript."
+  fi
+
+  if grep -Eqi \
+      'src="https?://|href="https?://[^"]+\.(css|js)([?"#]|")' \
+      "$LEGAL_TEMP"
+  then
+    fail "Legal page contains a remote executable asset."
+  else
+    pass "Legal page uses only local presentation assets."
+  fi
+
+  kiwix_package_version="$(
+    dpkg-query \
+      -W \
+      -f='${Version}' \
+      kiwix-tools \
+      2>/dev/null || true
+  )"
+
+  if [[ -n "$kiwix_package_version" ]] \
+    && grep -qF "$kiwix_package_version" "$LEGAL_TEMP"
+  then
+    pass "Legal page records the installed Kiwix package version."
+  else
+    fail "Legal page does not record the installed Kiwix package version."
+  fi
+else
+  fail "Unable to retrieve the Legal & Notices page."
+fi
+
+rm -f "$LEGAL_TEMP"
 
 
 echo

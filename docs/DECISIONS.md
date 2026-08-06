@@ -277,3 +277,40 @@ The following approaches are not approved:
 Any future restart, reboot, power-off, reindex, or configuration action must use
 a separate privileged execution boundary. Read access to the management viewer
 must not automatically grant permission to perform system changes.
+
+## Decision 026 — Generate Offline Legal and Software Notices
+
+**Date:** August 5, 2026
+**Status:** Accepted
+
+Offgrid Pi will generate a public, read-only Legal & Notices page from an
+approved machine-readable register and the packages installed on the device.
+
+### Decision
+
+The notice system will:
+
+- Record the Offgrid Pi project license as MIT.
+- Record exact installed versions of approved direct Debian packages.
+- Copy installed Debian copyright records into locally served text files.
+- Generate notices during dashboard installation.
+- Use no JavaScript or remote presentation assets.
+- Validate package names and copyright paths against an approved policy.
+- Clearly distinguish missing packages during partial installations.
+- Remain separate from protected management information.
+
+### Scope limitation
+
+The initial register covers direct packages intentionally installed by Offgrid
+Pi. It is not a complete transitive dependency inventory or release SBOM.
+
+Content licenses remain item-specific and continue to be recorded through
+content-pack manifests. A ZIM file is a container and does not provide one
+universal license for everything stored within it.
+
+### Distribution consequence
+
+Publishing license notices does not by itself satisfy every source-distribution
+obligation. Corresponding-source availability, written offers, trademarks, and
+content redistribution rights must be reviewed before distributing a release
+image or commercial product.

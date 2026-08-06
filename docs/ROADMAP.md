@@ -240,6 +240,7 @@ Current access model:
 
 Remaining work:
 
+* Added an offline Legal & Notices module with an approved direct-package register, exact installed versions, local copyright notices, MIT project license, installer integration, and installed-system verification
 * Include all Phase 7 components in the separate-card clean-install validation
 * Decide whether privileged browser administration belongs in a future phase; the currently approved browser interface remains read-only
 

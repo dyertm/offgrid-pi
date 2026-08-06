@@ -82,7 +82,7 @@ systemd-analyze verify "$TEMP_UNIT"
 
 INSTALLER="$ROOT/install.sh"
 
-grep -q '^INSTALLER_VERSION="0.7.3"$' "$INSTALLER" ||
+grep -q '^INSTALLER_VERSION="0.7.4"$' "$INSTALLER" ||
   fail "Installer version was not advanced to 0.7.3."
 
 grep -q   'scripts/offgridpi-management-server.py'   "$INSTALLER" ||

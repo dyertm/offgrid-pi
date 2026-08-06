@@ -1,0 +1,105 @@
+.legal-page main {
+  width: min(920px, 100%);
+  margin: 0 auto;
+}
+
+.legal-intro,
+.legal-panel,
+.component {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.legal-intro,
+.legal-panel {
+  margin-bottom: 16px;
+  padding: 18px;
+}
+
+.legal-intro p,
+.legal-panel p,
+.component p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.legal-panel h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.component-list {
+  display: grid;
+  gap: 12px;
+}
+
+.component {
+  padding: 16px;
+}
+
+.component-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.component h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.component-version {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.component-meta {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.component-meta strong {
+  color: var(--text);
+}
+
+.component-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.component-links a {
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.legal-warning {
+  border-left: 4px solid var(--accent);
+}
+
+.generated-at {
+  color: var(--disabled);
+  font-size: 0.76rem;
+}
+
+@media (max-width: 600px) {
+  .component-header {
+    flex-direction: column;
+  }
+
+  .component-version {
+    text-align: left;
+  }
+}
