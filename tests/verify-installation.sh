@@ -76,7 +76,6 @@ for path in \
   /opt/offgridpi/dashboard/index.html \
   /opt/offgridpi/dashboard/css/styles.css \
   /opt/offgridpi/dashboard/js/app.js \
-  /opt/offgridpi/dashboard/documents/index.html \
   /opt/offgridpi/dashboard/legal/index.html \
   /opt/offgridpi/dashboard/legal/legal.css \
   /opt/offgridpi/scripts/generate-legal-notices.py \
@@ -272,9 +271,10 @@ else
   fail "Dynamic Kiwix routing was not detected."
 fi
 
-if curl --max-time 5 -fsS http://127.0.0.1:8081/documents/ 2>/dev/null \
-  | grep -qF 'window.location.hostname'; then
-  pass "Local Documents uses a dynamic hostname redirect."
+if grep -qF 'id="documents-link"' /opt/offgridpi/dashboard/index.html \
+  && grep -qF 'documentsLink.href' /opt/offgridpi/dashboard/js/app.js \
+  && grep -qF ':8082' /opt/offgridpi/dashboard/js/app.js; then
+  pass "Local Documents uses the dashboard visitor hostname."
 else
   fail "Dynamic Local Documents routing was not detected."
 fi

@@ -87,7 +87,6 @@ check_payload() {
     "$PROJECT_ROOT/dashboard/index.html" \
     "$PROJECT_ROOT/dashboard/css/styles.css" \
     "$PROJECT_ROOT/dashboard/js/app.js" \
-    "$PROJECT_ROOT/dashboard/documents/index.html" \
     "$PROJECT_ROOT/dashboard/status/index.html" \
     "$PROJECT_ROOT/dashboard/status/status.css" \
     "$PROJECT_ROOT/dashboard/status/status.js" \
@@ -493,6 +492,8 @@ install_kiwix_module() {
 
 
 install_management_tool() {
+  ensure_service_account
+
   install -d \
     -o root \
     -g root \
