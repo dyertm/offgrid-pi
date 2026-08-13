@@ -257,9 +257,9 @@ Completion criteria:
 
 ## Phase 8 — Offline maps
 
-**Status:** Deferred
+**Status:** In progress — reader and pack standard
 
-Evaluate formats and rendering approaches after the document library and installer are stable.
+Build the read-only offline map reader, `.ogmap` pack schema and validator, range-capable map service, USB import workflow, localhost-only pack manager, and public-domain demonstration packs. See `docs/MAPS.md` for the approved architecture.
 
 ## Phase 9 — Offline entertainment
 

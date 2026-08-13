@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://offgridpi.local/schema/map-pack.schema.json",
+  "title": "Offgrid Pi Map Pack Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "pack_format",
+    "pack_id",
+    "name",
+    "version",
+    "status",
+    "reader_compatibility",
+    "description",
+    "region",
+    "data_date",
+    "estimated_installed_bytes",
+    "style_id",
+    "files",
+    "sources",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "pack_format": {
+      "const": "ogmap-zip-v1"
+    },
+    "pack_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "deprecated"
+      ]
+    },
+    "reader_compatibility": {
+      "$ref": "#/$defs/reader_compatibility"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "region": {
+      "$ref": "#/$defs/region"
+    },
+    "data_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "estimated_installed_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "style_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/file"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "reader_compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimum_version"
+      ],
+      "properties": {
+        "minimum_version": {
+          "type": "string",
+          "pattern": "^[0-9]+[.][0-9]+[.][0-9]+$"
+        }
+      }
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "bounds",
+        "default_center",
+        "min_zoom",
+        "max_zoom"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bounds": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            }
+          ],
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "default_center": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "min_zoom": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24
+        },
+        "max_zoom": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24
+        }
+      }
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "role",
+        "media_type",
+        "size_bytes",
+        "sha256",
+        "required"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(data/[a-zA-Z0-9._-]+[.]pmtiles|overlays/[a-zA-Z0-9._-]+[.]geojson|licenses/[a-zA-Z0-9._-]+[.]txt|README[.]txt)$"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "basemap",
+            "overlay",
+            "license",
+            "readme"
+          ]
+        },
+        "media_type": {
+          "type": "string",
+          "enum": [
+            "application/vnd.pmtiles",
+            "application/geo+json",
+            "text/plain"
+          ]
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "name",
+        "source_page",
+        "source_version",
+        "data_date",
+        "license",
+        "redistribution",
+        "attribution",
+        "notes"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_page": {
+          "type": "string",
+          "format": "uri"
+        },
+        "source_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "data_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1
+        },
+        "redistribution": {
+          "type": "string",
+          "enum": [
+            "permitted",
+            "restricted",
+            "prohibited",
+            "unknown"
+          ]
+        },
+        "attribution": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
