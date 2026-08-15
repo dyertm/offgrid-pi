@@ -1,7 +1,7 @@
 # Offgrid Pi Installation Guide
 
 **Document status:** Development installation and recovery guide
-**Validation status:** Installer 0.6.1, unified installation, verification, configuration backup, rollback, uninstall, reinstall, reboot persistence, local-network access, and offline operation have passed on the development Raspberry Pi. Clean-install validation on a separate Raspberry Pi OS installation remains required.
+**Validation status:** Installer 0.7.5 incorporates fixes identified during clean-install testing. Development-system validation has passed; final pristine clean-install acceptance on a separate Raspberry Pi OS installation remains required.
 
 ## 1. Validated development target
 

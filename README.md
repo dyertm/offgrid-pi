@@ -20,7 +20,7 @@ The development prototype currently provides:
 * Read-only System Status and localhost management views
 * Offline Legal & Notices page with local software-license records
 * Confirmed reboot persistence and operation with internet connectivity disabled
-* Reproducible installer `0.7.4` with unified installation, verification, configuration snapshots, rollback, content-preserving uninstall, and offline legal-notice generation
+* Reproducible installer `0.7.5` with unified installation, verification, configuration snapshots, rollback, content-preserving uninstall, and offline legal-notice generation
 
 The current services use:
 
@@ -72,7 +72,7 @@ Potential content includes:
 | Content-pack system | Completed |
 | System status and administration | In progress — clean-install validation remaining |
 
-Installer `0.7.4` packages the Kiwix, dashboard, Chromium autostart, document-library, management, status, and offline legal-notice components. It supports `install-all`, independent verification, configuration snapshots, rollback, and content-preserving uninstall. Validation on a separate clean Raspberry Pi OS installation remains required.
+Installer `0.7.5` packages the Kiwix, dashboard, Chromium autostart, document-library, management, status, and offline legal-notice components. It supports `install-all`, independent verification, configuration snapshots, rollback, and content-preserving uninstall. Validation on a separate clean Raspberry Pi OS installation remains required.
 
 ## Public and private content boundary
 
