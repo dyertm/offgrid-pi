@@ -1,7 +1,7 @@
 # Offgrid Pi Installation Guide
 
 **Document status:** Development installation and recovery guide
-**Validation status:** Installer 0.7.5 incorporates fixes identified during clean-install testing. Development-system validation has passed; final pristine clean-install acceptance on a separate Raspberry Pi OS installation remains required.
+**Validation status:** Installer 0.7.5 passed pristine clean-install acceptance on a separate Raspberry Pi OS 64-bit Desktop installation. Validation included preflight, one-pass `install-all`, independent verification, reboot persistence, Chromium autostart, local-service recovery, and offline-operation testing.
 
 ## 1. Validated development target
 
@@ -378,7 +378,6 @@ From another device, use either `offgridpi.local` or the Pi's local IP address. 
 ## 19. Known prototype limitations
 
 * The dashboard and document library use Python's built-in server and require later release review.
-* The current Kiwix service points to a specific ZIM filename rather than a generated library definition.
 * `zimcheck` 3.5.0 reported a structural error on tested official archives even though functional Kiwix tests passed.
-* The Phase 5 installer currently packages the document module first; Kiwix, dashboard, browser autostart, upgrade, and uninstall modules are still being added.
-* Clean-install testing is still required before a release is considered reproducible.
+* Kiwix remains intentionally disabled when no approved ZIM files are present; approved content can be added later without reinstalling the platform.
+* Clean-install acceptance validates reproducible installation behavior, but commercial-release packaging, imaging, and distribution procedures still require later release review.

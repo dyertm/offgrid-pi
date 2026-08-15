@@ -930,3 +930,114 @@ This register currently covers the seven direct packages intentionally installed
 by Offgrid Pi. It is not a complete transitive software bill of materials.
 Corresponding-source and written-offer procedures must be prepared separately
 before distributing a commercial release image.
+
+## Phase 5 / Phase 7 — Pristine Clean-Install Acceptance
+
+**Date:** August 14, 2026
+**Status:** Completed and accepted
+**Installer:** `0.7.5`
+**Validated commit:** `f234227abd4524d778b1b298ffa28387faa14cdc`
+
+Completed final pristine clean-install acceptance on a separate microSD card
+using a newly imaged Raspberry Pi OS 64-bit Desktop installation.
+
+### Validation platform
+
+- Raspberry Pi 4 Model B Rev 1.5
+- Debian GNU/Linux 13 (Trixie)
+- `aarch64`
+- Updated kernel: `6.18.39+rpt-rpi-v8`
+- Fresh HTTPS clone of `dyertm/offgrid-pi`
+- Repository confirmed clean and at the exact validated commit before installation
+
+The existing development microSD card was preserved separately and was not used
+as the clean-install target.
+
+### Pristine installation acceptance
+
+Before installation:
+
+- `sudo ./install.sh check` passed on the first attempt
+- Installer version confirmed as `0.7.5`
+- No Offgrid Pi modules had been preinstalled on the validation system
+
+A single uninterrupted:
+
+`sudo ./install.sh install-all`
+
+was then executed from the pristine state.
+
+The complete installation succeeded without repair, manual intervention, or a
+second installer run.
+
+Expected no-content Kiwix behavior was confirmed:
+
+- Kiwix packages and service definition installed successfully
+- No approved ZIM files were present
+- Kiwix remained disabled and inactive by design
+- TCP port `8080` was therefore not required
+
+Installed services and interfaces included:
+
+- Dashboard: TCP `8081`
+- Public document library: TCP `8082`
+- Localhost-only management viewer: `127.0.0.1:8083`
+- Document indexer
+- System-status publisher
+- Protected system-log publisher
+- Legal & Notices module
+- Chromium desktop autostart
+
+The installer-integrated verifier completed with:
+
+- Failures: `0`
+- Review items: `1`
+
+The single review item was the expected inability to detect Chromium from the
+SSH-only session before a desktop login.
+
+### Reboot persistence acceptance
+
+The clean-install system was rebooted and independently verified with:
+
+`sudo ./install.sh verify`
+
+Post-reboot verification completed with:
+
+- Failures: `0`
+- Review items: `0`
+- No failed systemd units
+- Chromium running
+- Hardware throttle status `0x0`
+
+All required services, listeners, generated files, security boundaries, status
+publishing, protected logs, configuration snapshots, and HTTP endpoints
+recovered successfully.
+
+The attached display also confirmed Chromium automatically opened the Offgrid Pi
+dashboard after reboot.
+
+### Offline-operation acceptance
+
+Internet routing was temporarily blocked while preserving local-network access.
+
+Confirmed while internet access was unavailable:
+
+- External HTTPS connectivity failed as expected
+- Dashboard continued returning HTTP `200`
+- Local Documents opened normally
+- System Status opened normally
+- Legal & Notices opened normally
+- SSH remained available over the local network
+
+Normal IPv4 and IPv6 default routing was then restored, and outbound HTTPS
+connectivity was reconfirmed successfully.
+
+### Acceptance result
+
+Installer `0.7.5` is accepted as reproducible for the currently implemented
+Offgrid Pi platform on the validated Raspberry Pi OS target.
+
+This closes the separate-card clean-install requirements for Phase 5 and
+Phase 7. Future development may add new modules or release-packaging
+requirements that will require their own validation.

@@ -68,11 +68,11 @@ Potential content includes:
 | Kiwix proof of concept | Completed |
 | Dashboard prototype | Completed |
 | Local document library | Completed |
-| Reproducible installer | In progress — clean-install validation remaining |
+| Reproducible installer | Completed — pristine clean-install validation passed |
 | Content-pack system | Completed |
-| System status and administration | In progress — clean-install validation remaining |
+| System status and administration | Completed — pristine clean-install validation passed |
 
-Installer `0.7.5` packages the Kiwix, dashboard, Chromium autostart, document-library, management, status, and offline legal-notice components. It supports `install-all`, independent verification, configuration snapshots, rollback, and content-preserving uninstall. Validation on a separate clean Raspberry Pi OS installation remains required.
+Installer `0.7.5` packages the Kiwix, dashboard, Chromium autostart, document-library, management, status, and offline legal-notice components. It supports `install-all`, independent verification, configuration snapshots, rollback, and content-preserving uninstall. Pristine clean-install acceptance was completed successfully on a separate Raspberry Pi OS 64-bit Desktop installation, including one-pass installation, reboot persistence, Chromium autostart, and offline-operation validation.
 
 ## Public and private content boundary
 

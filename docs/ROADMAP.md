@@ -11,10 +11,10 @@
 | 2 — Kiwix proof of concept | Completed |
 | 3 — Dashboard prototype | Completed |
 | 4 — Local document library | Completed |
-| 5 — Reproducible installer | In progress — clean-install validation remaining |
+| 5 — Reproducible installer | Completed — pristine clean-install validation passed |
 | 6 — Content-pack system | Completed — starter workflow validated |
-| 7 — System status and administration | In progress — clean-install validation remaining |
-| 8 — Offline maps | Deferred |
+| 7 — System status and administration | Completed — pristine clean-install validation passed |
+| 8 — Offline maps | In progress — reader and pack standard |
 | 9 — Offline entertainment | Planned |
 | 10 — Local Wi-Fi hotspot | Deferred |
 | 11 — Storage architecture | Deferred |
@@ -127,7 +127,7 @@ Known follow-up:
 
 ## Phase 5 — Reproducible installer
 
-**Status:** In progress — clean-install validation remaining
+**Status:** Completed — pristine clean-install validation passed
 
 Objectives:
 
@@ -155,6 +155,16 @@ Completion criteria:
 * Re-running the installer does not damage services or user content
 * Failures produce actionable messages
 * Verification can be run independently after installation or upgrade
+
+Acceptance validation:
+
+* Completed pristine clean-install testing on a separately imaged Raspberry Pi OS 64-bit Desktop microSD card
+* Confirmed installer `0.7.5` preflight passed before installation
+* Confirmed one-pass `install-all` completed successfully from a fresh GitHub clone
+* Confirmed independent verification passed after reboot with zero failures and zero review items
+* Confirmed Chromium autostart opened the dashboard after reboot
+* Confirmed dashboard, document library, System Status, and Legal & Notices remained functional with internet access blocked
+* Confirmed normal network access was restored after offline validation
 
 ## Phase 6 — Content-pack system
 
@@ -197,7 +207,7 @@ Completion validation:
 
 ## Phase 7 — System status and administration
 
-**Status:** In progress — clean-install validation remaining
+**Status:** Completed — pristine clean-install validation passed
 
 Completed outcomes:
 
@@ -217,6 +227,7 @@ Completed outcomes:
 * Added restrictive browser security headers, disabled caching, rejected write methods, and withheld raw JSON access
 * Kept browser-based privileged administration disabled
 * Added installer `0.7.3` support for the status tools, protected log publisher, and localhost management viewer
+* Added an offline Legal & Notices module with an approved direct-package register, exact installed versions, local copyright notices, MIT project license, installer integration, and installed-system verification
 * Added automated server, service, installer, listener, route, permissions, and installed-system verification
 * Deployed the management viewer successfully on the development Raspberry Pi
 * Confirmed the complete Phase 7 suite and installed-system verifier passed with zero failures and zero review items
@@ -238,10 +249,8 @@ Current access model:
 * Administrative actions: protected command line only
 * Remote protected-log access: authenticated SSH port forwarding
 
-Remaining work:
+Future consideration:
 
-* Added an offline Legal & Notices module with an approved direct-package register, exact installed versions, local copyright notices, MIT project license, installer integration, and installed-system verification
-* Include all Phase 7 components in the separate-card clean-install validation
 * Decide whether privileged browser administration belongs in a future phase; the currently approved browser interface remains read-only
 
 Completion criteria:
@@ -311,7 +320,6 @@ Publish a documented, reproducible, sanitized release with contribution and supp
 
 ## Immediate next actions
 
-1. Complete clean-install testing on a separate microSD card.
-3. Create the medical and first-aid content-pack manifest.
-4. Create the emergency-preparedness content-pack manifest.
-5. Select and add the project license.
+1. Create the medical and first-aid content-pack manifest.
+2. Create the emergency-preparedness content-pack manifest.
+3. Continue Phase 8 offline-map implementation and validation.
