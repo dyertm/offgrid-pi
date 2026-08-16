@@ -8,6 +8,7 @@ SERVICES=(
   offgridpi-dashboard.service
   offgridpi-documents.service
   offgridpi-document-indexer.service
+  offgridpi-maps.service
 )
 
 MANAGED_PATHS=()
@@ -94,7 +95,11 @@ build_managed_paths() {
     /etc/systemd/system/offgridpi-dashboard.service
     /etc/systemd/system/offgridpi-documents.service
     /etc/systemd/system/offgridpi-document-indexer.service
+    /etc/systemd/system/offgridpi-maps.service
     /opt/offgridpi/dashboard
+    /opt/offgridpi/maps
+    /opt/offgridpi/content-packs
+    /opt/offgridpi/scripts/offgridpi-map-server.py
     /opt/offgridpi/scripts/start-kiwix.sh
     /opt/offgridpi/scripts/launch-dashboard.sh
     /opt/offgridpi/scripts/index-documents.py

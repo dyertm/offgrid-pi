@@ -92,6 +92,18 @@ for path in \
   /etc/systemd/system/kiwix-serve.service \
   /opt/offgridpi/scripts/index-documents.py \
   /opt/offgridpi/scripts/watch-documents.sh \
+  /opt/offgridpi/maps/index.html \
+  /opt/offgridpi/scripts/offgridpi-map-server.py \
+  /opt/offgridpi/content-packs/import-map-pack.py \
+  /opt/offgridpi/content-packs/inspect-map-pack.py \
+  /opt/offgridpi/content-packs/validate-map-pack.py \
+  /opt/offgridpi/content-packs/schema/map-pack.schema.json \
+  /etc/systemd/system/offgridpi-maps.service \
+  /srv/offgridpi/content/maps \
+  /srv/offgridpi/content/maps/packs \
+  /srv/offgridpi/content/maps/incoming \
+  /srv/offgridpi/content/maps/rejected \
+  /srv/offgridpi/content/maps/user-data \
   /srv/offgridpi/content/kiwix \
   /srv/offgridpi/content/documents/public \
   /srv/offgridpi/content/documents/personal \
@@ -142,7 +154,8 @@ fi
 for service in \
   offgridpi-dashboard.service \
   offgridpi-documents.service \
-  offgridpi-document-indexer.service
+  offgridpi-document-indexer.service \
+  offgridpi-maps.service
 do
   check_service "$service"
 done
@@ -158,6 +171,7 @@ fi
 
 check_port 8081
 check_port 8082
+check_port 8084
 
 echo
 echo "=== Local HTTP ==="
@@ -171,6 +185,229 @@ fi
 check_http "Dashboard" "http://127.0.0.1:8081/"
 check_http "Document library" "http://127.0.0.1:8082/"
 
+
+echo
+echo "=== Offline Maps reader ==="
+
+map_user="$(
+  systemctl show \
+    offgridpi-maps.service \
+    --property=User \
+    --value \
+    2>/dev/null || true
+)"
+
+map_group="$(
+  systemctl show \
+    offgridpi-maps.service \
+    --property=Group \
+    --value \
+    2>/dev/null || true
+)"
+
+if [[ "$map_user" == "offgridpi" ]]; then
+  pass "Offline Maps service uses the restricted account."
+else
+  fail "Unexpected Offline Maps service user: ${map_user:-unknown}"
+fi
+
+if [[ "$map_group" == "offgridpi" ]]; then
+  pass "Offline Maps service uses the restricted group."
+else
+  fail "Unexpected Offline Maps service group: ${map_group:-unknown}"
+fi
+
+map_listener="$(
+  ss -ltnH 'sport = :8084' \
+    2>/dev/null || true
+)"
+
+if grep -qE \
+  '(^|[[:space:]])(0\.0\.0\.0|\*):8084([[:space:]]|$)' \
+  <<< "$map_listener"
+then
+  pass "Offline Maps reader listens publicly on TCP port 8084."
+else
+  fail "Offline Maps reader is not listening on the approved public address."
+fi
+
+map_temp="$(
+  mktemp -d
+)"
+
+map_headers="$map_temp/headers.txt"
+map_body="$map_temp/body.html"
+
+if curl \
+  --silent \
+  --show-error \
+  --dump-header "$map_headers" \
+  --output "$map_body" \
+  http://127.0.0.1:8084/
+then
+  if grep -qE \
+    '^HTTP/[^ ]+ 200([[:space:]]|$)' \
+    "$map_headers"
+  then
+    pass "Offline Maps reader returns HTTP 200."
+  else
+    fail "Offline Maps reader did not return HTTP 200."
+  fi
+
+  if grep -qF \
+    'Offline Maps' \
+    "$map_body"
+  then
+    pass "Offline Maps reader page content is valid."
+  else
+    fail "Offline Maps reader returned unexpected content."
+  fi
+
+  if grep -qi \
+    '^Content-Security-Policy:' \
+    "$map_headers"
+  then
+    pass "Offline Maps Content Security Policy is present."
+  else
+    fail "Offline Maps Content Security Policy is missing."
+  fi
+
+  if grep -qi \
+    '^X-Content-Type-Options: nosniff' \
+    "$map_headers"
+  then
+    pass "Offline Maps MIME-sniffing protection is enabled."
+  else
+    fail "Offline Maps MIME-sniffing protection is missing."
+  fi
+
+  if grep -qi \
+    '^X-Frame-Options: DENY' \
+    "$map_headers"
+  then
+    pass "Offline Maps frame protection is enabled."
+  else
+    fail "Offline Maps frame protection is missing."
+  fi
+else
+  fail "Unable to retrieve the Offline Maps reader page."
+fi
+
+map_unknown_code="$(
+  curl \
+    --silent \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    http://127.0.0.1:8084/not-present \
+    2>/dev/null || true
+)"
+
+if [[ "$map_unknown_code" == "404" ]]; then
+  pass "Unknown Offline Maps routes return HTTP 404."
+else
+  fail "Unexpected Offline Maps unknown-route response: HTTP ${map_unknown_code:-000}"
+fi
+
+map_post_code="$(
+  curl \
+    --silent \
+    --request POST \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    http://127.0.0.1:8084/ \
+    2>/dev/null || true
+)"
+
+if [[ "$map_post_code" == "405" ]]; then
+  pass "Offline Maps reader rejects write methods."
+else
+  fail "Unexpected Offline Maps POST response: HTTP ${map_post_code:-000}"
+fi
+
+map_range_target="$(
+  python3 - <<'PYMAP'
+import json
+from pathlib import Path
+from urllib.parse import quote
+
+root = Path("/srv/offgridpi/content/maps/packs")
+
+for manifest_path in sorted(root.glob("*/*/manifest.json")):
+    try:
+        manifest = json.loads(
+            manifest_path.read_text(encoding="utf-8")
+        )
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        continue
+
+    pack_id = manifest.get("pack_id")
+    version = manifest.get("version")
+    files = manifest.get("files")
+
+    if (
+        not isinstance(pack_id, str)
+        or not isinstance(version, str)
+        or not isinstance(files, list)
+    ):
+        continue
+
+    for declaration in files:
+        if not isinstance(declaration, dict):
+            continue
+
+        if declaration.get("role") != "basemap":
+            continue
+
+        relative = declaration.get("path")
+
+        if not isinstance(relative, str) or not relative:
+            continue
+
+        target = manifest_path.parent / relative
+
+        if target.is_symlink() or not target.is_file():
+            continue
+
+        print(
+            "/packs/"
+            + quote(pack_id, safe="")
+            + "/"
+            + quote(version, safe="")
+            + "/"
+            + quote(relative, safe="/")
+        )
+        raise SystemExit(0)
+PYMAP
+)"
+
+if [[ -n "$map_range_target" ]]; then
+  map_range_headers="$map_temp/range-headers.txt"
+
+  curl \
+    --silent \
+    --show-error \
+    --header 'Range: bytes=0-3' \
+    --dump-header "$map_range_headers" \
+    --output "$map_temp/range-body.bin" \
+    "http://127.0.0.1:8084$map_range_target" \
+    >/dev/null 2>&1 || true
+
+  if grep -qE \
+    '^HTTP/[^ ]+ 206([[:space:]]|$)' \
+    "$map_range_headers" 2>/dev/null \
+    && grep -qi \
+      '^Accept-Ranges: bytes' \
+      "$map_range_headers"
+  then
+    pass "Installed PMTiles content supports HTTP byte ranges."
+  else
+    fail "Installed PMTiles content failed HTTP byte-range verification."
+  fi
+else
+  pass "PMTiles range verification is not required without installed map packs."
+fi
+
+rm -rf "$map_temp"
 
 echo
 echo "=== Kiwix content ==="

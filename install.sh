@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-INSTALLER_VERSION="0.7.5"
+INSTALLER_VERSION="0.7.6"
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOCUMENT_PUBLIC="/srv/offgridpi/content/documents/public"
 DOCUMENT_PERSONAL="/srv/offgridpi/content/documents/personal"
 DASHBOARD_ROOT="/opt/offgridpi/dashboard"
+MAP_READER_ROOT="/opt/offgridpi/maps"
+MAP_CONTENT_ROOT="/srv/offgridpi/content/maps"
+MAP_PACK_ROOT="$MAP_CONTENT_ROOT/packs"
+MAP_INCOMING_ROOT="$MAP_CONTENT_ROOT/incoming"
+MAP_REJECTED_ROOT="$MAP_CONTENT_ROOT/rejected"
+MAP_USER_DATA_ROOT="$MAP_CONTENT_ROOT/user-data"
 KIWIX_ROOT="/srv/offgridpi/content/kiwix"
 CATEGORIES=(
   emergency first-aid food gardening communications radio repair
@@ -29,6 +35,7 @@ Usage:
   sudo ./install.sh install-all
   sudo ./install.sh install-management
   sudo ./install.sh install-documents
+  sudo ./install.sh install-maps
   sudo ./install.sh install-dashboard
   sudo ./install.sh install-kiwix
   sudo ./install.sh verify
@@ -43,6 +50,7 @@ Commands:
   install-management Install status, administration, protected logs,
                      and the localhost management viewer.
   install-documents  Idempotently install the validated document module.
+  install-maps       Idempotently install the offline map-reader module.
   install-dashboard  Idempotently install the dashboard and desktop autostart.
   install-kiwix      Idempotently install Kiwix and discover approved ZIM files.
   verify             Run the repository verification script.
@@ -112,6 +120,13 @@ check_payload() {
     "$PROJECT_ROOT/systemd/offgridpi-log-publisher.timer" \
     "$PROJECT_ROOT/scripts/offgridpi-management-server.py" \
     "$PROJECT_ROOT/systemd/offgridpi-management.service" \
+    "$PROJECT_ROOT/maps/index.html" \
+    "$PROJECT_ROOT/scripts/offgridpi-map-server.py" \
+    "$PROJECT_ROOT/systemd/offgridpi-maps.service" \
+    "$PROJECT_ROOT/content-packs/import-map-pack.py" \
+    "$PROJECT_ROOT/content-packs/inspect-map-pack.py" \
+    "$PROJECT_ROOT/content-packs/validate-map-pack.py" \
+    "$PROJECT_ROOT/content-packs/schema/map-pack.schema.json" \
     "$PROJECT_ROOT/scripts/manage-installation.sh" \
     "$PROJECT_ROOT/tests/verify-installation.sh"
   do
@@ -219,6 +234,118 @@ install_document_module() {
 
   log "Document module installation completed."
   log "Library URL: http://$(hostname):8082/"
+}
+
+
+install_map_module() {
+  require_root
+  check_host
+
+  local admin_user attempt map_page
+  admin_user="$(resolve_admin_user)"
+
+  log "Administrator: $admin_user"
+  log "Installing offline map-reader packages."
+
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    python3 \
+    curl \
+    rsync
+
+  ensure_service_account
+
+  install -d -o root -g root -m 0755 \
+    "$MAP_READER_ROOT" \
+    /opt/offgridpi/scripts \
+    /opt/offgridpi/content-packs \
+    /opt/offgridpi/content-packs/schema
+
+  install -d -o root -g root -m 0755 \
+    "$MAP_CONTENT_ROOT"
+
+  install -d -o "$admin_user" -g offgridpi -m 2750 \
+    "$MAP_PACK_ROOT" \
+    "$MAP_INCOMING_ROOT" \
+    "$MAP_REJECTED_ROOT" \
+    "$MAP_USER_DATA_ROOT"
+
+  systemctl stop offgridpi-maps.service 2>/dev/null || true
+
+  log "Installing map-reader application files."
+
+  rsync \
+    --archive \
+    --delete \
+    "$PROJECT_ROOT/maps/" \
+    "$MAP_READER_ROOT/"
+
+  chown -R root:root "$MAP_READER_ROOT"
+  find "$MAP_READER_ROOT" -type d -exec chmod 0755 {} +
+  find "$MAP_READER_ROOT" -type f -exec chmod 0644 {} +
+
+  install -o root -g root -m 0755 \
+    "$PROJECT_ROOT/scripts/offgridpi-map-server.py" \
+    /opt/offgridpi/scripts/offgridpi-map-server.py
+
+  install -o root -g root -m 0755 \
+    "$PROJECT_ROOT/content-packs/import-map-pack.py" \
+    /opt/offgridpi/content-packs/import-map-pack.py
+
+  install -o root -g root -m 0755 \
+    "$PROJECT_ROOT/content-packs/inspect-map-pack.py" \
+    /opt/offgridpi/content-packs/inspect-map-pack.py
+
+  install -o root -g root -m 0755 \
+    "$PROJECT_ROOT/content-packs/validate-map-pack.py" \
+    /opt/offgridpi/content-packs/validate-map-pack.py
+
+  install -o root -g root -m 0644 \
+    "$PROJECT_ROOT/content-packs/schema/map-pack.schema.json" \
+    /opt/offgridpi/content-packs/schema/map-pack.schema.json
+
+  install -o root -g root -m 0644 \
+    "$PROJECT_ROOT/systemd/offgridpi-maps.service" \
+    /etc/systemd/system/offgridpi-maps.service
+
+  python3 -m py_compile \
+    /opt/offgridpi/scripts/offgridpi-map-server.py \
+    /opt/offgridpi/content-packs/import-map-pack.py \
+    /opt/offgridpi/content-packs/inspect-map-pack.py \
+    /opt/offgridpi/content-packs/validate-map-pack.py
+
+  systemd-analyze verify \
+    /etc/systemd/system/offgridpi-maps.service
+
+  systemctl daemon-reload
+  systemctl enable --now offgridpi-maps.service
+
+  for attempt in $(seq 1 30); do
+    if curl \
+      --silent \
+      --fail \
+      --output /dev/null \
+      http://127.0.0.1:8084/
+    then
+      log "Offline map reader answered on TCP port 8084."
+      break
+    fi
+
+    sleep 1
+  done
+
+  map_page="$(
+    curl \
+      --silent \
+      --fail \
+      http://127.0.0.1:8084/
+  )" || die "Offline map reader did not become available."
+
+  grep -q 'Offline Maps' <<< "$map_page" \
+    || die "Offline map reader returned unexpected content."
+
+  log "Offline map-reader module installation completed."
+  log "Map reader URL: http://$(hostname):8084/"
 }
 
 
@@ -697,13 +824,16 @@ install_all_modules() {
 
   install_management_tool
 
-  log "Step 1 of 3: Kiwix module."
+  log "Step 1 of 4: Kiwix module."
   install_kiwix_module
 
-  log "Step 2 of 3: Document module."
+  log "Step 2 of 4: Document module."
   install_document_module
 
-  log "Step 3 of 3: Dashboard module."
+  log "Step 3 of 4: Offline Maps module."
+  install_map_module
+
+  log "Step 4 of 4: Dashboard module."
   install_dashboard_module
 
   log "Running complete installation verification."
@@ -753,6 +883,9 @@ case "${1:-}" in
     ;;
   install-documents)
     install_document_module
+    ;;
+  install-maps)
+    install_map_module
     ;;
   install-dashboard)
     install_dashboard_module

@@ -117,8 +117,8 @@ done
 pass "Installed verifier includes Legal & Notices checks."
 
 grep -qF \
-  'INSTALLER_VERSION="0.7.4"' \
+  'INSTALLER_VERSION="0.7.6"' \
   "$INSTALLER" ||
-  fail "Installer version was not advanced to 0.7.4."
+  fail "Installer version was not advanced to 0.7.6."
 
 pass "Legal installer integration tests completed."
