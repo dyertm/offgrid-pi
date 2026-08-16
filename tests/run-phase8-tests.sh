@@ -11,6 +11,7 @@ fi
 TESTS=(
   "tests/test-map-pack-validator.sh"
   "tests/test-map-pack-archive.sh"
+  "tests/test-map-pack-import.sh"
 )
 
 echo "=== Offgrid Pi Phase 8 tests ==="
