@@ -23,6 +23,7 @@ DEFAULT_TEMP_ROOT = Path("/srv/offgridpi/content/maps/incoming")
 
 FILE_MODE = 0o640
 DIRECTORY_MODE = 0o750
+PACK_DIRECTORY_MODE = 0o2750
 
 AT_FDCWD = -100
 RENAME_NOREPLACE = 1
@@ -399,6 +400,30 @@ def import_pack(
         )
 
         if valid:
+            if confirm:
+                owner_uid, group_gid = installation_ownership()
+                pack_container = final_directory.parent
+
+                if path_contains_symlink(
+                    destination_root,
+                    pack_container,
+                ):
+                    fail(
+                        "Map-pack container path contains a symbolic link."
+                    )
+
+                if owner_uid is not None and group_gid is not None:
+                    os.chown(
+                        pack_container,
+                        owner_uid,
+                        group_gid,
+                    )
+
+                os.chmod(
+                    pack_container,
+                    PACK_DIRECTORY_MODE,
+                )
+
             print(f"Result: ALREADY INSTALLED — {message}")
             return 0
 
@@ -428,7 +453,27 @@ def import_pack(
     destination_parent.mkdir(
         parents=True,
         exist_ok=True,
-        mode=DIRECTORY_MODE,
+        mode=PACK_DIRECTORY_MODE,
+    )
+
+    if path_contains_symlink(
+        destination_root,
+        destination_parent,
+    ):
+        fail(
+            "Map-pack container path contains a symbolic link."
+        )
+
+    if owner_uid is not None and group_gid is not None:
+        os.chown(
+            destination_parent,
+            owner_uid,
+            group_gid,
+        )
+
+    os.chmod(
+        destination_parent,
+        PACK_DIRECTORY_MODE,
     )
 
     temporary_root.mkdir(

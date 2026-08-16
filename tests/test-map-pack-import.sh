@@ -152,6 +152,14 @@ done
 
 pass "Confirmed import installed the complete versioned pack."
 
+PACK_CONTAINER="$DESTINATION_ROOT/synthetic-import-test"
+
+if [[ "$(stat -c '%a' "$PACK_CONTAINER")" != "2750" ]]; then
+  fail "Pack container directory does not use mode 2750."
+fi
+
+pass "Pack container directory uses the setgid maintenance mode."
+
 if find "$FINAL_DIRECTORY" -type f ! -perm 0640 -print -quit \
     | grep -q .
 then
@@ -187,6 +195,22 @@ if [[ "$output" != *"ALREADY INSTALLED"* ]]; then
 fi
 
 pass "Repeated import is idempotent for an unchanged installed version."
+
+chmod 0750 "$PACK_CONTAINER"
+
+repair_output="$(
+  "$IMPORTER"     "$ARCHIVE"     --destination-root "$DESTINATION_ROOT"     --temporary-root "$IMPORT_ROOT"     --confirm
+)"
+
+if [[ "$repair_output" != *"ALREADY INSTALLED"* ]]; then
+  fail "Confirmed re-import did not recognize the valid installed pack."
+fi
+
+if [[ "$(stat -c '%a' "$PACK_CONTAINER")" != "2750" ]]; then
+  fail "Confirmed re-import did not repair the pack-container mode."
+fi
+
+pass "Confirmed re-import repairs the pack-container maintenance mode."
 
 VERSION_TWO_ARCHIVE="$TEMP_ROOT/synthetic-import-v2.ogmap"
 VERSION_TWO_DIRECTORY="$DESTINATION_ROOT/synthetic-import-test/0.2.0"
