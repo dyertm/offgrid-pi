@@ -2,89 +2,173 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+  <meta
+    name="description"
+    content="Offgrid Pi offline map reader"
+  >
   <meta name="robots" content="noindex,nofollow">
+
   <title>Offline Maps | Offgrid Pi</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      font-family: Arial, Helvetica, sans-serif;
-    }
 
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: #0c1218;
-      color: #edf4f7;
-    }
-
-    main {
-      width: min(900px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 48px 0;
-    }
-
-    .eyebrow {
-      margin: 0 0 8px;
-      color: #7fd2ad;
-      font-size: 0.75rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(2rem, 7vw, 4rem);
-    }
-
-    .subtitle {
-      max-width: 680px;
-      margin: 14px 0 28px;
-      color: #a8b6bd;
-      line-height: 1.6;
-    }
-
-    .status {
-      border: 1px solid #31404a;
-      border-radius: 14px;
-      background: #111a22;
-      padding: 20px;
-    }
-
-    .status h2 {
-      margin-top: 0;
-    }
-
-    .status p {
-      margin-bottom: 0;
-      color: #b7c4ca;
-      line-height: 1.55;
-    }
-  </style>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
-  <main>
-    <p class="eyebrow">Offgrid Pi</p>
-    <h1>Offline Maps</h1>
+  <div class="page">
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">Offline Navigation</p>
+        <h1>Offline Maps</h1>
+        <p class="subtitle">
+          Browse map regions installed directly on this device.
+        </p>
+      </div>
 
-    <p class="subtitle">
-      Local maps remain available without an internet connection.
-      Installed map packs are served directly from this device.
-    </p>
+      <div class="header-actions">
+        <div
+          class="status-badge"
+          id="pack-status"
+          aria-live="polite"
+        >
+          Loading maps…
+        </div>
 
-    <section class="status">
-      <h2>Map reader foundation active</h2>
-      <p>
-        The secure offline map service is ready. Pack discovery and
-        interactive map rendering will be added during the next
-        Phase 8 reader milestone.
-      </p>
-    </section>
-  </main>
+        <a
+          class="dashboard-return"
+          id="dashboard-link"
+          href="#"
+        >
+          ← Dashboard
+        </a>
+      </div>
+    </header>
+
+    <main>
+      <section
+        class="reader-layout"
+        aria-label="Offline map reader"
+      >
+        <aside
+          class="catalog-panel"
+          aria-labelledby="catalog-heading"
+        >
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Available Content</p>
+              <h2 id="catalog-heading">Installed Maps</h2>
+            </div>
+
+            <span class="pack-count" id="pack-count">
+              0
+            </span>
+          </div>
+
+          <div
+            class="catalog-message"
+            id="catalog-message"
+            role="status"
+          >
+            Looking for installed map packs…
+          </div>
+
+          <div
+            class="pack-list"
+            id="pack-list"
+            aria-label="Installed map packs"
+          ></div>
+        </aside>
+
+        <section
+          class="map-panel"
+          aria-labelledby="selected-map-heading"
+        >
+          <div
+            class="map-placeholder"
+            id="map-workspace"
+          >
+            <div class="map-placeholder-content">
+              <p class="section-label">Map Workspace</p>
+              <h2>Select an installed map</h2>
+              <p>
+                Choose a region from the installed maps list to view
+                its details and prepare it for offline rendering.
+              </p>
+            </div>
+          </div>
+
+          <section
+            class="details-panel"
+            id="details-panel"
+            hidden
+            aria-labelledby="selected-map-heading"
+          >
+            <div class="details-heading">
+              <div>
+                <p class="section-label">Selected Map</p>
+                <h2 id="selected-map-heading"></h2>
+              </div>
+
+              <span
+                class="pack-state"
+                id="selected-status"
+              ></span>
+            </div>
+
+            <p
+              class="map-description"
+              id="selected-description"
+            ></p>
+
+            <dl class="metadata-grid">
+              <div>
+                <dt>Region</dt>
+                <dd id="selected-region"></dd>
+              </div>
+
+              <div>
+                <dt>Version</dt>
+                <dd id="selected-version"></dd>
+              </div>
+
+              <div>
+                <dt>Map Data</dt>
+                <dd id="selected-data-date"></dd>
+              </div>
+
+              <div>
+                <dt>Zoom Range</dt>
+                <dd id="selected-zoom"></dd>
+              </div>
+            </dl>
+
+            <div
+              class="limitations"
+              id="limitations-section"
+              hidden
+            >
+              <h3>Known Limitations</h3>
+              <ul id="selected-limitations"></ul>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>
+        Host:
+        <strong id="reader-host">offgridpi</strong>
+      </span>
+      <span>
+        Maps served locally • No internet connection required
+      </span>
+    </footer>
+  </div>
+
+  <script src="js/app.js"></script>
 </body>
 </html>

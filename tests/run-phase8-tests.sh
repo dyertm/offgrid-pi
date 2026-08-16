@@ -13,6 +13,7 @@ TESTS=(
   "tests/test-map-pack-archive.sh"
   "tests/test-map-pack-import.sh"
   "tests/test-map-server.sh"
+  "tests/test-map-reader-ui.sh"
   "tests/test-map-service.sh"
   "tests/test-map-installer.sh"
 )

@@ -11,7 +11,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import BinaryIO
-from urllib.parse import unquote, urlsplit
+from urllib.parse import quote, unquote, urlsplit
 
 DEFAULT_BIND = "0.0.0.0"
 DEFAULT_PORT = 8084
@@ -292,6 +292,230 @@ def declared_pack_paths(
     return declared
 
 
+def discovery_entry(
+    pack_root: Path,
+    pack_directory: Path,
+) -> dict[str, object] | None:
+    if path_has_symlink_component(
+        pack_root,
+        pack_directory,
+    ):
+        return None
+
+    if (
+        pack_directory.is_symlink()
+        or not pack_directory.is_dir()
+    ):
+        return None
+
+    try:
+        relative = pack_directory.relative_to(
+            pack_root
+        )
+    except ValueError:
+        return None
+
+    if len(relative.parts) != 2:
+        return None
+
+    directory_pack_id, directory_version = (
+        relative.parts
+    )
+
+    try:
+        manifest = load_pack_manifest(
+            pack_directory
+        )
+    except (
+        OSError,
+        RuntimeError,
+        ValueError,
+    ):
+        return None
+
+    pack_id = manifest.get("pack_id")
+    version = manifest.get("version")
+    name = manifest.get("name")
+    status = manifest.get("status")
+    description = manifest.get("description")
+    data_date = manifest.get("data_date")
+    style_id = manifest.get("style_id")
+    limitations = manifest.get("limitations")
+    region = manifest.get("region")
+    files = manifest.get("files")
+
+    if (
+        not isinstance(pack_id, str)
+        or pack_id != directory_pack_id
+        or not isinstance(version, str)
+        or version != directory_version
+        or not isinstance(name, str)
+        or not isinstance(status, str)
+        or not isinstance(description, str)
+        or not isinstance(data_date, str)
+        or not isinstance(style_id, str)
+        or not isinstance(limitations, list)
+        or not all(
+            isinstance(item, str)
+            for item in limitations
+        )
+        or not isinstance(region, dict)
+        or not isinstance(files, list)
+    ):
+        return None
+
+    region_name = region.get("name")
+    bounds = region.get("bounds")
+    default_center = region.get(
+        "default_center"
+    )
+    min_zoom = region.get("min_zoom")
+    max_zoom = region.get("max_zoom")
+
+    if (
+        not isinstance(region_name, str)
+        or not isinstance(bounds, list)
+        or len(bounds) != 4
+        or not all(
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            for value in bounds
+        )
+        or not isinstance(default_center, list)
+        or len(default_center) != 2
+        or not all(
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            for value in default_center
+        )
+        or not isinstance(min_zoom, (int, float))
+        or isinstance(min_zoom, bool)
+        or not isinstance(max_zoom, (int, float))
+        or isinstance(max_zoom, bool)
+    ):
+        return None
+
+    basemap_path: str | None = None
+
+    for declaration in files:
+        if not isinstance(declaration, dict):
+            return None
+
+        if declaration.get("role") != "basemap":
+            continue
+
+        candidate = declaration.get("path")
+
+        if (
+            basemap_path is not None
+            or not isinstance(candidate, str)
+            or not candidate
+        ):
+            return None
+
+        try:
+            safe_file(
+                pack_directory,
+                Path(candidate),
+            )
+        except (
+            FileNotFoundError,
+            OSError,
+            ValueError,
+        ):
+            return None
+
+        basemap_path = candidate
+
+    if basemap_path is None:
+        return None
+
+    encoded_pack_id = quote(
+        pack_id,
+        safe="",
+    )
+    encoded_version = quote(
+        version,
+        safe="",
+    )
+    encoded_basemap = "/".join(
+        quote(part, safe="")
+        for part in Path(
+            basemap_path
+        ).parts
+    )
+
+    return {
+        "pack_id": pack_id,
+        "name": name,
+        "version": version,
+        "status": status,
+        "description": description,
+        "data_date": data_date,
+        "style_id": style_id,
+        "limitations": limitations,
+        "region": {
+            "name": region_name,
+            "bounds": bounds,
+            "default_center": default_center,
+            "min_zoom": min_zoom,
+            "max_zoom": max_zoom,
+        },
+        "manifest_url": (
+            f"/packs/{encoded_pack_id}/"
+            f"{encoded_version}/manifest.json"
+        ),
+        "basemap_url": (
+            f"/packs/{encoded_pack_id}/"
+            f"{encoded_version}/{encoded_basemap}"
+        ),
+    }
+
+
+def discover_installed_packs(
+    pack_root: Path,
+) -> list[dict[str, object]]:
+    discovered: list[dict[str, object]] = []
+
+    try:
+        pack_directories = sorted(
+            pack_root.iterdir(),
+            key=lambda path: path.name,
+        )
+    except OSError:
+        return discovered
+
+    for pack_container in pack_directories:
+        if (
+            pack_container.is_symlink()
+            or not pack_container.is_dir()
+            or path_has_symlink_component(
+                pack_root,
+                pack_container,
+            )
+        ):
+            continue
+
+        try:
+            version_directories = sorted(
+                pack_container.iterdir(),
+                key=lambda path: path.name,
+            )
+        except OSError:
+            continue
+
+        for pack_directory in version_directories:
+            entry = discovery_entry(
+                pack_root,
+                pack_directory,
+            )
+
+            if entry is not None:
+                discovered.append(entry)
+
+    return discovered
+
+
 def content_type_for(path: Path) -> str:
     if path.suffix.lower() == ".pmtiles":
         return "application/vnd.pmtiles"
@@ -463,6 +687,62 @@ class MapReaderHandler(BaseHTTPRequestHandler):
         self.send_header(
             "Cache-Control",
             "no-store",
+        )
+        self.send_security_headers()
+        self.end_headers()
+
+        if include_body:
+            self.wfile.write(body)
+
+    def is_pack_discovery_request(self) -> bool:
+        request_path = urlsplit(
+            self.path
+        ).path
+
+        try:
+            relative = safe_relative_path(
+                request_path
+            )
+        except ValueError:
+            return False
+
+        return relative == Path("api/packs")
+
+    def serve_pack_discovery(
+        self,
+        *,
+        include_body: bool,
+    ) -> None:
+        payload = {
+            "schema_version": 1,
+            "packs": discover_installed_packs(
+                self.server.pack_root
+            ),
+        }
+
+        body = (
+            json.dumps(
+                payload,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            )
+            + "\n"
+        ).encode("utf-8")
+
+        self.send_response(
+            HTTPStatus.OK
+        )
+        self.send_header(
+            "Content-Type",
+            "application/json; charset=utf-8",
+        )
+        self.send_header(
+            "Content-Length",
+            str(len(body)),
+        )
+        self.send_header(
+            "Cache-Control",
+            "no-cache",
         )
         self.send_security_headers()
         self.end_headers()
@@ -687,11 +967,23 @@ class MapReaderHandler(BaseHTTPRequestHandler):
             return
 
     def do_GET(self) -> None:
+        if self.is_pack_discovery_request():
+            self.serve_pack_discovery(
+                include_body=True
+            )
+            return
+
         self.serve_file(
             include_body=True
         )
 
     def do_HEAD(self) -> None:
+        if self.is_pack_discovery_request():
+            self.serve_pack_discovery(
+                include_body=False
+            )
+            return
+
         self.serve_file(
             include_body=False
         )
