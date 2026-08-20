@@ -123,6 +123,7 @@ manifest = {
         item["size_bytes"] for item in files
     ),
     "style_id": "emergency-basic",
+    "tile_schema_id": "protomaps-basemap-v4",
     "files": files,
     "sources": [],
     "limitations": ["Synthetic test only."]
@@ -232,6 +233,7 @@ expected = {
     "description": "Synthetic reader fixture.",
     "data_date": "2026-08-15",
     "style_id": "emergency-basic",
+    "tile_schema_id": "protomaps-basemap-v4",
     "limitations": ["Synthetic test only."],
     "manifest_url": "/packs/test-pack/0.1.0/manifest.json",
     "basemap_url": (

@@ -554,7 +554,10 @@ for notice in \
   rsync.txt \
   chromium.txt \
   kiwix-tools.txt \
-  zim-tools.txt
+  zim-tools.txt \
+  maplibre-gl-js.txt \
+  pmtiles-js.txt \
+  fflate.txt
 do
   notice_path="$LEGAL_ROOT/notices/$notice"
 
@@ -601,10 +604,10 @@ then
       "$LEGAL_TEMP" 2>/dev/null || true
   )"
 
-  if [[ "$component_count" -eq 7 ]]; then
-    pass "Legal page lists all seven registered components."
+  if [[ "$component_count" -eq 10 ]]; then
+    pass "Legal page lists all ten registered components."
   else
-    fail "Legal page lists ${component_count:-0} component(s), expected 7."
+    fail "Legal page lists ${component_count:-0} component(s), expected 10."
   fi
 
   if grep -qF 'Not installed' "$LEGAL_TEMP"; then

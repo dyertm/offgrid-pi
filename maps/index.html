@@ -14,6 +14,10 @@
 
   <title>Offline Maps | Offgrid Pi</title>
 
+  <link
+    rel="stylesheet"
+    href="vendor/maplibre-gl-js/maplibre-gl.css"
+  >
   <link rel="stylesheet" href="css/styles.css">
 </head>
 
@@ -90,7 +94,18 @@
             class="map-placeholder"
             id="map-workspace"
           >
-            <div class="map-placeholder-content">
+            <div
+              class="map-canvas"
+              id="map-canvas"
+              aria-label="Offline map"
+            ></div>
+
+            <div
+              class="map-placeholder-content render-message"
+              id="render-message"
+              role="status"
+              aria-live="polite"
+            >
               <p class="section-label">Map Workspace</p>
               <h2>Select an installed map</h2>
               <p>
@@ -169,6 +184,12 @@
     </footer>
   </div>
 
+  <script
+    src="vendor/maplibre-gl-js/maplibre-gl.js"
+  ></script>
+  <script
+    src="vendor/pmtiles-js/pmtiles.js"
+  ></script>
   <script src="js/app.js"></script>
 </body>
 </html>

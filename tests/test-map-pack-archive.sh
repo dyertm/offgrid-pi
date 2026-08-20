@@ -62,6 +62,7 @@ manifest = {
     "data_date": "2026-08-14",
     "estimated_installed_bytes": sum(len(data) for data in files.values()),
     "style_id": "emergency-basic",
+    "tile_schema_id": "protomaps-basemap-v4",
     "files": [
         {
             "path": "data/basemap.pmtiles",

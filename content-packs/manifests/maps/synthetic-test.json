@@ -27,6 +27,7 @@
     "data_date": "2026-08-06",
     "estimated_installed_bytes": 3,
     "style_id": "emergency-basic",
+    "tile_schema_id": "protomaps-basemap-v4",
     "files": [
         {
             "path": "data/basemap.pmtiles",

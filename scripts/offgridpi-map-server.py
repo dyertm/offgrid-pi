@@ -340,6 +340,7 @@ def discovery_entry(
     description = manifest.get("description")
     data_date = manifest.get("data_date")
     style_id = manifest.get("style_id")
+    tile_schema_id = manifest.get("tile_schema_id")
     limitations = manifest.get("limitations")
     region = manifest.get("region")
     files = manifest.get("files")
@@ -354,6 +355,7 @@ def discovery_entry(
         or not isinstance(description, str)
         or not isinstance(data_date, str)
         or not isinstance(style_id, str)
+        or not isinstance(tile_schema_id, str)
         or not isinstance(limitations, list)
         or not all(
             isinstance(item, str)
@@ -453,6 +455,7 @@ def discovery_entry(
         "description": description,
         "data_date": data_date,
         "style_id": style_id,
+        "tile_schema_id": tile_schema_id,
         "limitations": limitations,
         "region": {
             "name": region_name,

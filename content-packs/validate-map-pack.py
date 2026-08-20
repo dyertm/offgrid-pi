@@ -15,8 +15,8 @@ SHA256 = re.compile(r"^[0-9a-f]{64}$")
 TOP_FIELDS = {
     "schema_version", "pack_format", "pack_id", "name", "version",
     "status", "reader_compatibility", "description", "region",
-    "data_date", "estimated_installed_bytes", "style_id", "files",
-    "sources", "limitations",
+    "data_date", "estimated_installed_bytes", "style_id",
+    "tile_schema_id", "files", "sources", "limitations",
 }
 
 READER_FIELDS = {"minimum_version"}
@@ -51,6 +51,7 @@ ROLE_RULES = {
 }
 
 APPROVED_STYLES = {"emergency-basic"}
+APPROVED_TILE_SCHEMAS = {"protomaps-basemap-v4"}
 
 def require(condition, message):
     if not condition:
@@ -243,6 +244,10 @@ def validate_manifest(data):
     require_identifier(data["style_id"], "style_id")
     require(data["style_id"] in APPROVED_STYLES,
             f"Unsupported reader-owned style: {data["style_id"]}")
+
+    require_identifier(data["tile_schema_id"], "tile_schema_id")
+    require(data["tile_schema_id"] in APPROVED_TILE_SCHEMAS,
+            f"Unsupported tile schema: {data["tile_schema_id"]}")
 
     validate_files(data["files"], data["estimated_installed_bytes"])
     validate_sources(data["sources"], data["status"], pack_date)

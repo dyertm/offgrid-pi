@@ -8,6 +8,8 @@ const elements = {
   catalogMessage: document.getElementById("catalog-message"),
   packList: document.getElementById("pack-list"),
   mapWorkspace: document.getElementById("map-workspace"),
+  mapCanvas: document.getElementById("map-canvas"),
+  renderMessage: document.getElementById("render-message"),
   detailsPanel: document.getElementById("details-panel"),
   selectedHeading: document.getElementById("selected-map-heading"),
   selectedStatus: document.getElementById("selected-status"),
@@ -23,6 +25,9 @@ const elements = {
 const state = {
   packs: [],
   selectedKey: null,
+  protocol: null,
+  archive: null,
+  map: null,
 };
 
 function dashboardUrl() {
@@ -89,6 +94,140 @@ function showErrorState() {
   elements.mapWorkspace.hidden = false;
 }
 
+function renderPack(pack) {
+  if (!state.protocol) {
+    return;
+  }
+
+  if (state.map) {
+    state.map.remove();
+    state.map = null;
+  }
+
+  const basemapUrl = new URL(
+    pack.basemap_url,
+    window.location.href,
+  ).href;
+
+  state.archive = new pmtiles.PMTiles(basemapUrl);
+  state.protocol.add(state.archive);
+
+  state.map = new maplibregl.Map({
+    container: elements.mapCanvas,
+    style: {
+      version: 8,
+      sources: {
+        basemap: {
+          type: "vector",
+          url: `pmtiles://${basemapUrl}`,
+        },
+      },
+      layers: [
+        {
+          id: "offline-background",
+          type: "background",
+          paint: {
+            "background-color": "#0f171f",
+          },
+        },
+        {
+          id: "earth",
+          type: "fill",
+          source: "basemap",
+          "source-layer": "earth",
+          paint: {
+            "fill-color": "#d8d2bf",
+          },
+        },
+        {
+          id: "landcover",
+          type: "fill",
+          source: "basemap",
+          "source-layer": "landcover",
+          paint: {
+            "fill-color": "#b9c9a5",
+            "fill-opacity": 0.55,
+          },
+        },
+        {
+          id: "landuse",
+          type: "fill",
+          source: "basemap",
+          "source-layer": "landuse",
+          paint: {
+            "fill-color": "#c7d3b2",
+            "fill-opacity": 0.45,
+          },
+        },
+        {
+          id: "water",
+          type: "fill",
+          source: "basemap",
+          "source-layer": "water",
+          paint: {
+            "fill-color": "#89b6cf",
+          },
+        },
+        {
+          id: "boundaries",
+          type: "line",
+          source: "basemap",
+          "source-layer": "boundaries",
+          paint: {
+            "line-color": "#727272",
+            "line-width": 1,
+            "line-opacity": 0.7,
+          },
+        },
+        {
+          id: "roads",
+          type: "line",
+          source: "basemap",
+          "source-layer": "roads",
+          paint: {
+            "line-color": "#f3eee3",
+            "line-width": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              3, 0.4,
+              10, 1.5,
+              15, 4,
+            ],
+          },
+        },
+        {
+          id: "buildings",
+          type: "fill",
+          source: "basemap",
+          "source-layer": "buildings",
+          minzoom: 11,
+          paint: {
+            "fill-color": "#b6aa9b",
+            "fill-outline-color": "#95897d",
+          },
+        },
+      ],
+    },
+    bounds: pack.region.bounds,
+    fitBoundsOptions: {
+      padding: 24,
+      maxZoom: pack.region.max_zoom,
+    },
+    attributionControl: false,
+  });
+
+  elements.renderMessage.hidden = false;
+  elements.renderMessage.querySelector("h2").textContent =
+    "Preparing offline map";
+  elements.renderMessage.querySelector("p:last-child").textContent =
+    "Loading local vector map data.";
+
+  state.map.on("load", () => {
+    elements.renderMessage.hidden = true;
+  });
+}
+
 function selectPack(pack) {
   state.selectedKey = packKey(pack);
 
@@ -124,8 +263,10 @@ function selectPack(pack) {
     elements.limitationsSection.hidden = true;
   }
 
-  elements.mapWorkspace.hidden = true;
+  elements.mapWorkspace.hidden = false;
   elements.detailsPanel.hidden = false;
+
+  renderPack(pack);
 }
 
 function createPackCard(pack) {
@@ -193,6 +334,7 @@ function validPack(pack) {
     && typeof pack.description === "string"
     && typeof pack.data_date === "string"
     && typeof pack.style_id === "string"
+    && typeof pack.tile_schema_id === "string"
     && Array.isArray(pack.limitations)
     && pack.limitations.every(
       (item) => typeof item === "string",
@@ -251,11 +393,42 @@ async function loadPacks() {
   }
 }
 
+function initializeRenderer() {
+  if (
+    typeof maplibregl === "undefined"
+    || typeof pmtiles === "undefined"
+  ) {
+    throw new Error(
+      "Offline map renderer libraries are unavailable.",
+    );
+  }
+
+  state.protocol = new pmtiles.Protocol();
+  maplibregl.addProtocol(
+    "pmtiles",
+    state.protocol.tile,
+  );
+}
+
 function initialize() {
   const hostname = window.location.hostname || "offgridpi";
 
   elements.readerHost.textContent = hostname;
   elements.dashboardLink.href = dashboardUrl();
+
+  try {
+    initializeRenderer();
+  } catch (error) {
+    console.error(
+      "Unable to initialize offline map rendering.",
+      error,
+    );
+
+    elements.renderMessage.querySelector("h2").textContent =
+      "Map renderer unavailable";
+    elements.renderMessage.querySelector("p:last-child").textContent =
+      "Installed map details remain available, but the map renderer could not start.";
+  }
 
   loadPacks();
 }

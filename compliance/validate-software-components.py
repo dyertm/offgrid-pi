@@ -3,7 +3,7 @@
 import json
 import re
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -17,6 +17,33 @@ EXPECTED_PACKAGES = {
     "zim-tools": "/usr/share/doc/zim-tools/copyright",
 }
 
+APPROVED_VENDORED_COMPONENTS = {
+    "maplibre-gl-js": {
+        "version": "5.13.0",
+        "license_expression": "BSD-3-Clause",
+        "license_file": (
+            "maps/vendor/maplibre-gl-js/LICENSE.txt"
+        ),
+        "asset_prefix": "maps/vendor/maplibre-gl-js/",
+    },
+    "pmtiles-js": {
+        "version": "4.4.1",
+        "license_expression": "BSD-3-Clause",
+        "license_file": (
+            "maps/vendor/pmtiles-js/LICENSE.txt"
+        ),
+        "asset_prefix": "maps/vendor/pmtiles-js/",
+    },
+    "fflate": {
+        "version": "0.8.2",
+        "license_expression": "MIT",
+        "license_file": (
+            "maps/vendor/pmtiles-js/FFLATE-LICENSE.txt"
+        ),
+        "asset_prefix": "maps/vendor/pmtiles-js/",
+    },
+}
+
 REGISTER_FIELDS = {
     "schema_version",
     "register_id",
@@ -24,6 +51,7 @@ REGISTER_FIELDS = {
     "description",
     "project",
     "packages",
+    "vendored_components",
 }
 
 PROJECT_FIELDS = {
@@ -47,7 +75,25 @@ PACKAGE_FIELDS = {
     "required",
 }
 
+VENDORED_FIELDS = {
+    "component_id",
+    "display_name",
+    "version",
+    "purpose",
+    "homepage",
+    "license_expression",
+    "license_summary",
+    "license_file",
+    "source_information",
+    "asset_paths",
+    "required",
+}
+
 ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
+VERSION_PATTERN = re.compile(
+    r"^[0-9]+[.][0-9]+[.][0-9]+"
+    r"(?:[-+][0-9A-Za-z.-]+)?$"
+)
 
 
 def check_fields(label, value, expected, errors):
@@ -74,6 +120,21 @@ def check_fields(label, value, expected, errors):
 def require_text(label, value, errors):
     if not isinstance(value, str) or not value.strip():
         errors.append(f"{label} must be a nonempty string.")
+
+
+def safe_repo_path(value):
+    if not isinstance(value, str) or not value:
+        return False
+
+    if "\\" in value or value.startswith("/"):
+        return False
+
+    path = PurePosixPath(value)
+
+    return not any(
+        part in {"", ".", ".."}
+        for part in path.parts
+    )
 
 
 def validate(register, license_path):
@@ -256,6 +317,170 @@ def validate(register, license_path):
         if unexpected:
             errors.append(
                 "Unexpected packages are present: "
+                + ", ".join(unexpected)
+            )
+
+    vendored = register.get("vendored_components")
+
+    if not isinstance(vendored, list):
+        errors.append(
+            "vendored_components must be a list."
+        )
+        return errors
+
+    seen_vendored_ids = set()
+
+    for number, component in enumerate(
+        vendored,
+        start=1,
+    ):
+        label = f"Vendored component {number}"
+
+        if not check_fields(
+            label,
+            component,
+            VENDORED_FIELDS,
+            errors,
+        ):
+            continue
+
+        component_id = component.get("component_id")
+
+        if (
+            not isinstance(component_id, str)
+            or not ID_PATTERN.fullmatch(component_id)
+        ):
+            errors.append(
+                f"{label} has an invalid component_id."
+            )
+            continue
+
+        if component_id in seen_vendored_ids:
+            errors.append(
+                f"Duplicate vendored component_id: {component_id}"
+            )
+        else:
+            seen_vendored_ids.add(component_id)
+
+        approved = APPROVED_VENDORED_COMPONENTS.get(
+            component_id
+        )
+
+        if approved is None:
+            errors.append(
+                f"{label} contains an unapproved vendored component: "
+                f"{component_id!r}"
+            )
+            continue
+
+        for field in (
+            "display_name",
+            "purpose",
+            "license_summary",
+            "source_information",
+        ):
+            require_text(
+                f"{label}.{field}",
+                component.get(field),
+                errors,
+            )
+
+        version = component.get("version")
+
+        if (
+            not isinstance(version, str)
+            or not VERSION_PATTERN.fullmatch(version)
+        ):
+            errors.append(
+                f"{label}.version must be a semantic version."
+            )
+        elif version != approved["version"]:
+            errors.append(
+                f"{label} has an unapproved version."
+            )
+
+        homepage = component.get("homepage")
+
+        if (
+            not isinstance(homepage, str)
+            or not homepage.startswith("https://")
+        ):
+            errors.append(
+                f"{label}.homepage must use HTTPS."
+            )
+
+        if (
+            component.get("license_expression")
+            != approved["license_expression"]
+        ):
+            errors.append(
+                f"{label} has an unexpected license expression."
+            )
+
+        license_file = component.get("license_file")
+
+        if (
+            license_file != approved["license_file"]
+            or not safe_repo_path(license_file)
+        ):
+            errors.append(
+                f"{label} has an unexpected license path."
+            )
+
+        asset_paths = component.get("asset_paths")
+
+        if not isinstance(asset_paths, list) or not asset_paths:
+            errors.append(
+                f"{label}.asset_paths must be a nonempty list."
+            )
+        else:
+            seen_assets = set()
+
+            for asset_path in asset_paths:
+                if (
+                    not safe_repo_path(asset_path)
+                    or not asset_path.startswith(
+                        approved["asset_prefix"]
+                    )
+                ):
+                    errors.append(
+                        f"{label} contains an unsafe asset path."
+                    )
+                    continue
+
+                if asset_path in seen_assets:
+                    errors.append(
+                        f"{label} contains a duplicate asset path."
+                    )
+                else:
+                    seen_assets.add(asset_path)
+
+        if component.get("required") is not True:
+            errors.append(
+                f"{label}.required must be true."
+            )
+
+    expected_vendored = set(
+        APPROVED_VENDORED_COMPONENTS
+    )
+
+    if seen_vendored_ids != expected_vendored:
+        missing = sorted(
+            expected_vendored - seen_vendored_ids
+        )
+        unexpected = sorted(
+            seen_vendored_ids - expected_vendored
+        )
+
+        if missing:
+            errors.append(
+                "Required vendored components are missing: "
+                + ", ".join(missing)
+            )
+
+        if unexpected:
+            errors.append(
+                "Unexpected vendored components are present: "
                 + ", ".join(unexpected)
             )
 

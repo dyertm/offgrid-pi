@@ -95,5 +95,53 @@
       "source_information": "Refer to the Debian package metadata and OpenZIM upstream project for corresponding source information.",
       "required": true
     }
+  ],
+  "vendored_components": [
+    {
+      "component_id": "maplibre-gl-js",
+      "display_name": "MapLibre GL JS",
+      "version": "5.13.0",
+      "purpose": "Renders interactive vector maps locally in the Offline Maps reader.",
+      "homepage": "https://maplibre.org/maplibre-gl-js/",
+      "license_expression": "BSD-3-Clause",
+      "license_summary": "Vendored browser library distributed under the BSD 3-Clause License.",
+      "license_file": "maps/vendor/maplibre-gl-js/LICENSE.txt",
+      "source_information": "Vendored from the upstream MapLibre GL JS 5.13.0 release. Upstream source and release history are available from the MapLibre GL JS project.",
+      "asset_paths": [
+        "maps/vendor/maplibre-gl-js/maplibre-gl.js",
+        "maps/vendor/maplibre-gl-js/maplibre-gl.css"
+      ],
+      "required": true
+    },
+    {
+      "component_id": "pmtiles-js",
+      "display_name": "PMTiles JavaScript",
+      "version": "4.4.1",
+      "purpose": "Provides PMTiles protocol support for locally stored offline map archives.",
+      "homepage": "https://github.com/protomaps/PMTiles",
+      "license_expression": "BSD-3-Clause",
+      "license_summary": "Vendored browser library distributed under the BSD 3-Clause License.",
+      "license_file": "maps/vendor/pmtiles-js/LICENSE.txt",
+      "source_information": "Vendored from the upstream PMTiles JavaScript 4.4.1 release. Upstream source and release history are available from the Protomaps PMTiles project.",
+      "asset_paths": [
+        "maps/vendor/pmtiles-js/pmtiles.js"
+      ],
+      "required": true
+    },
+    {
+      "component_id": "fflate",
+      "display_name": "fflate",
+      "version": "0.8.2",
+      "purpose": "Provides the decompression fallback embedded in the PMTiles JavaScript browser bundle.",
+      "homepage": "https://github.com/101arrowz/fflate",
+      "license_expression": "MIT",
+      "license_summary": "Bundled dependency distributed under the MIT License.",
+      "license_file": "maps/vendor/pmtiles-js/FFLATE-LICENSE.txt",
+      "source_information": "Bundled inside the PMTiles JavaScript 4.4.1 browser distribution. The embedded source was verified to match the upstream fflate 0.8.2 browser build.",
+      "asset_paths": [
+        "maps/vendor/pmtiles-js/pmtiles.js"
+      ],
+      "required": true
+    }
   ]
 }

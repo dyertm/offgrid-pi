@@ -22,11 +22,26 @@ TEMP_ROOT="$(mktemp -d)"
 trap 'rm -rf -- "$TEMP_ROOT"' EXIT
 
 SYSTEM_ROOT="$TEMP_ROOT/system"
+PROJECT_ROOT="$TEMP_ROOT/project"
 OUTPUT_ROOT="$TEMP_ROOT/output"
 FAKE_DPKG="$TEMP_ROOT/dpkg-query"
 REGISTER_FIXTURE="$TEMP_ROOT/software-components.json"
 
 cp "$REGISTER" "$REGISTER_FIXTURE"
+
+mkdir -p   "$PROJECT_ROOT/maps/vendor/maplibre-gl-js"   "$PROJECT_ROOT/maps/vendor/pmtiles-js"
+
+printf '%s\n'   "Synthetic MapLibre GL JS BSD-3-Clause notice"   > "$PROJECT_ROOT/maps/vendor/maplibre-gl-js/LICENSE.txt"
+
+printf '%s\n'   "Synthetic PMTiles JavaScript BSD-3-Clause notice"   > "$PROJECT_ROOT/maps/vendor/pmtiles-js/LICENSE.txt"
+
+printf '%s\n'   "Synthetic fflate MIT notice"   > "$PROJECT_ROOT/maps/vendor/pmtiles-js/FFLATE-LICENSE.txt"
+
+printf '%s\n' "synthetic maplibre javascript"   > "$PROJECT_ROOT/maps/vendor/maplibre-gl-js/maplibre-gl.js"
+
+printf '%s\n' "synthetic maplibre stylesheet"   > "$PROJECT_ROOT/maps/vendor/maplibre-gl-js/maplibre-gl.css"
+
+printf '%s\n' "synthetic pmtiles javascript"   > "$PROJECT_ROOT/maps/vendor/pmtiles-js/pmtiles.js"
 
 packages=(
   python3
@@ -82,6 +97,7 @@ python3 -m py_compile "$GENERATOR"
   --stylesheet "$STYLESHEET" \
   --validator "$VALIDATOR" \
   --system-root "$SYSTEM_ROOT" \
+  --project-root "$PROJECT_ROOT" \
   --dpkg-query "$FAKE_DPKG" \
   --output-root "$OUTPUT_ROOT"
 
@@ -101,7 +117,13 @@ for package in "${packages[@]}"; do
     fail "Package notice is missing: $package"
 done
 
-pass "Project and package notice files were generated."
+for component in   maplibre-gl-js   pmtiles-js   fflate
+do
+  [[ -s "$OUTPUT_ROOT/notices/$component.txt" ]] ||
+    fail "Vendored component notice is missing: $component"
+done
+
+pass "Project, package, and vendored notice files were generated."
 
 python3 - "$OUTPUT_ROOT/index.html" <<'PY'
 import sys
@@ -144,9 +166,9 @@ text = page.read_text(encoding="utf-8")
 inspector = Inspector()
 inspector.feed(text)
 
-if inspector.component_count != 7:
+if inspector.component_count != 10:
     raise SystemExit(
-        f"Expected 7 component cards; found "
+        f"Expected 10 component cards; found "
         f"{inspector.component_count}."
     )
 
@@ -175,6 +197,9 @@ required_notices = {
     "notices/chromium.txt",
     "notices/kiwix-tools.txt",
     "notices/zim-tools.txt",
+    "notices/maplibre-gl-js.txt",
+    "notices/pmtiles-js.txt",
+    "notices/fflate.txt",
 }
 
 if not required_notices.issubset(inspector.links):
@@ -188,6 +213,9 @@ for version in (
     "150.0-test",
     "3.7-test",
     "3.5-test",
+    "5.13.0",
+    "4.4.1",
+    "0.8.2",
 ):
     if version not in text:
         raise SystemExit(
@@ -220,6 +248,7 @@ OFFGRIDPI_TEST_MISSING_PACKAGE="kiwix-tools" \
     --stylesheet "$STYLESHEET" \
     --validator "$VALIDATOR" \
     --system-root "$SYSTEM_ROOT" \
+    --project-root "$PROJECT_ROOT" \
     --dpkg-query "$FAKE_DPKG" \
     --output-root "$PARTIAL_OUTPUT" \
     --allow-missing
@@ -243,6 +272,7 @@ if OFFGRIDPI_TEST_MISSING_PACKAGE="kiwix-tools" \
       --stylesheet "$STYLESHEET" \
       --validator "$VALIDATOR" \
       --system-root "$SYSTEM_ROOT" \
+      --project-root "$PROJECT_ROOT" \
       --dpkg-query "$FAKE_DPKG" \
       --output-root "$TEMP_ROOT/strict-missing" \
       >/dev/null 2>&1
@@ -263,6 +293,7 @@ if "$GENERATOR" \
     --stylesheet "$STYLESHEET" \
     --validator "$VALIDATOR" \
     --system-root "$SYSTEM_ROOT" \
+    --project-root "$PROJECT_ROOT" \
     --dpkg-query "$FAKE_DPKG" \
     --output-root "$OUTPUT_ROOT" \
     >/dev/null 2>&1

@@ -70,6 +70,26 @@ def system_file(system_root, absolute_path):
     return system_root / absolute_path.lstrip("/")
 
 
+def project_file(project_root, relative_path):
+    destination = project_root / relative_path
+
+    try:
+        resolved_root = project_root.resolve(strict=True)
+        resolved_destination = destination.resolve(strict=True)
+    except FileNotFoundError:
+        return destination
+
+    try:
+        resolved_destination.relative_to(resolved_root)
+    except ValueError as error:
+        raise RuntimeError(
+            "Vendored component path escapes the project root: "
+            f"{relative_path}"
+        ) from error
+
+    return resolved_destination
+
+
 def package_html(package, version, notice_name):
     display_name = html.escape(package["display_name"])
     package_name = html.escape(package["package_name"])
@@ -108,6 +128,79 @@ def package_html(package, version, notice_name):
             <li>
               <strong>Debian package:</strong>
               <code>{package_name}</code>
+            </li>
+            <li>
+              <strong>License summary:</strong>
+              {license_summary}
+            </li>
+            <li>
+              <strong>Source information:</strong>
+              {source_information}
+            </li>
+          </ul>
+
+          <div class="component-links">
+            {notice_link}
+
+            <a href="{homepage}">
+              Upstream project
+            </a>
+          </div>
+        </article>
+    """.strip()
+
+
+def vendored_html(component, version, notice_name):
+    display_name = html.escape(component["display_name"])
+    purpose = html.escape(component["purpose"])
+    license_expression = html.escape(
+        component["license_expression"]
+    )
+    license_summary = html.escape(
+        component["license_summary"]
+    )
+    source_information = html.escape(
+        component["source_information"]
+    )
+    homepage = html.escape(
+        component["homepage"],
+        quote=True,
+    )
+    shown_version = html.escape(version)
+
+    notice_link = ""
+
+    if notice_name is not None:
+        safe_notice_name = html.escape(
+            notice_name,
+            quote=True,
+        )
+
+        notice_link = f"""
+            <a href="notices/{safe_notice_name}">
+              Read bundled license notice
+            </a>
+        """.strip()
+
+    return f"""
+        <article class="component">
+          <div class="component-header">
+            <h3>{display_name}</h3>
+            <span class="component-version">
+              {shown_version}
+            </span>
+          </div>
+
+          <p>{purpose}</p>
+
+          <ul class="component-meta">
+            <li>
+              <strong>Component type:</strong>
+              Vendored browser library
+            </li>
+            <li>
+              <strong>License:</strong>
+              {license_expression}
             </li>
             <li>
               <strong>License summary:</strong>
@@ -200,12 +293,14 @@ def render_page(register, components, generated_at):
         <h2>About this register</h2>
 
         <p>
-          This page records the direct software packages intentionally
-          installed by Offgrid Pi. Debian packages can include additional
-          libraries, dependencies, copyright holders, and license terms.
-          The complete installed Debian copyright records are provided
-          locally below. Components may be marked as not installed when
-          this page is generated for a partial module installation.
+          This page records the direct software packages and vendored
+          browser libraries intentionally used by Offgrid Pi. Debian
+          packages can include additional libraries, dependencies,
+          copyright holders, and license terms. The complete installed
+          Debian copyright records and bundled vendored-library notices
+          are provided locally below. Components may be marked as not
+          installed when this page is generated for a partial module
+          installation.
         </p>
 
         <p>
@@ -251,6 +346,7 @@ def generate(args):
     validator_path = args.validator.resolve()
     output_root = args.output_root.resolve()
     system_root = args.system_root.resolve()
+    project_root = args.project_root.resolve()
 
     validate_register(
         validator_path,
@@ -349,6 +445,62 @@ def generate(args):
                 )
             )
 
+        for component in register["vendored_components"]:
+            component_id = component["component_id"]
+            license_source = project_file(
+                project_root,
+                component["license_file"],
+            )
+
+            asset_sources = [
+                project_file(
+                    project_root,
+                    asset_path,
+                )
+                for asset_path in component["asset_paths"]
+            ]
+
+            component_available = (
+                license_source.is_file()
+                and all(
+                    asset_source.is_file()
+                    for asset_source in asset_sources
+                )
+            )
+
+            if not component_available:
+                if component["required"] and not args.allow_missing:
+                    raise RuntimeError(
+                        "Required vendored component is unavailable: "
+                        f"{component_id}"
+                    )
+
+                rendered_components.append(
+                    vendored_html(
+                        component,
+                        "Not installed",
+                        None,
+                    )
+                )
+                continue
+
+            notice_name = f"{component_id}.txt"
+
+            shutil.copyfile(
+                license_source,
+                notices / notice_name,
+            )
+
+            installed_count += 1
+
+            rendered_components.append(
+                vendored_html(
+                    component,
+                    component["version"],
+                    notice_name,
+                )
+            )
+
         generated_at = (
             datetime.now(timezone.utc)
             .replace(microsecond=0)
@@ -427,6 +579,15 @@ def parse_args():
         "--system-root",
         type=Path,
         default=Path("/"),
+    )
+    parser.add_argument(
+        "--project-root",
+        type=Path,
+        default=ROOT,
+        help=(
+            "Trusted root containing vendored component "
+            "licenses and browser assets."
+        ),
     )
     parser.add_argument(
         "--dpkg-query",

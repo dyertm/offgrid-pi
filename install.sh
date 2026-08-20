@@ -121,6 +121,14 @@ check_payload() {
     "$PROJECT_ROOT/scripts/offgridpi-management-server.py" \
     "$PROJECT_ROOT/systemd/offgridpi-management.service" \
     "$PROJECT_ROOT/maps/index.html" \
+    "$PROJECT_ROOT/maps/css/styles.css" \
+    "$PROJECT_ROOT/maps/js/app.js" \
+    "$PROJECT_ROOT/maps/vendor/maplibre-gl-js/maplibre-gl.js" \
+    "$PROJECT_ROOT/maps/vendor/maplibre-gl-js/maplibre-gl.css" \
+    "$PROJECT_ROOT/maps/vendor/maplibre-gl-js/LICENSE.txt" \
+    "$PROJECT_ROOT/maps/vendor/pmtiles-js/pmtiles.js" \
+    "$PROJECT_ROOT/maps/vendor/pmtiles-js/LICENSE.txt" \
+    "$PROJECT_ROOT/maps/vendor/pmtiles-js/FFLATE-LICENSE.txt" \
     "$PROJECT_ROOT/scripts/offgridpi-map-server.py" \
     "$PROJECT_ROOT/systemd/offgridpi-maps.service" \
     "$PROJECT_ROOT/content-packs/import-map-pack.py" \

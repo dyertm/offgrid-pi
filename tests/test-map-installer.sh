@@ -29,6 +29,14 @@ grep -q '^INSTALLER_VERSION="0\.7\.6"$' "$INSTALLER" ||
 
 for payload in \
   'maps/index.html' \
+  'maps/css/styles.css' \
+  'maps/js/app.js' \
+  'maps/vendor/maplibre-gl-js/maplibre-gl.js' \
+  'maps/vendor/maplibre-gl-js/maplibre-gl.css' \
+  'maps/vendor/maplibre-gl-js/LICENSE.txt' \
+  'maps/vendor/pmtiles-js/pmtiles.js' \
+  'maps/vendor/pmtiles-js/LICENSE.txt' \
+  'maps/vendor/pmtiles-js/FFLATE-LICENSE.txt' \
   'scripts/offgridpi-map-server.py' \
   'systemd/offgridpi-maps.service' \
   'content-packs/import-map-pack.py' \

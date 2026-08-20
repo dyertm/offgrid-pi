@@ -72,6 +72,8 @@ required_ids = {
     "catalog-message",
     "pack-list",
     "map-workspace",
+    "map-canvas",
+    "render-message",
     "details-panel",
     "selected-map-heading",
     "selected-status",
@@ -117,14 +119,21 @@ for asset in (
             f"Missing reader asset: {path}"
         )
 
-if parser.stylesheets != ["css/styles.css"]:
+if parser.stylesheets != [
+    "vendor/maplibre-gl-js/maplibre-gl.css",
+    "css/styles.css",
+]:
     raise SystemExit(
-        "Reader stylesheet reference is unexpected."
+        "Reader stylesheet references are unexpected."
     )
 
-if parser.scripts != ["js/app.js"]:
+if parser.scripts != [
+    "vendor/maplibre-gl-js/maplibre-gl.js",
+    "vendor/pmtiles-js/pmtiles.js",
+    "js/app.js",
+]:
     raise SystemExit(
-        "Reader script reference is unexpected."
+        "Reader script references are unexpected."
     )
 PY
 
@@ -136,12 +145,62 @@ grep -q 'fetch(' "$READER_ROOT/js/app.js" ||
 grep -q '"/api/packs"' "$READER_ROOT/js/app.js" ||
   fail "Reader does not use the local map-pack discovery API."
 
-if grep -REn \
+grep -q '^\.map-canvas {' "$READER_ROOT/css/styles.css" ||
+  fail "Reader stylesheet lacks the map canvas."
+
+grep -q '^\.render-message {' "$READER_ROOT/css/styles.css" ||
+  fail "Reader stylesheet lacks the render-status overlay."
+
+grep -q 'new pmtiles.Protocol' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not initialize the PMTiles protocol."
+
+grep -q 'maplibregl.addProtocol' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not register the PMTiles protocol with MapLibre."
+
+grep -q 'getElementById("map-canvas")' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not bind the MapLibre canvas."
+
+if grep -q 'elements.mapWorkspace.hidden = true' "$READER_ROOT/js/app.js"; then
+  fail "Selecting a map hides the renderer workspace."
+fi
+
+grep -q 'typeof pack.tile_schema_id === "string"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not validate the tile schema identifier."
+
+grep -q 'new pmtiles.PMTiles' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not create a PMTiles archive instance."
+
+grep -q 'state.protocol.add' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not register selected PMTiles archives."
+
+grep -q 'new maplibregl.Map' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not create a MapLibre map instance."
+
+grep -q 'pmtiles://' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not connect MapLibre to the local PMTiles vector source."
+
+for source_layer in earth water landcover landuse roads buildings boundaries; do
+  grep -q "\"source-layer\": \"${source_layer}\"" "$READER_ROOT/js/app.js" ||
+    fail "Reader style is missing Protomaps source layer: ${source_layer}"
+done
+
+grep -q 'bounds: pack.region.bounds' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not frame the selected map to its declared bounds."
+
+grep -q 'state.map.on("load"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not react to successful map loading."
+
+grep -q 'elements.renderMessage.hidden = true' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not clear the loading message after rendering."
+
+if grep -En \
   'https?://|src="//|href="//' \
-  "$READER_ROOT" \
+  "$READER_ROOT/index.html" \
+  "$READER_ROOT/css/styles.css" \
+  "$READER_ROOT/js/app.js" \
   >/dev/null
 then
-  fail "Offline Maps reader contains a remote dependency."
+  fail "Offline Maps reader contains a remote runtime dependency."
 fi
 
 pass "Offline Maps reader uses local-only discovery and assets."

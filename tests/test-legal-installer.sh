@@ -104,7 +104,10 @@ verifier_markers=(
   '/opt/offgridpi/compliance/software-components.json'
   '=== Legal & Notices ==='
   'http://127.0.0.1:8081/legal/'
-  'Legal page lists all seven registered components.'
+  'maplibre-gl-js.txt'
+  'pmtiles-js.txt'
+  'fflate.txt'
+  'Legal page lists all ten registered components.'
   'Legal page contains no JavaScript.'
   'Legal page records the installed Kiwix package version.'
 )

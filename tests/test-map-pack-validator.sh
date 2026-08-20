@@ -83,6 +83,9 @@ elif mutation == "byte_total":
 elif mutation == "unsupported_style":
     data["style_id"] = "unknown-style"
 
+elif mutation == "unsupported_tile_schema":
+    data["tile_schema_id"] = "unknown-schema"
+
 elif mutation == "published_restricted":
     data["status"] = "published"
     data["sources"][0]["redistribution"] = "restricted"
@@ -129,6 +132,7 @@ expect_failure center_outside "Default center outside bounds"
 expect_failure zoom_order "Reversed zoom range"
 expect_failure byte_total "Incorrect installed-byte total"
 expect_failure unsupported_style "Unsupported reader-owned style"
+expect_failure unsupported_tile_schema "Unsupported tile schema"
 expect_failure published_restricted "Published pack without permitted redistribution"
 expect_failure source_newer "Source date newer than pack date"
 expect_failure non_https_source "Non-HTTPS source URL"

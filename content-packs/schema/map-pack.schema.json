@@ -17,6 +17,7 @@
     "data_date",
     "estimated_installed_bytes",
     "style_id",
+    "tile_schema_id",
     "files",
     "sources",
     "limitations"
@@ -69,6 +70,12 @@
     "style_id": {
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "tile_schema_id": {
+      "type": "string",
+      "enum": [
+        "protomaps-basemap-v4"
+      ]
     },
     "files": {
       "type": "array",
