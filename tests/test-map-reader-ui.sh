@@ -193,6 +193,25 @@ grep -q 'state.map.on("load"' "$READER_ROOT/js/app.js" ||
 grep -q 'elements.renderMessage.hidden = true' "$READER_ROOT/js/app.js" ||
   fail "Reader does not clear the loading message after rendering."
 
+grep -q '"source-layer": "water"' "$READER_ROOT/js/app.js" ||
+  fail "Reader style does not include the Protomaps water layer."
+
+grep -q '\["==", \["geometry-type"\], "Polygon"\]' "$READER_ROOT/js/app.js" ||
+  fail "Reader water styling is not restricted to polygon geometry."
+
+grep -q '"source-layer": "places"' "$READER_ROOT/js/app.js" ||
+  fail "Reader style does not include offline place labels."
+
+grep -q '"source-layer": "roads"' "$READER_ROOT/js/app.js" ||
+  fail "Reader style does not include offline road labels."
+
+grep -q '"text-font": \["sans-serif"\]' "$READER_ROOT/js/app.js" ||
+  fail "Reader labels do not use the local generic font stack."
+
+if grep -q 'glyphs:' "$READER_ROOT/js/app.js"; then
+  fail "Reader style unexpectedly declares an external glyph source."
+fi
+
 if grep -En \
   'https?://|src="//|href="//' \
   "$READER_ROOT/index.html" \

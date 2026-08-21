@@ -164,6 +164,7 @@ function renderPack(pack) {
           type: "fill",
           source: "basemap",
           "source-layer": "water",
+          filter: ["==", ["geometry-type"], "Polygon"],
           paint: {
             "fill-color": "#89b6cf",
           },
@@ -205,6 +206,47 @@ function renderPack(pack) {
           paint: {
             "fill-color": "#b6aa9b",
             "fill-outline-color": "#95897d",
+          },
+        },
+        {
+          id: "road-labels",
+          type: "symbol",
+          source: "basemap",
+          "source-layer": "roads",
+          minzoom: 10,
+          layout: {
+            "symbol-placement": "line",
+            "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
+            "text-font": ["sans-serif"],
+            "text-size": 11,
+          },
+          paint: {
+            "text-color": "#3f3a34",
+            "text-halo-color": "#f5f1e8",
+            "text-halo-width": 1.5,
+          },
+        },
+        {
+          id: "place-labels",
+          type: "symbol",
+          source: "basemap",
+          "source-layer": "places",
+          minzoom: 4,
+          layout: {
+            "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
+            "text-font": ["sans-serif"],
+            "text-size": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              4, 11,
+              10, 16,
+            ],
+          },
+          paint: {
+            "text-color": "#20272c",
+            "text-halo-color": "#f4f1e8",
+            "text-halo-width": 1.5,
           },
         },
       ],
