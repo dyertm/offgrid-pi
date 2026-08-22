@@ -302,6 +302,22 @@ main {
   gap: 8px;
 }
 
+.map-attribution {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 3;
+  max-width: calc(100% - 24px);
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: rgba(15, 23, 31, 0.88);
+  color: var(--text);
+  font-size: 0.68rem;
+  line-height: 1.35;
+  text-align: right;
+  pointer-events: none;
+}
+
 .map-control-button {
   min-width: 44px;
   min-height: 44px;

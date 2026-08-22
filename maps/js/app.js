@@ -16,6 +16,8 @@ const elements = {
   mapHelp: document.getElementById("map-help"),
   mapHelpPanel: document.getElementById("map-help-panel"),
   mapHelpClose: document.getElementById("map-help-close"),
+  mapFullscreen: document.getElementById("map-fullscreen"),
+  mapAttribution: document.getElementById("map-attribution"),
   detailsPanel: document.getElementById("details-panel"),
   selectedHeading: document.getElementById("selected-map-heading"),
   selectedStatus: document.getElementById("selected-status"),
@@ -271,6 +273,18 @@ function renderPack(pack) {
     attributionControl: false,
   });
 
+  state.map.dragRotate.disable();
+  state.map.touchZoomRotate.disableRotation();
+  state.map.touchPitch.disable();
+
+  state.map.addControl(
+    new maplibregl.ScaleControl({
+      maxWidth: 120,
+      unit: "imperial",
+    }),
+    "bottom-left",
+  );
+
   elements.renderMessage.hidden = false;
   elements.renderMessage.querySelector("h2").textContent =
     "Preparing offline map";
@@ -302,6 +316,15 @@ function selectPack(pack) {
   elements.selectedDataDate.textContent = formatDate(pack.data_date);
   elements.selectedZoom.textContent =
     `${pack.region.min_zoom}–${pack.region.max_zoom}`;
+
+  const attributionText = pack.attributions
+    .map(
+      (item) => `${item.name} — ${item.attribution}`,
+    )
+    .join(" • ");
+
+  elements.mapAttribution.textContent = attributionText;
+  elements.mapAttribution.hidden = attributionText.length === 0;
 
   clearChildren(elements.selectedLimitations);
 
@@ -389,6 +412,17 @@ function validPack(pack) {
     && typeof pack.data_date === "string"
     && typeof pack.style_id === "string"
     && typeof pack.tile_schema_id === "string"
+    && Array.isArray(pack.attributions)
+    && pack.attributions.every(
+      (item) => (
+        item
+        && typeof item === "object"
+        && typeof item.name === "string"
+        && item.name.length > 0
+        && typeof item.attribution === "string"
+        && item.attribution.length > 0
+      ),
+    )
     && Array.isArray(pack.limitations)
     && pack.limitations.every(
       (item) => typeof item === "string",
@@ -509,6 +543,40 @@ function initialize() {
     elements.mapHelpPanel.hidden = true;
     elements.mapHelp.setAttribute("aria-expanded", "false");
     elements.mapHelp.focus();
+  });
+
+  elements.mapFullscreen.addEventListener("click", async () => {
+    try {
+      if (document.fullscreenElement === elements.mapWorkspace) {
+        await document.exitFullscreen();
+      } else {
+        await elements.mapWorkspace.requestFullscreen();
+      }
+    } catch (error) {
+      console.error("Unable to change map fullscreen mode.", error);
+    }
+  });
+
+  document.addEventListener("fullscreenchange", () => {
+    const fullscreen =
+      document.fullscreenElement === elements.mapWorkspace;
+
+    elements.mapFullscreen.textContent =
+      fullscreen ? "Exit Fullscreen" : "Fullscreen";
+    elements.mapFullscreen.setAttribute(
+      "aria-label",
+      fullscreen
+        ? "Exit fullscreen map"
+        : "Enter fullscreen map",
+    );
+    elements.mapFullscreen.title =
+      fullscreen
+        ? "Exit fullscreen map"
+        : "Enter fullscreen map";
+
+    if (state.map) {
+      state.map.resize();
+    }
   });
 
   document.addEventListener("keydown", (event) => {

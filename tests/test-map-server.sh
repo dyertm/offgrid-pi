@@ -125,7 +125,19 @@ manifest = {
     "style_id": "emergency-basic",
     "tile_schema_id": "protomaps-basemap-v4",
     "files": files,
-    "sources": [],
+    "sources": [
+        {
+            "source_id": "synthetic",
+            "name": "Synthetic Test Data",
+            "source_page": "https://example.invalid/offgridpi/reader-test",
+            "source_version": "0.1.0",
+            "data_date": "2026-08-15",
+            "license": "Synthetic test license",
+            "redistribution": "permitted",
+            "attribution": "Synthetic test attribution",
+            "notes": "Contains no real geographic data."
+        }
+    ],
     "limitations": ["Synthetic test only."]
 }
 
@@ -234,6 +246,12 @@ expected = {
     "data_date": "2026-08-15",
     "style_id": "emergency-basic",
     "tile_schema_id": "protomaps-basemap-v4",
+    "attributions": [
+        {
+            "name": "Synthetic Test Data",
+            "attribution": "Synthetic test attribution",
+        }
+    ],
     "limitations": ["Synthetic test only."],
     "manifest_url": "/packs/test-pack/0.1.0/manifest.json",
     "basemap_url": (

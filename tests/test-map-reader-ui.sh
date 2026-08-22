@@ -166,15 +166,36 @@ grep -q 'new pmtiles.Protocol' "$READER_ROOT/js/app.js" ||
 grep -q 'maplibregl.addProtocol' "$READER_ROOT/js/app.js" ||
   fail "Reader does not register the PMTiles protocol with MapLibre."
 
-for control_id in map-zoom-in map-zoom-out map-reset-view map-help; do
+for control_id in map-zoom-in map-zoom-out map-reset-view map-help map-fullscreen; do
   grep -q "id=\"${control_id}\"" "$READER_ROOT/index.html" ||
     fail "Reader is missing navigation control: ${control_id}"
 done
 
-for binding_id in map-zoom-in map-zoom-out map-reset-view map-help; do
+for binding_id in map-zoom-in map-zoom-out map-reset-view map-help map-fullscreen; do
   grep -q "getElementById(\"${binding_id}\")" "$READER_ROOT/js/app.js" ||
     fail "Reader does not bind navigation control: ${binding_id}"
 done
+
+grep -q 'requestFullscreen' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not support entering fullscreen mode."
+
+grep -q 'exitFullscreen' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not support leaving fullscreen mode."
+
+grep -q 'state.map.resize' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not resize MapLibre after fullscreen changes."
+
+grep -q 'new maplibregl.ScaleControl' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not provide an on-map distance scale."
+
+grep -q 'state.map.dragRotate.disable' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not disable mouse/touchpad map rotation."
+
+grep -q 'state.map.touchZoomRotate.disableRotation' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not disable touch rotation."
+
+grep -q 'state.map.touchPitch.disable' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not disable accidental map pitching."
 
 grep -q 'state.map.zoomIn' "$READER_ROOT/js/app.js" ||
   fail "Zoom-in control is not wired to MapLibre."
@@ -218,6 +239,24 @@ fi
 
 grep -q 'typeof pack.tile_schema_id === "string"' "$READER_ROOT/js/app.js" ||
   fail "Reader does not validate the tile schema identifier."
+
+grep -q 'id="map-attribution"' "$READER_ROOT/index.html" ||
+  fail "Reader is missing persistent map attribution."
+
+grep -q '^\.map-attribution {' "$READER_ROOT/css/styles.css" ||
+  fail "Reader stylesheet lacks persistent map attribution."
+
+grep -q 'getElementById("map-attribution")' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not bind the map attribution element."
+
+grep -q 'Array.isArray(pack.attributions)' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not validate map-pack attribution metadata."
+
+grep -q 'typeof item.attribution === "string"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not validate attribution text."
+
+grep -q 'elements.mapAttribution.textContent' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not display attribution from the selected map pack."
 
 grep -q 'new pmtiles.PMTiles' "$READER_ROOT/js/app.js" ||
   fail "Reader does not create a PMTiles archive instance."

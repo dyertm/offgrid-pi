@@ -341,6 +341,7 @@ def discovery_entry(
     data_date = manifest.get("data_date")
     style_id = manifest.get("style_id")
     tile_schema_id = manifest.get("tile_schema_id")
+    sources = manifest.get("sources")
     limitations = manifest.get("limitations")
     region = manifest.get("region")
     files = manifest.get("files")
@@ -356,6 +357,7 @@ def discovery_entry(
         or not isinstance(data_date, str)
         or not isinstance(style_id, str)
         or not isinstance(tile_schema_id, str)
+        or not isinstance(sources, list)
         or not isinstance(limitations, list)
         or not all(
             isinstance(item, str)
@@ -432,6 +434,30 @@ def discovery_entry(
     if basemap_path is None:
         return None
 
+    attributions: list[dict[str, str]] = []
+
+    for source in sources:
+        if not isinstance(source, dict):
+            return None
+
+        source_name = source.get("name")
+        source_attribution = source.get("attribution")
+
+        if (
+            not isinstance(source_name, str)
+            or not source_name
+            or not isinstance(source_attribution, str)
+            or not source_attribution
+        ):
+            return None
+
+        attributions.append(
+            {
+                "name": source_name,
+                "attribution": source_attribution,
+            }
+        )
+
     encoded_pack_id = quote(
         pack_id,
         safe="",
@@ -456,6 +482,7 @@ def discovery_entry(
         "data_date": data_date,
         "style_id": style_id,
         "tile_schema_id": tile_schema_id,
+        "attributions": attributions,
         "limitations": limitations,
         "region": {
             "name": region_name,
