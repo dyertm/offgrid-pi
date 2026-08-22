@@ -270,10 +270,37 @@ grep -q 'new maplibregl.Map' "$READER_ROOT/js/app.js" ||
 grep -q 'pmtiles://' "$READER_ROOT/js/app.js" ||
   fail "Reader does not connect MapLibre to the local PMTiles vector source."
 
-for source_layer in earth water landcover landuse roads buildings boundaries; do
+for source_layer in earth water landcover landuse roads buildings boundaries pois; do
   grep -q "\"source-layer\": \"${source_layer}\"" "$READER_ROOT/js/app.js" ||
     fail "Reader style is missing Protomaps source layer: ${source_layer}"
 done
+
+for poi_kind in hospital fire_station police clinic doctors pharmacy chemist supermarket fuel hardware doityourself townhall library community_centre post_office station bus_station ferry_terminal; do
+  grep -q "\"${poi_kind}\"" "$READER_ROOT/js/app.js" ||
+    fail "Reader POI styling is missing preparedness category: ${poi_kind}"
+done
+
+grep -q 'id: "water-point-labels"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not label named bodies of water."
+
+grep -q 'id: "water-line-labels"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not label named rivers, canals, and streams."
+
+for water_kind in water bay river canal stream; do
+  grep -q "\"${water_kind}\"" "$READER_ROOT/js/app.js" ||
+    fail "Reader water-label styling is missing category: ${water_kind}"
+done
+
+grep -q 'id: "major-landmark-labels"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not provide major navigation landmark labels."
+
+for landmark_kind in park nature_reserve forest aerodrome peak viewpoint attraction; do
+  grep -q "\"${landmark_kind}\"" "$READER_ROOT/js/app.js" ||
+    fail "Reader landmark styling is missing category: ${landmark_kind}"
+done
+
+grep -q '\["get", "min_zoom"\]' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not use source importance metadata to limit landmark clutter."
 
 grep -q 'bounds: pack.region.bounds' "$READER_ROOT/js/app.js" ||
   fail "Reader does not frame the selected map to its declared bounds."
