@@ -16,6 +16,10 @@ const elements = {
   mapHelp: document.getElementById("map-help"),
   mapHelpPanel: document.getElementById("map-help-panel"),
   mapHelpClose: document.getElementById("map-help-close"),
+  mapLayers: document.getElementById("map-layers"),
+  mapLayersPanel: document.getElementById("map-layers-panel"),
+  mapLayersClose: document.getElementById("map-layers-close"),
+  layerToggles: document.querySelectorAll("[data-layer-group]"),
   mapFullscreen: document.getElementById("map-fullscreen"),
   mapAttribution: document.getElementById("map-attribution"),
   detailsPanel: document.getElementById("details-panel"),
@@ -37,6 +41,59 @@ const state = {
   archive: null,
   map: null,
 };
+
+const MAP_LAYER_GROUPS = {
+  emergency: [
+    "hospital-labels",
+    "emergency-service-labels",
+  ],
+  medical: [
+    "medical-service-labels",
+  ],
+  supplies: [
+    "essential-supply-labels",
+  ],
+  "public-services": [
+    "public-service-labels",
+  ],
+  transportation: [
+    "transport-labels",
+  ],
+  landmarks: [
+    "major-landmark-labels",
+  ],
+  water: [
+    "water-point-labels",
+    "water-line-labels",
+  ],
+};
+
+function setLayerGroupVisibility(group, visible) {
+  if (!state.map || !MAP_LAYER_GROUPS[group]) {
+    return;
+  }
+
+  for (const layerId of MAP_LAYER_GROUPS[group]) {
+    if (!state.map.getLayer(layerId)) {
+      continue;
+    }
+
+    state.map.setLayoutProperty(
+      layerId,
+      "visibility",
+      visible ? "visible" : "none",
+    );
+  }
+}
+
+function applyLayerVisibility() {
+  for (const toggle of elements.layerToggles) {
+    setLayerGroupVisibility(
+      toggle.dataset.layerGroup,
+      toggle.checked,
+    );
+  }
+}
 
 function dashboardUrl() {
   const hostname = window.location.hostname || "offgridpi";
@@ -552,6 +609,7 @@ function renderPack(pack) {
     "Loading local vector map data.";
 
   state.map.on("load", () => {
+    applyLayerVisibility();
     elements.renderMessage.hidden = true;
   });
 }
@@ -790,8 +848,40 @@ function initialize() {
     }
   });
 
+  elements.mapLayers.addEventListener("click", () => {
+    const willOpen = elements.mapLayersPanel.hidden;
+
+    elements.mapHelpPanel.hidden = true;
+    elements.mapHelp.setAttribute("aria-expanded", "false");
+
+    elements.mapLayersPanel.hidden = !willOpen;
+    elements.mapLayers.setAttribute(
+      "aria-expanded",
+      willOpen ? "true" : "false",
+    );
+  });
+
+  elements.mapLayersClose.addEventListener("click", () => {
+    elements.mapLayersPanel.hidden = true;
+    elements.mapLayers.setAttribute("aria-expanded", "false");
+    elements.mapLayers.focus();
+  });
+
+  for (const toggle of elements.layerToggles) {
+    toggle.addEventListener("change", () => {
+      setLayerGroupVisibility(
+        toggle.dataset.layerGroup,
+        toggle.checked,
+      );
+    });
+  }
+
   elements.mapHelp.addEventListener("click", () => {
     const willOpen = elements.mapHelpPanel.hidden;
+
+    elements.mapLayersPanel.hidden = true;
+    elements.mapLayers.setAttribute("aria-expanded", "false");
+
     elements.mapHelpPanel.hidden = !willOpen;
     elements.mapHelp.setAttribute(
       "aria-expanded",

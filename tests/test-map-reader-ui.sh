@@ -166,15 +166,32 @@ grep -q 'new pmtiles.Protocol' "$READER_ROOT/js/app.js" ||
 grep -q 'maplibregl.addProtocol' "$READER_ROOT/js/app.js" ||
   fail "Reader does not register the PMTiles protocol with MapLibre."
 
-for control_id in map-zoom-in map-zoom-out map-reset-view map-help map-fullscreen; do
+for control_id in map-zoom-in map-zoom-out map-reset-view map-help map-layers map-fullscreen; do
   grep -q "id=\"${control_id}\"" "$READER_ROOT/index.html" ||
     fail "Reader is missing navigation control: ${control_id}"
 done
 
-for binding_id in map-zoom-in map-zoom-out map-reset-view map-help map-fullscreen; do
+for binding_id in map-zoom-in map-zoom-out map-reset-view map-help map-layers map-fullscreen; do
   grep -q "getElementById(\"${binding_id}\")" "$READER_ROOT/js/app.js" ||
     fail "Reader does not bind navigation control: ${binding_id}"
 done
+
+grep -q 'id="map-layers-panel"' "$READER_ROOT/index.html" ||
+  fail "Reader is missing the map-layer controls panel."
+
+grep -q '^\.map-layers-panel {' "$READER_ROOT/css/styles.css" ||
+  fail "Reader stylesheet lacks dedicated layer-panel sizing."
+
+grep -q 'overflow-y: auto' "$READER_ROOT/css/styles.css" ||
+  fail "Reader layer panel cannot scroll when map height is limited."
+
+for layer_group in emergency medical supplies public-services transportation landmarks water; do
+  grep -q "data-layer-group=\"${layer_group}\"" "$READER_ROOT/index.html" ||
+    fail "Reader is missing layer toggle group: ${layer_group}"
+done
+
+grep -q 'setLayoutProperty' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not change MapLibre layer visibility from layer controls."
 
 grep -q 'requestFullscreen' "$READER_ROOT/js/app.js" ||
   fail "Reader does not support entering fullscreen mode."

@@ -136,9 +136,21 @@
 
               <button
                 type="button"
+                class="map-control-button map-control-wide"
+                id="map-layers"
+                aria-label="Map layers"
+                aria-expanded="false"
+                title="Show or hide map layers"
+              >
+                Layers
+              </button>
+
+              <button
+                type="button"
                 class="map-control-button"
                 id="map-help"
                 aria-label="Map navigation help"
+                aria-expanded="false"
                 title="Map navigation help"
               >
                 ?
@@ -195,6 +207,90 @@
                   <dd>Return to the starting map view</dd>
                 </div>
               </dl>
+            </section>
+
+            <section
+              class="map-help-panel map-layers-panel"
+              id="map-layers-panel"
+              aria-labelledby="map-layers-heading"
+              hidden
+            >
+              <div class="map-help-heading">
+                <h2 id="map-layers-heading">Map Layers</h2>
+                <button
+                  type="button"
+                  class="map-help-close"
+                  id="map-layers-close"
+                  aria-label="Close map layers"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div class="map-layer-list">
+                <label class="map-layer-toggle">
+                  <input
+                    type="checkbox"
+                    data-layer-group="emergency"
+                    checked
+                  >
+                  <span>Emergency</span>
+                </label>
+
+                <label class="map-layer-toggle">
+                  <input
+                    type="checkbox"
+                    data-layer-group="medical"
+                    checked
+                  >
+                  <span>Medical</span>
+                </label>
+
+                <label class="map-layer-toggle">
+                  <input
+                    type="checkbox"
+                    data-layer-group="supplies"
+                    checked
+                  >
+                  <span>Supplies</span>
+                </label>
+
+                <label class="map-layer-toggle">
+                  <input
+                    type="checkbox"
+                    data-layer-group="public-services"
+                    checked
+                  >
+                  <span>Public Services</span>
+                </label>
+
+                <label class="map-layer-toggle">
+                  <input
+                    type="checkbox"
+                    data-layer-group="transportation"
+                    checked
+                  >
+                  <span>Transportation</span>
+                </label>
+
+                <label class="map-layer-toggle">
+                  <input
+                    type="checkbox"
+                    data-layer-group="landmarks"
+                    checked
+                  >
+                  <span>Landmarks</span>
+                </label>
+
+                <label class="map-layer-toggle">
+                  <input
+                    type="checkbox"
+                    data-layer-group="water"
+                    checked
+                  >
+                  <span>Water Labels</span>
+                </label>
+              </div>
             </section>
 
             <div

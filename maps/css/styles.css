@@ -401,6 +401,39 @@ main {
   color: var(--muted);
 }
 
+.map-layers-panel {
+  max-height: calc(100% - 80px);
+  overflow-y: auto;
+}
+
+.map-layer-list {
+  display: grid;
+  gap: 8px;
+}
+
+.map-layer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-deep);
+  cursor: pointer;
+}
+
+.map-layer-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.map-layer-toggle span {
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
 .map-placeholder-content h2 {
   margin: 4px 0 8px;
   font-size: 1.4rem;
