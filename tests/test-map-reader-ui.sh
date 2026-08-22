@@ -151,11 +151,63 @@ grep -q '^\.map-canvas {' "$READER_ROOT/css/styles.css" ||
 grep -q '^\.render-message {' "$READER_ROOT/css/styles.css" ||
   fail "Reader stylesheet lacks the render-status overlay."
 
+grep -q '^\.map-controls {' "$READER_ROOT/css/styles.css" ||
+  fail "Reader stylesheet lacks map navigation controls."
+
+grep -q '^\.map-control-button {' "$READER_ROOT/css/styles.css" ||
+  fail "Reader stylesheet lacks touch-friendly map buttons."
+
+grep -q '^\.map-help-panel {' "$READER_ROOT/css/styles.css" ||
+  fail "Reader stylesheet lacks the navigation help panel."
+
 grep -q 'new pmtiles.Protocol' "$READER_ROOT/js/app.js" ||
   fail "Reader does not initialize the PMTiles protocol."
 
 grep -q 'maplibregl.addProtocol' "$READER_ROOT/js/app.js" ||
   fail "Reader does not register the PMTiles protocol with MapLibre."
+
+for control_id in map-zoom-in map-zoom-out map-reset-view map-help; do
+  grep -q "id=\"${control_id}\"" "$READER_ROOT/index.html" ||
+    fail "Reader is missing navigation control: ${control_id}"
+done
+
+for binding_id in map-zoom-in map-zoom-out map-reset-view map-help; do
+  grep -q "getElementById(\"${binding_id}\")" "$READER_ROOT/js/app.js" ||
+    fail "Reader does not bind navigation control: ${binding_id}"
+done
+
+grep -q 'state.map.zoomIn' "$READER_ROOT/js/app.js" ||
+  fail "Zoom-in control is not wired to MapLibre."
+
+grep -q 'state.map.zoomOut' "$READER_ROOT/js/app.js" ||
+  fail "Zoom-out control is not wired to MapLibre."
+
+grep -q 'state.map.fitBounds' "$READER_ROOT/js/app.js" ||
+  fail "Reset-view control does not restore the selected map bounds."
+
+grep -q 'id="map-help-panel"' "$READER_ROOT/index.html" ||
+  fail "Reader is missing the map navigation help panel."
+
+grep -q 'addEventListener("keydown"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not provide keyboard map navigation."
+
+grep -q 'ArrowUp' "$READER_ROOT/js/app.js" ||
+  fail "Reader keyboard navigation does not support arrow keys."
+
+grep -q 'state.map.panBy(\[0, -panDistance\])' "$READER_ROOT/js/app.js" ||
+  fail "Arrow Up does not pan the map upward."
+
+grep -q 'state.map.panBy(\[0, panDistance\])' "$READER_ROOT/js/app.js" ||
+  fail "Arrow Down does not pan the map downward."
+
+grep -q 'state.map.panBy(\[-panDistance, 0\])' "$READER_ROOT/js/app.js" ||
+  fail "Arrow Left does not pan the map left."
+
+grep -q 'state.map.panBy(\[panDistance, 0\])' "$READER_ROOT/js/app.js" ||
+  fail "Arrow Right does not pan the map right."
+
+grep -q 'event.key === "Home"' "$READER_ROOT/js/app.js" ||
+  fail "Reader keyboard navigation does not support Home reset."
 
 grep -q 'getElementById("map-canvas")' "$READER_ROOT/js/app.js" ||
   fail "Reader does not bind the MapLibre canvas."

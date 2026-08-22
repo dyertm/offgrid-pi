@@ -293,6 +293,98 @@ main {
   z-index: 1;
 }
 
+.map-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  display: flex;
+  gap: 8px;
+}
+
+.map-control-button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.map-control-button:hover,
+.map-control-button:focus-visible {
+  border-color: var(--accent);
+}
+
+.map-control-wide {
+  min-width: 68px;
+  font-size: 0.8rem;
+}
+
+.map-help-panel {
+  position: absolute;
+  top: 68px;
+  right: 12px;
+  z-index: 4;
+  width: min(300px, calc(100% - 24px));
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.map-help-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.map-help-heading h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.map-help-close {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-deep);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.map-help-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.map-help-list div {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 10px;
+}
+
+.map-help-list dt {
+  font-weight: 700;
+}
+
+.map-help-list dd {
+  margin: 0;
+  color: var(--muted);
+}
+
 .map-placeholder-content h2 {
   margin: 4px 0 8px;
   font-size: 1.4rem;

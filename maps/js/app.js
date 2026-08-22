@@ -10,6 +10,12 @@ const elements = {
   mapWorkspace: document.getElementById("map-workspace"),
   mapCanvas: document.getElementById("map-canvas"),
   renderMessage: document.getElementById("render-message"),
+  mapZoomIn: document.getElementById("map-zoom-in"),
+  mapZoomOut: document.getElementById("map-zoom-out"),
+  mapResetView: document.getElementById("map-reset-view"),
+  mapHelp: document.getElementById("map-help"),
+  mapHelpPanel: document.getElementById("map-help-panel"),
+  mapHelpClose: document.getElementById("map-help-close"),
   detailsPanel: document.getElementById("details-panel"),
   selectedHeading: document.getElementById("selected-map-heading"),
   selectedStatus: document.getElementById("selected-status"),
@@ -38,6 +44,12 @@ function dashboardUrl() {
 
 function packKey(pack) {
   return `${pack.pack_id}@${pack.version}`;
+}
+
+function selectedPack() {
+  return state.packs.find(
+    (pack) => packKey(pack) === state.selectedKey,
+  ) || null;
 }
 
 function humanStatus(status) {
@@ -457,6 +469,106 @@ function initialize() {
 
   elements.readerHost.textContent = hostname;
   elements.dashboardLink.href = dashboardUrl();
+
+  elements.mapZoomIn.addEventListener("click", () => {
+    if (state.map) {
+      state.map.zoomIn();
+    }
+  });
+
+  elements.mapZoomOut.addEventListener("click", () => {
+    if (state.map) {
+      state.map.zoomOut();
+    }
+  });
+
+  elements.mapResetView.addEventListener("click", () => {
+    const pack = selectedPack();
+
+    if (state.map && pack) {
+      state.map.fitBounds(
+        pack.region.bounds,
+        {
+          padding: 24,
+          maxZoom: pack.region.max_zoom,
+        },
+      );
+    }
+  });
+
+  elements.mapHelp.addEventListener("click", () => {
+    const willOpen = elements.mapHelpPanel.hidden;
+    elements.mapHelpPanel.hidden = !willOpen;
+    elements.mapHelp.setAttribute(
+      "aria-expanded",
+      willOpen ? "true" : "false",
+    );
+  });
+
+  elements.mapHelpClose.addEventListener("click", () => {
+    elements.mapHelpPanel.hidden = true;
+    elements.mapHelp.setAttribute("aria-expanded", "false");
+    elements.mapHelp.focus();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!state.map) {
+      return;
+    }
+
+    if (event.key === "+" || event.key === "=") {
+      event.preventDefault();
+      state.map.zoomIn();
+      return;
+    }
+
+    if (event.key === "-" || event.key === "_") {
+      event.preventDefault();
+      state.map.zoomOut();
+      return;
+    }
+
+    const panDistance = 100;
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      state.map.panBy([0, -panDistance]);
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      state.map.panBy([0, panDistance]);
+      return;
+    }
+
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      state.map.panBy([-panDistance, 0]);
+      return;
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      state.map.panBy([panDistance, 0]);
+      return;
+    }
+
+    if (event.key === "Home") {
+      const pack = selectedPack();
+
+      if (pack) {
+        event.preventDefault();
+        state.map.fitBounds(
+          pack.region.bounds,
+          {
+            padding: 24,
+            maxZoom: pack.region.max_zoom,
+          },
+        );
+      }
+    }
+  });
 
   try {
     initializeRenderer();

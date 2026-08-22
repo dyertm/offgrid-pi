@@ -101,6 +101,93 @@
             ></div>
 
             <div
+              class="map-controls"
+              aria-label="Map navigation controls"
+            >
+              <button
+                type="button"
+                class="map-control-button"
+                id="map-zoom-in"
+                aria-label="Zoom in"
+                title="Zoom in"
+              >
+                +
+              </button>
+
+              <button
+                type="button"
+                class="map-control-button"
+                id="map-zoom-out"
+                aria-label="Zoom out"
+                title="Zoom out"
+              >
+                −
+              </button>
+
+              <button
+                type="button"
+                class="map-control-button map-control-wide"
+                id="map-reset-view"
+                aria-label="Reset map view"
+                title="Return to the starting map view"
+              >
+                Home
+              </button>
+
+              <button
+                type="button"
+                class="map-control-button"
+                id="map-help"
+                aria-label="Map navigation help"
+                title="Map navigation help"
+              >
+                ?
+              </button>
+            </div>
+
+            <section
+              class="map-help-panel"
+              id="map-help-panel"
+              aria-labelledby="map-help-heading"
+              hidden
+            >
+              <div class="map-help-heading">
+                <h2 id="map-help-heading">Navigate Map</h2>
+                <button
+                  type="button"
+                  class="map-help-close"
+                  id="map-help-close"
+                  aria-label="Close map navigation help"
+                >
+                  ×
+                </button>
+              </div>
+
+              <dl class="map-help-list">
+                <div>
+                  <dt>Drag</dt>
+                  <dd>Move around the map</dd>
+                </div>
+                <div>
+                  <dt>Scroll / Pinch</dt>
+                  <dd>Zoom in or out</dd>
+                </div>
+                <div>
+                  <dt>+ / −</dt>
+                  <dd>Zoom in or out</dd>
+                </div>
+                <div>
+                  <dt>Arrow keys</dt>
+                  <dd>Move around the map</dd>
+                </div>
+                <div>
+                  <dt>Home</dt>
+                  <dd>Return to the starting map view</dd>
+                </div>
+              </dl>
+            </section>
+
+            <div
               class="map-placeholder-content render-message"
               id="render-message"
               role="status"
