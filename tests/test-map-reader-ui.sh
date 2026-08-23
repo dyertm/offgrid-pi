@@ -166,12 +166,12 @@ grep -q 'new pmtiles.Protocol' "$READER_ROOT/js/app.js" ||
 grep -q 'maplibregl.addProtocol' "$READER_ROOT/js/app.js" ||
   fail "Reader does not register the PMTiles protocol with MapLibre."
 
-for control_id in map-zoom-in map-zoom-out map-reset-view map-help map-layers map-fullscreen; do
+for control_id in map-zoom-in map-zoom-out map-reset-view map-measure map-help map-layers map-fullscreen; do
   grep -q "id=\"${control_id}\"" "$READER_ROOT/index.html" ||
     fail "Reader is missing navigation control: ${control_id}"
 done
 
-for binding_id in map-zoom-in map-zoom-out map-reset-view map-help map-layers map-fullscreen; do
+for binding_id in map-zoom-in map-zoom-out map-reset-view map-measure map-help map-layers map-fullscreen; do
   grep -q "getElementById(\"${binding_id}\")" "$READER_ROOT/js/app.js" ||
     fail "Reader does not bind navigation control: ${binding_id}"
 done
@@ -209,11 +209,42 @@ grep -A12 '^\.map-coordinates {' "$READER_ROOT/css/styles.css" |
   grep -q 'top: 12px' ||
   fail "Reader map-center coordinates are not positioned at the top."
 
+grep -q '@media (max-width: 1100px)' "$READER_ROOT/css/styles.css" ||
+  fail "Reader lacks a compact-screen map layout."
+
+grep -A18 '@media (max-width: 1100px)' "$READER_ROOT/css/styles.css" |
+  grep -q 'bottom: 12px' ||
+  fail "Reader does not move coordinates to the lower-left on compact screens."
+
+grep -A18 '@media (max-width: 1100px)' "$READER_ROOT/css/styles.css" |
+  grep -q '\.maplibregl-ctrl-bottom-left' ||
+  fail "Reader does not reposition the map scale on compact screens."
+
+grep -A18 '@media (max-width: 1100px)' "$READER_ROOT/css/styles.css" |
+  grep -q 'top: 12px' ||
+  fail "Reader does not move the map scale to the upper-left on compact screens."
+
 grep -q 'getCenter()' "$READER_ROOT/js/app.js" ||
   fail "Reader does not obtain the current MapLibre map center."
 
 grep -q '"move"' "$READER_ROOT/js/app.js" ||
   fail "Reader does not update coordinates as the map moves."
+
+grep -q 'measurementStart' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not track a map-center measurement start point."
+
+grep -A12 '^function selectPack(pack)' "$READER_ROOT/js/app.js" |
+  grep -q 'state.measurementStart = null' ||
+  fail "Reader does not clear active measurements when switching map packs."
+
+grep -q 'calculateDistance' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not calculate offline point-to-point distance."
+
+grep -q 'calculateBearing' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not calculate offline point-to-point bearing."
+
+grep -q 'Measure from center' "$READER_ROOT/index.html" ||
+  fail "Reader navigation help does not explain center-based measurement."
 
 grep -q 'requestFullscreen' "$READER_ROOT/js/app.js" ||
   fail "Reader does not support entering fullscreen mode."

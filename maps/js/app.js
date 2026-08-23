@@ -13,6 +13,7 @@ const elements = {
   mapZoomIn: document.getElementById("map-zoom-in"),
   mapZoomOut: document.getElementById("map-zoom-out"),
   mapResetView: document.getElementById("map-reset-view"),
+  mapMeasure: document.getElementById("map-measure"),
   mapHelp: document.getElementById("map-help"),
   mapHelpPanel: document.getElementById("map-help-panel"),
   mapHelpClose: document.getElementById("map-help-close"),
@@ -41,6 +42,7 @@ const state = {
   protocol: null,
   archive: null,
   map: null,
+  measurementStart: null,
 };
 
 const MAP_LAYER_GROUPS = {
@@ -96,6 +98,61 @@ function applyLayerVisibility() {
   }
 }
 
+function toRadians(value) {
+  return value * Math.PI / 180;
+}
+
+function toDegrees(value) {
+  return value * 180 / Math.PI;
+}
+
+function calculateDistance(start, end) {
+  const earthRadiusMiles = 3958.8;
+  const lat1 = toRadians(start.lat);
+  const lat2 = toRadians(end.lat);
+  const deltaLat = toRadians(end.lat - start.lat);
+  const deltaLng = toRadians(end.lng - start.lng);
+
+  const a =
+    Math.sin(deltaLat / 2) ** 2
+    + Math.cos(lat1)
+      * Math.cos(lat2)
+      * Math.sin(deltaLng / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusMiles * c;
+}
+
+function calculateBearing(start, end) {
+  const lat1 = toRadians(start.lat);
+  const lat2 = toRadians(end.lat);
+  const deltaLng = toRadians(end.lng - start.lng);
+
+  const y = Math.sin(deltaLng) * Math.cos(lat2);
+  const x =
+    Math.cos(lat1) * Math.sin(lat2)
+    - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLng);
+
+  return (toDegrees(Math.atan2(y, x)) + 360) % 360;
+}
+
+function bearingDirection(bearing) {
+  const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+  return directions[Math.round(bearing / 45) % 8];
+}
+
+function formatMeasurement(end) {
+  if (!state.measurementStart) {
+    return "";
+  }
+
+  const distance = calculateDistance(state.measurementStart, end);
+  const bearing = calculateBearing(state.measurementStart, end);
+
+  return `\nMeasure: ${distance.toFixed(2)} mi • `
+    + `${Math.round(bearing)}° ${bearingDirection(bearing)}`;
+}
+
 function formatCoordinate(value, positive, negative) {
   const direction = value >= 0 ? positive : negative;
   return `${Math.abs(value).toFixed(4)}° ${direction}`;
@@ -111,7 +168,8 @@ function updateMapCoordinates() {
 
   elements.mapCoordinates.textContent =
     `Center: ${formatCoordinate(center.lat, "N", "S")}, `
-    + `${formatCoordinate(center.lng, "E", "W")}`;
+    + `${formatCoordinate(center.lng, "E", "W")}`
+    + formatMeasurement(center);
 }
 
 function dashboardUrl() {
@@ -638,6 +696,14 @@ function renderPack(pack) {
 
 function selectPack(pack) {
   state.selectedKey = packKey(pack);
+  state.measurementStart = null;
+
+  elements.mapMeasure.textContent = "Measure";
+  elements.mapMeasure.setAttribute(
+    "aria-label",
+    "Measure distance and bearing from map center",
+  );
+  elements.mapMeasure.title = "Measure from map center";
 
   for (const button of elements.packList.querySelectorAll(".pack-card")) {
     button.setAttribute(
@@ -868,6 +934,38 @@ function initialize() {
         },
       );
     }
+  });
+
+  elements.mapMeasure.addEventListener("click", () => {
+    if (!state.map) {
+      return;
+    }
+
+    if (state.measurementStart) {
+      state.measurementStart = null;
+      elements.mapMeasure.textContent = "Measure";
+      elements.mapMeasure.setAttribute(
+        "aria-label",
+        "Measure distance and bearing from map center",
+      );
+      elements.mapMeasure.title = "Measure from map center";
+    } else {
+      const center = state.map.getCenter();
+
+      state.measurementStart = {
+        lat: center.lat,
+        lng: center.lng,
+      };
+
+      elements.mapMeasure.textContent = "Clear";
+      elements.mapMeasure.setAttribute(
+        "aria-label",
+        "Clear map measurement",
+      );
+      elements.mapMeasure.title = "Clear measurement";
+    }
+
+    updateMapCoordinates();
   });
 
   elements.mapLayers.addEventListener("click", () => {

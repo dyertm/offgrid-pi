@@ -329,6 +329,7 @@ main {
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
   line-height: 1.35;
+  white-space: pre-line;
   pointer-events: none;
 }
 
@@ -550,6 +551,23 @@ main {
 
 [hidden] {
   display: none !important;
+}
+
+@media (max-width: 1100px) {
+  .map-coordinates {
+    top: auto;
+    bottom: 12px;
+  }
+
+  .maplibregl-ctrl-bottom-left {
+    top: 12px;
+    bottom: auto;
+    left: 12px;
+  }
+
+  .maplibregl-ctrl-bottom-left .maplibregl-ctrl {
+    margin: 0;
+  }
 }
 
 @media (max-width: 900px) {
