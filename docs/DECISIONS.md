@@ -314,3 +314,101 @@ Publishing license notices does not by itself satisfy every source-distribution
 obligation. Corresponding-source availability, written offers, trademarks, and
 content redistribution rights must be reviewed before distributing a release
 image or commercial product.
+
+## Decision 027 — Add a Shared Owner Mode Security Boundary
+
+**Date:** August 23, 2026
+**Status:** Approved for implementation
+
+Offgrid Pi will provide a shared Owner Mode authorization layer for protected
+owner data and configuration. Saved map waypoints will be the first feature to
+use this boundary, but Owner Mode is intended to support additional protected
+features without creating separate passwords or authorization systems for each
+module.
+
+### Service separation
+
+The existing localhost management viewer remains unchanged:
+
+- TCP port `8083`
+- Bound only to `127.0.0.1`
+- Read-only protected diagnostics
+- Remote access through authenticated SSH port forwarding
+
+A separate Owner Mode service will use TCP port `8085`.
+
+The Owner Mode service may support access from the directly attached browser
+and authorized devices connected to the Offgrid Pi local network or hotspot.
+It must remain separate from the public dashboard, document server, Kiwix, and
+read-only map reader.
+
+### Owner authentication
+
+Owner Mode will use an owner-created PIN or equivalent local recovery
+credential.
+
+The implementation must:
+
+- Never store the Owner PIN in plaintext.
+- Never transmit the Owner PIN or authenticated owner session over
+  unencrypted LAN HTTP.
+- Use an authenticated and encrypted transport for network-connected owner
+  devices.
+- Rate-limit failed authentication attempts.
+- Use expiring browser sessions that can be explicitly locked.
+- Invalidate protected sessions when appropriate during reboot, credential
+  changes, or security-sensitive recovery operations.
+- Avoid exposing authentication secrets in logs, URLs, public web roots, or
+  content exports.
+
+The exact encrypted local transport and credential-verification mechanism will
+be selected after focused security and usability testing.
+
+### Access model
+
+Public and owner access are distinct capabilities.
+
+Unauthenticated users may access intentionally public offline resources such as
+maps and approved shared content.
+
+Authenticated Owner Mode may provide access to features including:
+
+- Private map waypoints, markers, and notes.
+- Map-pack import and management.
+- Personal content management.
+- Content backup and export.
+- Network and hotspot configuration.
+- Other owner-specific settings added in future phases.
+
+Owner Mode access does not automatically grant permission to perform privileged
+operating-system actions.
+
+Restart, reboot, power-off, recovery, factory reset, service control, and other
+privileged operations must retain a separate privileged execution and
+confirmation boundary.
+
+### Private map data
+
+Installed map packs remain read-only and separate from private user-generated
+map data.
+
+Private map information will be stored under:
+
+`/srv/offgridpi/content/maps/user-data`
+
+The public map reader on TCP port `8084` must not expose private waypoint data
+by default.
+
+An authenticated owner may intentionally view private map data from another
+connected device. Future sharing controls may allow selected waypoint
+information to be exposed read-only to other local users without granting
+Owner Mode access.
+
+### Resilience requirement
+
+Owner Mode must support emergency access from another authorized local device
+when the Offgrid Pi computer remains operational but its directly attached
+display, keyboard, or other local interface is unavailable.
+
+This redundancy requirement is part of the Owner Mode design rather than an
+optional convenience feature.

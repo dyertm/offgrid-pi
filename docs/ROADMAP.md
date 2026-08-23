@@ -268,7 +268,7 @@ Completion criteria:
 
 **Status:** In progress — reader and pack standard
 
-Build the read-only offline map reader, `.ogmap` pack schema and validator, range-capable map service, USB import workflow, localhost-only pack manager, and public-domain demonstration packs. See `docs/MAPS.md` for the approved architecture.
+Build the read-only offline map reader, `.ogmap` pack schema and validator, range-capable map service, USB import workflow, authenticated Owner Mode foundation with protected map-pack management, private waypoint support, and public-domain demonstration packs. See `docs/MAPS.md` and Decision 027 in `docs/DECISIONS.md` for the approved architecture.
 
 ## Phase 9 — Offline entertainment
 

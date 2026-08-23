@@ -9,7 +9,7 @@ A small public-domain overview pack may be included for immediate demonstration.
 ## Service architecture
 
 - Public read-only map reader: TCP port `8084`
-- Future localhost-only map-pack manager: TCP port `8085`
+- Future authenticated Owner Mode service: TCP port `8085`
 - Reader application: `/opt/offgridpi/maps`
 - Installed packs: `/srv/offgridpi/content/maps/packs`
 - Temporary imports: `/srv/offgridpi/content/maps/incoming`
@@ -18,6 +18,11 @@ A small public-domain overview pack may be included for immediate demonstration.
 
 The public reader must support HTTP byte-range requests for PMTiles files.
 Uploads and pack changes must never be exposed through the public reader.
+Private waypoint data must remain hidden from unauthenticated map-reader users.
+
+The Owner Mode service will provide the protected boundary for future map-pack
+management and private waypoint access. Network-connected Owner Mode access must
+use authenticated encrypted transport as defined in Decision 027.
 
 ## Map-pack format
 
@@ -73,7 +78,7 @@ A failed update must preserve the previously installed version.
 3. Range-capable read-only map service
 4. Basic reader with a tiny synthetic test pack
 5. USB import workflow
-6. Localhost-only pack manager
+6. Authenticated Owner Mode foundation and protected map-pack management
 7. Public-domain nationwide overview pack
 8. Washington emergency pack
 9. OSM-derived Washington comparison pack
