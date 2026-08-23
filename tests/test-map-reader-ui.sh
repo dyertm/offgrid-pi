@@ -193,6 +193,28 @@ done
 grep -q 'setLayoutProperty' "$READER_ROOT/js/app.js" ||
   fail "Reader does not change MapLibre layer visibility from layer controls."
 
+grep -q 'id="map-coordinates"' "$READER_ROOT/index.html" ||
+  fail "Reader is missing the map-center coordinate readout."
+
+grep -q 'id="map-center-crosshair"' "$READER_ROOT/index.html" ||
+  fail "Reader is missing the visual map-center crosshair."
+
+grep -q 'Center:' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not clearly label center coordinates."
+
+grep -q 'toFixed(4)' "$READER_ROOT/js/app.js" ||
+  fail "Reader coordinate display is not limited to four decimal places."
+
+grep -A12 '^\.map-coordinates {' "$READER_ROOT/css/styles.css" |
+  grep -q 'top: 12px' ||
+  fail "Reader map-center coordinates are not positioned at the top."
+
+grep -q 'getCenter()' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not obtain the current MapLibre map center."
+
+grep -q '"move"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not update coordinates as the map moves."
+
 grep -q 'requestFullscreen' "$READER_ROOT/js/app.js" ||
   fail "Reader does not support entering fullscreen mode."
 

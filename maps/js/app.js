@@ -22,6 +22,7 @@ const elements = {
   layerToggles: document.querySelectorAll("[data-layer-group]"),
   mapFullscreen: document.getElementById("map-fullscreen"),
   mapAttribution: document.getElementById("map-attribution"),
+  mapCoordinates: document.getElementById("map-coordinates"),
   detailsPanel: document.getElementById("details-panel"),
   selectedHeading: document.getElementById("selected-map-heading"),
   selectedStatus: document.getElementById("selected-status"),
@@ -93,6 +94,24 @@ function applyLayerVisibility() {
       toggle.checked,
     );
   }
+}
+
+function formatCoordinate(value, positive, negative) {
+  const direction = value >= 0 ? positive : negative;
+  return `${Math.abs(value).toFixed(4)}° ${direction}`;
+}
+
+function updateMapCoordinates() {
+  if (!state.map) {
+    elements.mapCoordinates.textContent = "Center: —";
+    return;
+  }
+
+  const center = state.map.getCenter();
+
+  elements.mapCoordinates.textContent =
+    `Center: ${formatCoordinate(center.lat, "N", "S")}, `
+    + `${formatCoordinate(center.lng, "E", "W")}`;
 }
 
 function dashboardUrl() {
@@ -610,8 +629,11 @@ function renderPack(pack) {
 
   state.map.on("load", () => {
     applyLayerVisibility();
+    updateMapCoordinates();
     elements.renderMessage.hidden = true;
   });
+
+  state.map.on("move", updateMapCoordinates);
 }
 
 function selectPack(pack) {
