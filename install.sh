@@ -12,6 +12,8 @@ MAP_PACK_ROOT="$MAP_CONTENT_ROOT/packs"
 MAP_INCOMING_ROOT="$MAP_CONTENT_ROOT/incoming"
 MAP_REJECTED_ROOT="$MAP_CONTENT_ROOT/rejected"
 MAP_USER_DATA_ROOT="$MAP_CONTENT_ROOT/user-data"
+OWNER_STATE_ROOT="/var/lib/offgridpi/owner"
+OWNER_PORT="8085"
 KIWIX_ROOT="/srv/offgridpi/content/kiwix"
 CATEGORIES=(
   emergency first-aid food gardening communications radio repair
@@ -36,6 +38,7 @@ Usage:
   sudo ./install.sh install-management
   sudo ./install.sh install-documents
   sudo ./install.sh install-maps
+  sudo ./install.sh install-owner
   sudo ./install.sh install-dashboard
   sudo ./install.sh install-kiwix
   sudo ./install.sh verify
@@ -51,6 +54,7 @@ Commands:
                      and the localhost management viewer.
   install-documents  Idempotently install the validated document module.
   install-maps       Idempotently install the offline map-reader module.
+  install-owner      Idempotently install the localhost Owner Mode foundation.
   install-dashboard  Idempotently install the dashboard and desktop autostart.
   install-kiwix      Idempotently install Kiwix and discover approved ZIM files.
   verify             Run the repository verification script.
@@ -131,6 +135,8 @@ check_payload() {
     "$PROJECT_ROOT/maps/vendor/pmtiles-js/FFLATE-LICENSE.txt" \
     "$PROJECT_ROOT/scripts/offgridpi-map-server.py" \
     "$PROJECT_ROOT/systemd/offgridpi-maps.service" \
+    "$PROJECT_ROOT/scripts/offgridpi-owner-server.py" \
+    "$PROJECT_ROOT/systemd/offgridpi-owner.service" \
     "$PROJECT_ROOT/content-packs/import-map-pack.py" \
     "$PROJECT_ROOT/content-packs/inspect-map-pack.py" \
     "$PROJECT_ROOT/content-packs/validate-map-pack.py" \
@@ -275,7 +281,9 @@ install_map_module() {
   install -d -o "$admin_user" -g offgridpi -m 2750 \
     "$MAP_PACK_ROOT" \
     "$MAP_INCOMING_ROOT" \
-    "$MAP_REJECTED_ROOT" \
+    "$MAP_REJECTED_ROOT"
+
+  install -d -o "$admin_user" -g offgridpi -m 2770 \
     "$MAP_USER_DATA_ROOT"
 
   systemctl stop offgridpi-maps.service 2>/dev/null || true
@@ -354,6 +362,104 @@ install_map_module() {
 
   log "Offline map-reader module installation completed."
   log "Map reader URL: http://$(hostname):8084/"
+}
+
+
+install_owner_module() {
+  require_root
+  check_host
+
+  local admin_user attempt owner_page
+  admin_user="$(resolve_admin_user)"
+
+  log "Administrator: $admin_user"
+  log "Installing Owner Mode foundation."
+
+  ensure_service_account
+
+  install -d \
+    -o root \
+    -g root \
+    -m 0755 \
+    /opt/offgridpi/scripts \
+    /srv/offgridpi/content \
+    /srv/offgridpi/content/maps
+
+  install -d \
+    -o offgridpi \
+    -g offgridpi \
+    -m 0700 \
+    "$OWNER_STATE_ROOT"
+
+  install -d \
+    -o "$admin_user" \
+    -g offgridpi \
+    -m 2770 \
+    /srv/offgridpi/content/maps/user-data
+
+  systemctl stop offgridpi-owner.service 2>/dev/null || true
+
+  install \
+    -o root \
+    -g root \
+    -m 0755 \
+    "$PROJECT_ROOT/scripts/offgridpi-owner-server.py" \
+    /opt/offgridpi/scripts/offgridpi-owner-server.py
+
+  install \
+    -o root \
+    -g root \
+    -m 0644 \
+    "$PROJECT_ROOT/systemd/offgridpi-owner.service" \
+    /etc/systemd/system/offgridpi-owner.service
+
+  python3 -m py_compile /opt/offgridpi/scripts/offgridpi-owner-server.py
+  systemd-analyze verify /etc/systemd/system/offgridpi-owner.service
+
+  systemctl daemon-reload
+  systemctl enable --now offgridpi-owner.service
+
+  for attempt in $(seq 1 30); do
+    if curl \
+      --silent \
+      --fail \
+      --output /dev/null \
+      "http://127.0.0.1:${OWNER_PORT}/"
+    then
+      log "Owner Mode bootstrap answered on TCP port ${OWNER_PORT}."
+      break
+    fi
+
+    sleep 1
+  done
+
+  owner_page="$(
+    curl \
+      --silent \
+      --fail \
+      http://127.0.0.1:8085/
+  )" || die "Owner Mode bootstrap did not become available."
+
+  grep -q 'Offgrid Pi Owner Mode' <<< "$owner_page" \
+    || die "Owner Mode bootstrap returned unexpected content."
+
+  local owner_listener
+  owner_listener="$(
+    ss -ltnH 'sport = :8085'
+  )"
+
+  grep -q '127.0.0.1:8085' <<< "$owner_listener" \
+    || die "Owner Mode bootstrap is not listening on localhost."
+
+  if grep -Eq \
+    '0\.0\.0\.0:8085|\*:8085|\[::\]:8085' \
+    <<< "$owner_listener"
+  then
+    die "Owner Mode bootstrap is exposed beyond localhost."
+  fi
+
+  log "Owner Mode foundation installation completed."
+  log "Owner Mode bootstrap URL: http://127.0.0.1:8085/"
 }
 
 
@@ -832,16 +938,19 @@ install_all_modules() {
 
   install_management_tool
 
-  log "Step 1 of 4: Kiwix module."
+  log "Step 1 of 5: Kiwix module."
   install_kiwix_module
 
-  log "Step 2 of 4: Document module."
+  log "Step 2 of 5: Document module."
   install_document_module
 
-  log "Step 3 of 4: Offline Maps module."
+  log "Step 3 of 5: Offline Maps module."
   install_map_module
 
-  log "Step 4 of 4: Dashboard module."
+  log "Step 4 of 5: Owner Mode foundation."
+  install_owner_module
+
+  log "Step 5 of 5: Dashboard module."
   install_dashboard_module
 
   log "Running complete installation verification."
@@ -894,6 +1003,9 @@ case "${1:-}" in
     ;;
   install-maps)
     install_map_module
+    ;;
+  install-owner)
+    install_owner_module
     ;;
   install-dashboard)
     install_dashboard_module

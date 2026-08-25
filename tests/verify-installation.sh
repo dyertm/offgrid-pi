@@ -99,6 +99,9 @@ for path in \
   /opt/offgridpi/content-packs/validate-map-pack.py \
   /opt/offgridpi/content-packs/schema/map-pack.schema.json \
   /etc/systemd/system/offgridpi-maps.service \
+  /opt/offgridpi/scripts/offgridpi-owner-server.py \
+  /etc/systemd/system/offgridpi-owner.service \
+  /var/lib/offgridpi/owner \
   /srv/offgridpi/content/maps \
   /srv/offgridpi/content/maps/packs \
   /srv/offgridpi/content/maps/incoming \
@@ -1196,6 +1199,196 @@ else
 fi
 
 rm -rf "$management_temp"
+
+printf '\n=== Owner Mode foundation ===\n'
+
+for path in \
+  /opt/offgridpi/scripts/offgridpi-owner-server.py \
+  /etc/systemd/system/offgridpi-owner.service \
+  /var/lib/offgridpi/owner
+do
+  if [[ -e "$path" ]]; then
+    pass "Owner Mode component exists: $path"
+  else
+    fail "Owner Mode component is missing: $path"
+  fi
+done
+
+waypoint_mode="$(
+  stat -c '%a' /srv/offgridpi/content/maps/user-data 2>/dev/null || true
+)"
+
+waypoint_group="$(
+  stat -c '%G' /srv/offgridpi/content/maps/user-data 2>/dev/null || true
+)"
+
+if [[ "$waypoint_mode" == "2770" && "$waypoint_group" == "offgridpi" ]]; then
+  pass "Private waypoint directory permissions are correct."
+else
+  fail "Unexpected private waypoint directory permissions: mode=${waypoint_mode:-unknown} group=${waypoint_group:-unknown}"
+fi
+
+if systemctl is-enabled --quiet \
+  offgridpi-owner.service
+then
+  pass "Owner Mode service is enabled."
+else
+  fail "Owner Mode service is not enabled."
+fi
+
+if systemctl is-active --quiet \
+  offgridpi-owner.service
+then
+  pass "Owner Mode service is active."
+else
+  fail "Owner Mode service is not active."
+fi
+
+owner_user="$(
+  systemctl show \
+    offgridpi-owner.service \
+    --property=User \
+    --value \
+    2>/dev/null || true
+)"
+
+owner_group="$(
+  systemctl show \
+    offgridpi-owner.service \
+    --property=Group \
+    --value \
+    2>/dev/null || true
+)"
+
+if [[ "$owner_user" == "offgridpi" ]]; then
+  pass "Owner Mode service uses the restricted account."
+else
+  fail "Unexpected Owner Mode service user: ${owner_user:-unknown}"
+fi
+
+if [[ "$owner_group" == "offgridpi" ]]; then
+  pass "Owner Mode service uses the restricted group."
+else
+  fail "Unexpected Owner Mode service group: ${owner_group:-unknown}"
+fi
+
+owner_listener="$(
+  ss -ltnH 'sport = :8085' \
+    2>/dev/null || true
+)"
+
+if grep -qE \
+  '(^|[[:space:]])127\.0\.0\.1:8085([[:space:]]|$)' \
+  <<< "$owner_listener"
+then
+  pass "Owner Mode bootstrap listens on 127.0.0.1:8085."
+else
+  fail "Owner Mode bootstrap is not listening on localhost."
+fi
+
+if grep -Eq \
+  '(^|[[:space:]])(0\.0\.0\.0|\*|\[::\]):8085([[:space:]]|$)' \
+  <<< "$owner_listener"
+then
+  fail "Owner Mode bootstrap is exposed beyond localhost."
+else
+  pass "Owner Mode bootstrap has no public listener."
+fi
+
+owner_temp="$(
+  mktemp -d
+)"
+
+owner_headers="$owner_temp/headers.txt"
+owner_body="$owner_temp/body.html"
+
+if curl \
+  --silent \
+  --show-error \
+  --dump-header "$owner_headers" \
+  --output "$owner_body" \
+  http://127.0.0.1:8085/
+then
+  if grep -qE \
+    '^HTTP/[^ ]+ 200([[:space:]]|$)' \
+    "$owner_headers"
+  then
+    pass "Owner Mode bootstrap returns HTTP 200."
+  else
+    fail "Owner Mode bootstrap did not return HTTP 200."
+  fi
+
+  if grep -qF \
+    'Offgrid Pi Owner Mode' \
+    "$owner_body"
+  then
+    pass "Owner Mode bootstrap page content is valid."
+  else
+    fail "Owner Mode bootstrap returned unexpected content."
+  fi
+
+  if grep -qi \
+    '^Cache-Control: no-store' \
+    "$owner_headers"
+  then
+    pass "Owner Mode responses disable browser caching."
+  else
+    fail "Owner Mode no-store protection is missing."
+  fi
+
+  if grep -qi \
+    '^X-Frame-Options: DENY' \
+    "$owner_headers"
+  then
+    pass "Owner Mode frame protection is enabled."
+  else
+    fail "Owner Mode frame protection is missing."
+  fi
+
+  if grep -qi \
+    '^Content-Security-Policy:' \
+    "$owner_headers"
+  then
+    pass "Owner Mode Content Security Policy is present."
+  else
+    fail "Owner Mode Content Security Policy is missing."
+  fi
+else
+  fail "Unable to retrieve the Owner Mode bootstrap page."
+fi
+
+owner_unknown_code="$(
+  curl \
+    --silent \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    http://127.0.0.1:8085/unknown \
+    2>/dev/null || true
+)"
+
+if [[ "$owner_unknown_code" == "404" ]]; then
+  pass "Unknown Owner Mode routes return HTTP 404."
+else
+  fail "Unexpected Owner Mode unknown-route response: HTTP ${owner_unknown_code:-000}"
+fi
+
+owner_post_code="$(
+  curl \
+    --silent \
+    --request POST \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    http://127.0.0.1:8085/ \
+    2>/dev/null || true
+)"
+
+if [[ "$owner_post_code" == "405" ]]; then
+  pass "Owner Mode bootstrap rejects write methods."
+else
+  fail "Unexpected Owner Mode POST response: HTTP ${owner_post_code:-000}"
+fi
+
+rm -rf "$owner_temp"
 
 echo "=== System health ==="
 FAILED_UNITS="$(systemctl --failed --no-legend 2>/dev/null || true)"

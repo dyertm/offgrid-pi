@@ -102,7 +102,7 @@ grep -qF \
   fail "Standalone install-maps command is missing."
 
 grep -qF \
-  'Step 3 of 4: Offline Maps module.' \
+  'Step 3 of 5: Offline Maps module.' \
   "$INSTALLER" ||
   fail "install-all does not include Maps in the expected sequence."
 
