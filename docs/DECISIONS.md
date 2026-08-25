@@ -412,3 +412,192 @@ display, keyboard, or other local interface is unavailable.
 
 This redundancy requirement is part of the Owner Mode design rather than an
 optional convenience feature.
+
+## Decision 028 — Owner Credential Enrollment and Non-Destructive Recovery
+
+**Date:** August 25, 2026
+**Status:** Approved for implementation
+
+Owner Mode credentials will be designed so loss of an Owner PIN does not cause
+loss of saved waypoints, personal content, configuration, or other owner data.
+
+The Owner PIN is an authorization credential. It is not the encryption key for
+ordinary Owner Mode data.
+
+### Enrollment
+
+A new Offgrid Pi installation will support Owner Mode enrollment through a
+reusable local enrollment workflow.
+
+The enrollment workflow is intended to be called by the future first-run setup
+experience, but Owner Mode may also be enrolled later if the owner initially
+defers setup.
+
+Enrollment will:
+
+- Require creation and confirmation of an Owner PIN.
+- Permit a longer PIN or passphrase where supported by the interface.
+- Never store the Owner PIN in plaintext.
+- Generate a separate offline recovery credential.
+- Display the recovery credential to the owner for external safekeeping.
+- Store only the information required to verify the recovery credential, not a
+  recoverable plaintext copy of the credential.
+- Keep credential state under `/var/lib/offgridpi/owner`.
+- Keep credentials separate from user-generated content under
+  `/srv/offgridpi/content`.
+
+The same underlying enrollment mechanism must be usable by future graphical
+setup interfaces without duplicating credential-generation logic.
+
+### Recovery credential
+
+Owner enrollment will generate a cryptographically random recovery credential.
+
+The recovery credential must:
+
+- Work without internet access.
+- Require no vendor account, email account, cloud service, or external server.
+- Be suitable for recording on paper or storing on removable media or another
+  trusted device.
+- Be verified locally by Offgrid Pi.
+- Permit the owner to establish a new Owner PIN.
+- Never reveal the previous PIN.
+- Never delete user content as part of credential recovery.
+
+A future Recovery Card interface may present the recovery credential in a
+human-readable format and provide printable or downloadable instructions.
+
+### Non-destructive PIN reset
+
+Resetting or replacing the Owner PIN must modify authentication state only.
+
+A PIN reset must not delete or recreate:
+
+- Saved map waypoints, markers, or notes.
+- Installed map packs.
+- Personal documents.
+- User media.
+- Imported content.
+- Owner-generated exports or backups.
+- Other persistent user content.
+
+Credential changes must invalidate existing authenticated Owner Mode sessions.
+
+### Physical recovery
+
+Offgrid Pi will retain a separate physical/local recovery path for an owner who
+has lost both the Owner PIN and the normal recovery credential.
+
+Physical recovery must:
+
+- Require local or physical control of the Offgrid Pi.
+- Never be available as an unauthenticated LAN operation.
+- Reset Owner authentication independently of user content.
+- Invalidate existing Owner Mode sessions.
+- Clearly distinguish credential recovery from destructive factory reset.
+
+The exact physical-recovery interaction will be selected during later recovery
+and first-run UX development.
+
+### Factory reset separation
+
+Owner credential recovery and factory reset are separate operations.
+
+A credential reset must be non-destructive.
+
+Any future factory-reset operation that can remove private user data must use a
+separate workflow, explicit warnings, and deliberate confirmation. Forgetting
+an Owner PIN must never force the owner to perform a factory reset.
+
+### Security scope
+
+Because non-destructive physical recovery is required, the default Owner PIN
+primarily protects against unauthorized network access and casual unauthorized
+local access. It is not intended by itself to provide cryptographic protection
+against an attacker with unrestricted physical possession of the device and its
+storage.
+
+Optional encrypted private-storage features may be considered later. If added,
+their encryption and recovery model must remain separate from the default Owner
+PIN and must clearly explain any risk of permanent data loss.
+
+## Decision 029 — Keep the Generic First-Run Experience in Offgrid Pi
+
+**Date:** August 25, 2026
+**Status:** Approved for implementation
+
+Offgrid Pi will provide a reusable first-run setup framework as part of the
+public open-source core.
+
+The generic first-run experience will configure appliance-level features that
+are useful to any Offgrid Pi installation rather than embedding commercial
+product assumptions into the core.
+
+### Core first-run responsibilities
+
+The Offgrid Pi first-run framework may provide setup for:
+
+- Device name and basic identity.
+- Time zone, locale, and other regional settings.
+- Owner Mode enrollment.
+- Owner PIN creation and confirmation.
+- Offline recovery-credential generation and acknowledgement.
+- Network or hotspot configuration when those features are available.
+- Storage and content-location validation.
+- Other generic appliance configuration added in future phases.
+- Persistent completion state so first-run setup does not repeat after normal
+  reboot.
+
+The first-run interface must not duplicate security-sensitive implementation
+logic.
+
+For example, Owner enrollment will call the shared Owner credential subsystem
+rather than implementing PIN hashing, recovery-credential generation, or
+credential storage inside the setup wizard itself.
+
+### Reusable backend operations
+
+Security and configuration operations exposed through first-run setup must be
+implemented as reusable backend functions or controlled APIs.
+
+The same underlying operations may later be called by:
+
+- First-run setup.
+- Owner Mode settings.
+- Credential-change workflows.
+- Recovery workflows.
+- Administrative or maintenance interfaces where appropriate.
+
+This avoids maintaining separate credential or configuration implementations
+for setup and normal operation.
+
+### Product overlays
+
+Commercial products built on Offgrid Pi may provide a private first-run
+presentation or product overlay without replacing the generic setup framework.
+
+A product overlay may supply:
+
+- Branding, colors, logos, and product-specific language.
+- SKU or factory configuration defaults.
+- Factory provisioning validation.
+- Licensed or curated content-bundle checks.
+- Product-specific hardware detection or setup.
+- Commercial support and recovery information.
+
+Commercial product assets, provisioning data, and other protected
+productization details must remain outside the public Offgrid Pi core.
+
+The public first-run implementation must not require knowledge of a particular
+commercial product or brand.
+
+### Open-source usability
+
+A user installing the public Offgrid Pi project should ultimately receive the
+same appliance-oriented setup principles as a commercial derivative rather
+than being required to manually edit configuration files for normal initial
+setup.
+
+Product overlays may improve presentation and provide product-specific
+automation, but the generic Offgrid Pi installation must remain independently
+usable.
