@@ -29,6 +29,7 @@ grep -q '^INSTALLER_VERSION="0\.7\.6"$' "$INSTALLER" ||
 
 for payload in \
   'scripts/offgridpi-owner-server.py' \
+  'scripts/offgridpi_owner_credentials.py' \
   'systemd/offgridpi-owner.service'
 do
   grep -qF "$payload" "$INSTALLER" ||
@@ -50,6 +51,7 @@ grep -q '^install_owner_module() {' "$INSTALLER" ||
 
 for path in \
   '/opt/offgridpi/scripts/offgridpi-owner-server.py' \
+  '/opt/offgridpi/scripts/offgridpi_owner_credentials.py' \
   '/etc/systemd/system/offgridpi-owner.service' \
   '/var/lib/offgridpi/owner' \
   '/srv/offgridpi/content/maps/user-data'
@@ -62,6 +64,11 @@ grep -qF \
   'python3 -m py_compile /opt/offgridpi/scripts/offgridpi-owner-server.py' \
   "$INSTALLER" ||
   fail "Installer does not syntax-check the Owner Mode server."
+
+grep -qF \
+  'python3 -m py_compile /opt/offgridpi/scripts/offgridpi_owner_credentials.py' \
+  "$INSTALLER" ||
+  fail "Installer does not syntax-check the Owner credential module."
 
 grep -qF \
   'systemd-analyze verify /etc/systemd/system/offgridpi-owner.service' \
@@ -112,6 +119,7 @@ grep -qF \
 for path in \
   '/etc/systemd/system/offgridpi-owner.service' \
   '/opt/offgridpi/scripts/offgridpi-owner-server.py' \
+  '/opt/offgridpi/scripts/offgridpi_owner_credentials.py' \
   '/var/lib/offgridpi/owner'
 do
   grep -qF "$path" "$MANAGER" ||
@@ -129,6 +137,7 @@ pass "Backup, rollback, and uninstall tracking preserves private waypoint data."
 
 for marker in \
   '/opt/offgridpi/scripts/offgridpi-owner-server.py' \
+  '/opt/offgridpi/scripts/offgridpi_owner_credentials.py' \
   '/etc/systemd/system/offgridpi-owner.service' \
   '/var/lib/offgridpi/owner' \
   'offgridpi-owner.service' \

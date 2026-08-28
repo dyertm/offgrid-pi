@@ -101,7 +101,6 @@ for path in \
   /etc/systemd/system/offgridpi-maps.service \
   /opt/offgridpi/scripts/offgridpi-owner-server.py \
   /etc/systemd/system/offgridpi-owner.service \
-  /var/lib/offgridpi/owner \
   /srv/offgridpi/content/maps \
   /srv/offgridpi/content/maps/packs \
   /srv/offgridpi/content/maps/incoming \
@@ -1204,10 +1203,11 @@ printf '\n=== Owner Mode foundation ===\n'
 
 for path in \
   /opt/offgridpi/scripts/offgridpi-owner-server.py \
+  /opt/offgridpi/scripts/offgridpi_owner_credentials.py \
   /etc/systemd/system/offgridpi-owner.service \
   /var/lib/offgridpi/owner
 do
-  if [[ -e "$path" ]]; then
+  if "${privileged[@]}" test -e "$path"; then
     pass "Owner Mode component exists: $path"
   else
     fail "Owner Mode component is missing: $path"

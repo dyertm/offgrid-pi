@@ -136,6 +136,7 @@ check_payload() {
     "$PROJECT_ROOT/scripts/offgridpi-map-server.py" \
     "$PROJECT_ROOT/systemd/offgridpi-maps.service" \
     "$PROJECT_ROOT/scripts/offgridpi-owner-server.py" \
+    "$PROJECT_ROOT/scripts/offgridpi_owner_credentials.py" \
     "$PROJECT_ROOT/systemd/offgridpi-owner.service" \
     "$PROJECT_ROOT/content-packs/import-map-pack.py" \
     "$PROJECT_ROOT/content-packs/inspect-map-pack.py" \
@@ -409,11 +410,19 @@ install_owner_module() {
   install \
     -o root \
     -g root \
+    -m 0755 \
+    "$PROJECT_ROOT/scripts/offgridpi_owner_credentials.py" \
+    /opt/offgridpi/scripts/offgridpi_owner_credentials.py
+
+  install \
+    -o root \
+    -g root \
     -m 0644 \
     "$PROJECT_ROOT/systemd/offgridpi-owner.service" \
     /etc/systemd/system/offgridpi-owner.service
 
   python3 -m py_compile /opt/offgridpi/scripts/offgridpi-owner-server.py
+  python3 -m py_compile /opt/offgridpi/scripts/offgridpi_owner_credentials.py
   systemd-analyze verify /etc/systemd/system/offgridpi-owner.service
 
   systemctl daemon-reload
