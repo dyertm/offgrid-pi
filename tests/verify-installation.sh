@@ -1204,6 +1204,7 @@ printf '\n=== Owner Mode foundation ===\n'
 for path in \
   /opt/offgridpi/scripts/offgridpi-owner-server.py \
   /opt/offgridpi/scripts/offgridpi_owner_credentials.py \
+  /opt/offgridpi/scripts/offgridpi_owner_auth.py \
   /etc/systemd/system/offgridpi-owner.service \
   /var/lib/offgridpi/owner
 do

@@ -17,6 +17,7 @@ TESTS=(
   "tests/test-map-service.sh"
   "tests/test-owner-service.sh"
   "tests/test-owner-credentials.sh"
+  "tests/test-owner-auth.sh"
   "tests/test-map-installer.sh"
   "tests/test-owner-installer.sh"
 )
