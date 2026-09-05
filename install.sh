@@ -109,6 +109,7 @@ check_payload() {
     "$PROJECT_ROOT/compliance/validate-software-components.py" \
     "$PROJECT_ROOT/scripts/generate-legal-notices.py" \
     "$PROJECT_ROOT/LICENSE" \
+    "$PROJECT_ROOT/scripts/offgridpi-dashboard-server.py" \
     "$PROJECT_ROOT/scripts/launch-dashboard.sh" \
     "$PROJECT_ROOT/systemd/offgridpi-dashboard.service" \
     "$PROJECT_ROOT/desktop/offgridpi-dashboard.desktop" \
@@ -537,6 +538,7 @@ install_dashboard_module() {
   rsync \
     --archive \
     --delete \
+    --exclude 'data/system-status.json' \
     "$PROJECT_ROOT/dashboard/" \
     "$DASHBOARD_ROOT/"
 
@@ -550,19 +552,9 @@ install_dashboard_module() {
   find "$DASHBOARD_ROOT" -type d -exec chmod 0755 {} +
   find "$DASHBOARD_ROOT" -type f -exec chmod 0644 {} +
 
-  if [[ -x /opt/offgridpi/scripts/publish-system-status.sh ]]; then
-    if /opt/offgridpi/scripts/publish-system-status.sh; then
-      log "Dashboard system status republished."
-    else
-      publisher_result=$?
-
-      if [[ "$publisher_result" -eq 1 ]]; then
-        log "Dashboard system status republished with ATTENTION state."
-      else
-        die "Dashboard system-status publication failed."
-      fi
-    fi
-  fi
+  install -o root -g root -m 0755 \
+    "$PROJECT_ROOT/scripts/offgridpi-dashboard-server.py" \
+    /opt/offgridpi/scripts/offgridpi-dashboard-server.py
 
   install -o root -g root -m 0755 \
     "$PROJECT_ROOT/scripts/launch-dashboard.sh" \
@@ -611,6 +603,20 @@ install_dashboard_module() {
     --output /dev/null \
     http://127.0.0.1:8081/ \
     || die "Dashboard service did not become available."
+
+  if [[ -x /opt/offgridpi/scripts/publish-system-status.sh ]]; then
+    if /opt/offgridpi/scripts/publish-system-status.sh; then
+      log "Dashboard system status republished."
+    else
+      publisher_result=$?
+
+      if [[ "$publisher_result" -eq 1 ]]; then
+        log "Dashboard system status republished with ATTENTION state."
+      else
+        die "Dashboard system-status publication failed."
+      fi
+    fi
+  fi
 
   log "Dashboard module installation completed."
   log "Dashboard URL: http://$(hostname):8081/"

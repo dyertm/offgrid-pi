@@ -29,8 +29,7 @@ for attempt in $(seq 1 30); do
     then
         echo "Dashboard service is available."
         exec /usr/bin/chromium \
-            --new-window \
-            --start-maximized \
+            --kiosk \
             --no-first-run \
             --no-default-browser-check \
             --disable-session-crashed-bubble \

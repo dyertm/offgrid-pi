@@ -107,6 +107,7 @@ build_managed_paths() {
     /opt/offgridpi/scripts/offgridpi_owner_auth.py
     /var/lib/offgridpi/owner
     /opt/offgridpi/scripts/start-kiwix.sh
+    /opt/offgridpi/scripts/offgridpi-dashboard-server.py
     /opt/offgridpi/scripts/launch-dashboard.sh
     /opt/offgridpi/scripts/index-documents.py
     /opt/offgridpi/scripts/watch-documents.sh

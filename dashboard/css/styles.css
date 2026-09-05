@@ -220,3 +220,138 @@ main {
     justify-content: space-between;
   }
 }
+
+/* Larger appliance layout for 1080p-class displays. */
+@media (min-width: 1100px) and (min-height: 700px) {
+  .page {
+    width: min(1820px, 100%);
+    padding: 24px 32px;
+  }
+
+  .site-header {
+    gap: 28px;
+    margin-bottom: 20px;
+  }
+
+  .eyebrow {
+    font-size: 1rem;
+  }
+
+  h1 {
+    font-size: 4.2rem;
+  }
+
+  .subtitle {
+    margin-top: 10px;
+    font-size: 1.24rem;
+  }
+
+  .status-badge {
+    padding: 10px 16px;
+    font-size: 0.94rem;
+  }
+
+  .dashboard-grid {
+    gap: 18px;
+  }
+
+  .card {
+    min-height: 245px;
+    padding: 32px;
+    border-radius: 16px;
+  }
+
+  .card h2 {
+    margin: 9px 0 8px;
+    font-size: 1.8rem;
+  }
+
+  .card p {
+    font-size: 1.2rem;
+    line-height: 1.5;
+  }
+
+  .card-label {
+    font-size: 1rem;
+  }
+
+  .card-action {
+    padding-top: 10px;
+    font-size: 1.16rem;
+  }
+
+  .site-footer {
+    margin-top: 14px;
+    padding-top: 16px;
+    font-size: 1rem;
+  }
+}
+
+/* Dashboard color and contrast refinement. */
+:root {
+  --bg: #09131e;
+  --surface: #172737;
+  --hover: #21374a;
+  --border: #628879;
+  --text: #ffffff;
+  --muted: #ced9e1;
+  --accent: #72d66d;
+  --accent-dark: #1f4228;
+  --disabled: #95a3ad;
+}
+
+body {
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(52, 94, 124, 0.22) 0,
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at left center,
+      rgba(34, 61, 80, 0.15) 0,
+      transparent 32%
+    ),
+    var(--bg);
+  color: var(--text);
+}
+
+.card {
+  border-color: var(--border);
+  background:
+    linear-gradient(
+      180deg,
+      #192b3c 0%,
+      #152331 100%
+    );
+  color: var(--text);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+}
+
+.card h2 {
+  color: #ffffff;
+}
+
+.card p {
+  color: var(--muted);
+}
+
+.card-label {
+  color: #9be895;
+}
+
+.card-action {
+  color: #d6f5d1;
+}
+
+.card-active:hover,
+.card-active:focus-visible {
+  border-color: var(--accent);
+  background:
+    linear-gradient(
+      180deg,
+      #21374a 0%,
+      #1a2d3e 100%
+    );
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+}

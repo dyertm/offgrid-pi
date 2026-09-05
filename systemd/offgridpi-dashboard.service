@@ -8,7 +8,7 @@ Type=simple
 User=offgridpi
 Group=offgridpi
 WorkingDirectory=/opt/offgridpi/dashboard
-ExecStart=/usr/bin/python3 -m http.server 8081 --directory /opt/offgridpi/dashboard
+ExecStart=/opt/offgridpi/scripts/offgridpi-dashboard-server.py
 Restart=on-failure
 RestartSec=5
 

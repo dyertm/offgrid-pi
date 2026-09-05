@@ -83,6 +83,7 @@ for path in \
   /opt/offgridpi/compliance/schema/software-components.schema.json \
   /opt/offgridpi/compliance/validate-software-components.py \
   /opt/offgridpi/LICENSE \
+  /opt/offgridpi/scripts/offgridpi-dashboard-server.py \
   /opt/offgridpi/scripts/launch-dashboard.sh \
   /etc/systemd/system/offgridpi-dashboard.service \
   /opt/offgridpi/scripts/start-kiwix.sh \
@@ -516,6 +517,16 @@ if grep -qF 'id="documents-link"' /opt/offgridpi/dashboard/index.html \
   pass "Local Documents uses the dashboard visitor hostname."
 else
   fail "Dynamic Local Documents routing was not detected."
+fi
+
+if grep -qF 'id="maps-link"' /opt/offgridpi/dashboard/index.html \
+  && grep -qF 'href="http://127.0.0.1:8084/"' \
+    /opt/offgridpi/dashboard/index.html \
+  && grep -qF 'mapsLink.href' /opt/offgridpi/dashboard/js/app.js \
+  && grep -qF ':8084' /opt/offgridpi/dashboard/js/app.js; then
+  pass "Offline Maps has a local fallback and visitor-host routing."
+else
+  fail "Offline Maps dashboard routing was not detected."
 fi
 
 if [[ -x /opt/offgridpi/scripts/launch-dashboard.sh ]]; then
