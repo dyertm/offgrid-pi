@@ -103,3 +103,71 @@
     text-align: left;
   }
 }
+
+/* ==========================================================================
+   UX-02A — Large-display Legal & Notices layout
+   Preserve readable line lengths while using more of the 1080p display.
+   ========================================================================== */
+
+@media (min-width: 1100px) and (min-height: 700px) {
+  .legal-page .site-header {
+    width: min(1820px, 100%);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .legal-page main {
+    width: min(1820px, 100%);
+  }
+
+  .component-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .legal-intro,
+  .legal-panel {
+    padding: 24px;
+  }
+
+  .legal-intro p,
+  .legal-panel p,
+  .component p {
+    font-size: 1.18rem;
+    line-height: 1.6;
+  }
+
+  .legal-panel h2 {
+    font-size: 1.55rem;
+  }
+
+  .component {
+    padding: 20px;
+  }
+
+  .component h3 {
+    font-size: 1.25rem;
+  }
+
+  .component-version {
+    font-size: 1rem;
+  }
+
+  .component-meta {
+    font-size: 1.05rem;
+  }
+
+  .component-links a {
+    font-size: 1.05rem;
+  }
+
+  .generated-at {
+    font-size: 0.95rem;
+  }
+
+  .legal-page .dashboard-return {
+    min-height: 46px;
+    padding: 10px 16px;
+    font-size: 1.08rem;
+  }
+}
