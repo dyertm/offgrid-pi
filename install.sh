@@ -111,6 +111,9 @@ check_payload() {
     "$PROJECT_ROOT/LICENSE" \
     "$PROJECT_ROOT/scripts/offgridpi-dashboard-server.py" \
     "$PROJECT_ROOT/scripts/launch-dashboard.sh" \
+    "$PROJECT_ROOT/chromium/kiwix-navigation/manifest.json" \
+    "$PROJECT_ROOT/chromium/kiwix-navigation/content.js" \
+    "$PROJECT_ROOT/chromium/kiwix-navigation/styles.css" \
     "$PROJECT_ROOT/systemd/offgridpi-dashboard.service" \
     "$PROJECT_ROOT/desktop/offgridpi-dashboard.desktop" \
     "$PROJECT_ROOT/scripts/start-kiwix.sh" \
@@ -510,7 +513,9 @@ install_dashboard_module() {
     "$DASHBOARD_ROOT" \
     /opt/offgridpi/scripts \
     /opt/offgridpi/compliance \
-    /opt/offgridpi/compliance/schema
+    /opt/offgridpi/compliance/schema \
+    /opt/offgridpi/chromium \
+    /opt/offgridpi/chromium/kiwix-navigation
 
   install -o root -g root -m 0755 \
     "$PROJECT_ROOT/scripts/generate-legal-notices.py" \
@@ -559,6 +564,12 @@ install_dashboard_module() {
   install -o root -g root -m 0755 \
     "$PROJECT_ROOT/scripts/launch-dashboard.sh" \
     /opt/offgridpi/scripts/launch-dashboard.sh
+
+  install -o root -g root -m 0644 \
+    "$PROJECT_ROOT/chromium/kiwix-navigation/manifest.json" \
+    "$PROJECT_ROOT/chromium/kiwix-navigation/content.js" \
+    "$PROJECT_ROOT/chromium/kiwix-navigation/styles.css" \
+    /opt/offgridpi/chromium/kiwix-navigation/
 
   install -o root -g root -m 0644 \
     "$PROJECT_ROOT/systemd/offgridpi-dashboard.service" \

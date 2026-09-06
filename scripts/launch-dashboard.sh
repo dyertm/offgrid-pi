@@ -3,6 +3,7 @@
 set -u
 
 DASHBOARD_URL="http://127.0.0.1:8081/"
+KIWIX_NAV_EXTENSION="/opt/offgridpi/chromium/kiwix-navigation"
 LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/offgridpi"
 LOG_FILE="${LOG_DIR}/dashboard-launch.log"
 
@@ -29,11 +30,13 @@ for attempt in $(seq 1 30); do
     then
         echo "Dashboard service is available."
         exec /usr/bin/chromium \
+            --ozone-platform=wayland \
             --kiosk \
             --no-first-run \
             --no-default-browser-check \
             --disable-session-crashed-bubble \
             --password-store=basic \
+            --load-extension="$KIWIX_NAV_EXTENSION" \
             "$DASHBOARD_URL"
     fi
 
