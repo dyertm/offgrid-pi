@@ -149,15 +149,62 @@ def main() -> int:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Local Documents | Offgrid Pi</title>
 <style>
-:root{{color-scheme:dark;font-family:Arial,Helvetica,sans-serif}}*{{box-sizing:border-box}}html{{scroll-behavior:smooth}}body{{margin:0;background:#0c1218;color:#edf4f7}}a{{color:inherit}}.wrap{{width:min(1050px,calc(100% - 28px));margin:auto}}.top{{position:sticky;top:0;z-index:5;background:#0c1218f2;border-bottom:1px solid #293640}}.top .wrap{{min-height:62px;display:flex;align-items:center;justify-content:space-between}}.brand{{font-weight:800;letter-spacing:.08em;text-decoration:none}}main{{padding:28px 0}}h1{{font-size:clamp(2rem,6vw,3.3rem);margin:0}}.intro{{color:#b4c2c9;max-width:760px;line-height:1.5}}.stats{{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0}}.stats span,.nav a{{border:1px solid #33434e;background:#111a22;border-radius:9px;padding:9px 11px}}.search{{display:grid;grid-template-columns:1fr auto;gap:10px;margin:18px 0}}input,button{{font:inherit;border:1px solid #3a4b56;border-radius:9px;background:#111a22;color:#fff;padding:12px}}button{{font-weight:700;cursor:pointer}}.nav{{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:8px;margin-bottom:24px}}.nav a{{display:flex;justify-content:space-between;text-decoration:none;color:#cbd7dc}}.nav b,header p{{color:#7fd2ad}}section{{scroll-margin-top:74px;border:1px solid #293640;border-radius:12px;background:#101820;margin:0 0 16px;overflow:hidden}}section header{{padding:16px 18px;display:flex;justify-content:space-between;gap:18px;border-bottom:1px solid #293640}}section header p{{font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin:0 0 4px}}h2{{font-size:1.2rem;margin:0}}section header>span{{font-size:.8rem;background:#193126;color:#94e2bd;padding:6px 9px;border-radius:999px;height:max-content}}ul{{list-style:none;margin:0;padding:0}}li+li{{border-top:1px solid #24313a}}li a{{display:flex;justify-content:space-between;gap:16px;padding:13px 18px;text-decoration:none}}li a:hover{{background:#17232d}}li span:first-child{{min-width:0;display:grid;gap:3px}}li strong,li small{{overflow-wrap:anywhere}}small{{color:#84969f}}.meta{{display:flex;align-items:center;gap:10px;flex:0 0 auto;font-size:.75rem}}.meta b{{border:1px solid #40525e;border-radius:5px;padding:4px 7px}}.empty{{padding:15px 18px;color:#84969f;font-style:italic}}#none{{display:none;text-align:center;border:1px dashed #52636d;border-radius:9px;padding:14px;color:#c1cdd2}}footer{{padding:5px 0 30px;color:#7f919b;text-align:center;font-size:.75rem}}@media(max-width:650px){{.search{{grid-template-columns:1fr}}section header,li a{{flex-direction:column}}.meta{{flex-wrap:wrap}}}}
+:root{{color-scheme:dark;font-family:Arial,Helvetica,sans-serif}}*{{box-sizing:border-box}}html{{scroll-behavior:smooth}}body{{margin:0;background:#0c1218;color:#edf4f7}}a{{color:inherit}}.wrap{{width:min(1050px,calc(100% - 28px));margin:auto}}.top{{position:sticky;top:0;z-index:5;background:#0c1218f2;border-bottom:1px solid #293640}}.page-header{{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}}.brand{{font-weight:800;letter-spacing:.08em;text-decoration:none}}main{{padding:28px 0}}h1{{font-size:clamp(2rem,6vw,3.3rem);margin:0}}.intro{{color:#b4c2c9;max-width:760px;line-height:1.5}}.stats{{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0}}.stats span,.nav a{{border:1px solid #33434e;background:#111a22;border-radius:9px;padding:9px 11px}}.search{{display:grid;grid-template-columns:1fr auto;gap:10px;margin:18px 0}}input,button{{font:inherit;border:1px solid #3a4b56;border-radius:9px;background:#111a22;color:#fff;padding:12px}}button{{font-weight:700;cursor:pointer}}.nav{{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:8px;margin-bottom:24px}}.nav a{{display:flex;justify-content:space-between;text-decoration:none;color:#cbd7dc}}.nav b,header p{{color:#7fd2ad}}section{{scroll-margin-top:74px;border:1px solid #293640;border-radius:12px;background:#101820;margin:0 0 16px;overflow:hidden}}section header{{padding:16px 18px;display:flex;justify-content:space-between;gap:18px;border-bottom:1px solid #293640}}section header p{{font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin:0 0 4px}}h2{{font-size:1.2rem;margin:0}}section header>span{{font-size:.8rem;background:#193126;color:#94e2bd;padding:6px 9px;border-radius:999px;height:max-content}}ul{{list-style:none;margin:0;padding:0}}li+li{{border-top:1px solid #24313a}}li a{{display:flex;justify-content:space-between;gap:16px;padding:13px 18px;text-decoration:none}}li a:hover{{background:#17232d}}li span:first-child{{min-width:0;display:grid;gap:3px}}li strong,li small{{overflow-wrap:anywhere}}small{{color:#84969f}}.meta{{display:flex;align-items:center;gap:10px;flex:0 0 auto;font-size:.75rem}}.meta b{{border:1px solid #40525e;border-radius:5px;padding:4px 7px}}.empty{{padding:15px 18px;color:#84969f;font-style:italic}}#none{{display:none;text-align:center;border:1px dashed #52636d;border-radius:9px;padding:14px;color:#c1cdd2}}footer{{padding:5px 0 30px;color:#7f919b;text-align:center;font-size:.75rem}}@media(min-width:1100px) and (min-height:700px){{
+.wrap{{width:min(1820px,calc(100% - 64px))}}
+body{{background:#09131e;color:#ffffff}}
+.page-header{{margin-bottom:0}}
+.page-header p{{color:#72d66d!important}}
+.intro{{color:#ced9e1}}
+.stats span,.nav a{{border-color:#628879;background:#172737}}
+input,button{{border-color:#628879;background:#172737;color:#ffffff}}
+.nav a{{color:#ced9e1}}
+.nav b,section header p{{color:#72d66d}}
+section{{border-color:#628879;background:#172737}}
+section header{{border-bottom-color:#628879}}
+section header>span{{background:#1f4228;color:#72d66d}}
+li+li{{border-top-color:#21374a}}
+li a:hover{{background:#21374a}}
+small{{color:#ced9e1}}
+.meta b{{border-color:#628879}}
+.empty{{color:#ced9e1}}
+#none{{border-color:#628879;color:#ced9e1}}
+footer{{color:#95a3ad}}
+.page-header .dashboard-return{{border-color:#628879;background:#172737;color:#72d66d}}
+.page-header .dashboard-return:hover,
+.page-header .dashboard-return:focus-visible{{border-color:#72d66d;background:#1f4228}}
+h1{{font-size:4.2rem}}
+.intro{{max-width:1050px;font-size:1.18rem;line-height:1.6}}
+.stats{{font-size:1.15rem}}
+.stats span{{padding:13px 16px}}
+.nav a{{padding:12px 14px}}
+.search{{gap:12px}}
+input,button{{padding:14px 16px;font-size:1.08rem}}
+.nav{{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}}
+.nav a{{font-size:1.05rem}}
+section header{{padding:20px 22px}}
+section header p{{font-size:.95rem}}
+h2{{font-size:1.5rem}}
+section header>span{{font-size:.95rem;padding:7px 11px}}
+li a{{padding:16px 22px}}
+li strong{{font-size:1.12rem}}
+li small{{font-size:1.05rem;line-height:1.45}}
+.meta{{font-size:1rem}}
+.empty{{font-size:1.05rem}}
+footer{{font-size:.9rem}}
+.page-header .dashboard-return{{min-height:46px;padding:10px 16px;font-size:1.08rem}}
+}}@media(max-width:650px){{.search{{grid-template-columns:1fr}}section header,li a{{flex-direction:column}}.meta{{flex-wrap:wrap}}}}
 .dashboard-return{{display:inline-flex;align-items:center;min-height:34px;padding:7px 11px;border:1px solid #33434e;border-radius:9px;background:#111a22;color:#7fd2ad;font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap}}.dashboard-return:hover,.dashboard-return:focus-visible{{border-color:#7fd2ad;background:#193126}}
 </style>
 </head>
 <body>
-<header class="top"><div class="wrap"><a class="brand" href="/">OFFGRID PI</a><a class="dashboard-return" id="dashboard" href="http://localhost:8081/">← Dashboard</a></div></header>
 <main class="wrap">
+<div class="page-header">
+<div>
 <p style="color:#7fd2ad;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Offline reference library</p>
 <h1>Local Documents</h1>
+</div>
+<a class="dashboard-return" id="dashboard" href="http://localhost:8081/">← Dashboard</a>
+</div>
 <p class="intro">Browse approved public documents stored on this Offgrid Pi. Personal files are maintained in a separate protected directory and are not included here.</p>
 <div class="stats"><span><b>{total}</b> indexed file{"s" if total != 1 else ""}</span><span><b>{len(CATEGORIES)}</b> categories</span><span>Generated {html.escape(generated_text)}</span></div>
 <div class="search"><input id="q" type="search" placeholder="Search file names, paths, or types"><button id="clear" type="button">Clear</button></div>

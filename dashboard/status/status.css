@@ -162,3 +162,86 @@
 .status-page .header-actions {
   align-self: flex-start;
 }
+
+
+/* ==========================================================================
+   UX-01B — Large-display System Status layout
+   Matches the approved 1080p dashboard scale without changing compact layouts.
+   ========================================================================== */
+
+@media (min-width: 1100px) and (min-height: 700px) {
+  .status-page {
+    width: min(1820px, 100%);
+  }
+
+  .status-message {
+    margin-bottom: 18px;
+    padding: 13px 16px;
+    border-radius: 11px;
+    font-size: 1.24rem;
+  }
+
+  .status-grid {
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+
+  .status-card {
+    min-height: 136px;
+    padding: 20px;
+    border-radius: 14px;
+  }
+
+  .status-card h2 {
+    margin-bottom: 10px;
+    font-size: 1.10rem;
+  }
+
+  .status-value {
+    font-size: 2.15rem;
+  }
+
+  .status-detail {
+    margin-top: 8px;
+    font-size: 1.18rem;
+    line-height: 1.45;
+  }
+
+  .service-panel {
+    border-radius: 16px;
+  }
+
+  .section-heading {
+    padding: 18px 22px;
+  }
+
+  .section-heading h2 {
+    font-size: 1.78rem;
+  }
+
+  .service-row {
+    gap: 18px;
+    padding: 15px 22px;
+  }
+
+  .service-name {
+    font-size: 1.36rem;
+  }
+
+  .service-detail {
+    margin-top: 5px;
+    font-size: 1.12rem;
+  }
+
+  .service-state {
+    min-width: 104px;
+    padding: 7px 11px;
+    font-size: 1.02rem;
+  }
+
+  .status-page .dashboard-return {
+    min-height: 46px;
+    padding: 10px 16px;
+    font-size: 1.08rem;
+  }
+}
