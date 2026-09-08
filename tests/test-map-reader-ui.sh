@@ -157,6 +157,12 @@ grep -q '"/api/packs"' "$READER_ROOT/js/app.js" ||
 grep -q '^\.map-canvas {' "$READER_ROOT/css/styles.css" ||
   fail "Reader stylesheet lacks the map canvas."
 
+grep -q '^\.map-canvas.pdf-viewer {' "$READER_ROOT/css/styles.css" ||
+  fail "Reader stylesheet lacks PDF viewer layout."
+
+grep -q '^\.pdf-page-canvas {' "$READER_ROOT/css/styles.css" ||
+  fail "Reader stylesheet lacks PDF page canvas styling."
+
 grep -q '^\.render-message {' "$READER_ROOT/css/styles.css" ||
   fail "Reader stylesheet lacks the render-status overlay."
 
@@ -177,6 +183,12 @@ grep -q 'vendor/pdfjs/build/pdf.mjs' "$READER_ROOT/js/app.js" ||
 
 grep -q 'GlobalWorkerOptions.workerSrc' "$READER_ROOT/js/app.js" ||
   fail "Reader does not configure the bundled PDF.js worker."
+
+grep -q '^async function renderPdfPack(pack)' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not provide a dedicated PDF renderer."
+
+grep -q 'pdfjs.getDocument' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not load documents through PDF.js."
 
 grep -q 'maplibregl.addProtocol' "$READER_ROOT/js/app.js" ||
   fail "Reader does not register the PMTiles protocol with MapLibre."

@@ -44,6 +44,8 @@ const state = {
   archive: null,
   map: null,
   pdfjs: null,
+  pdfDocument: null,
+  pdfScale: 1,
   measurementStart: null,
 };
 
@@ -271,6 +273,11 @@ function renderPmtilesPack(pack) {
     state.map.remove();
     state.map = null;
   }
+
+  state.pdfDocument = null;
+  state.pdfScale = 1;
+  elements.mapCanvas.classList.remove("pdf-viewer");
+  clearChildren(elements.mapCanvas);
 
   const basemapUrl = new URL(
     pack.basemap_url,
@@ -714,6 +721,128 @@ function renderPmtilesPack(pack) {
   state.map.on("move", updateMapCoordinates);
 }
 
+async function renderPdfPack(pack) {
+  if (state.map) {
+    state.map.remove();
+    state.map = null;
+  }
+
+  state.archive = null;
+  state.pdfDocument = null;
+  state.pdfScale = 1;
+
+  elements.mapCanvas.classList.add("pdf-viewer");
+  clearChildren(elements.mapCanvas);
+
+  elements.renderMessage.hidden = false;
+  elements.renderMessage.querySelector("h2").textContent =
+    "Preparing reference map";
+  elements.renderMessage.querySelector("p:last-child").textContent =
+    "Loading local PDF map data.";
+
+  try {
+    const pdfjs = await initializePdfRenderer();
+
+    const documentUrl = new URL(
+      pack.viewer.url,
+      window.location.href,
+    ).href;
+
+    const assetRoot = new URL(
+      "vendor/pdfjs/web/",
+      window.location.href,
+    ).href;
+
+    const loadingTask = pdfjs.getDocument({
+      url: documentUrl,
+      cMapUrl: `${assetRoot}cmaps/`,
+      cMapPacked: true,
+      standardFontDataUrl: `${assetRoot}standard_fonts/`,
+      wasmUrl: `${assetRoot}wasm/`,
+      iccUrl: `${assetRoot}iccs/`,
+    });
+
+    const pdf = await loadingTask.promise;
+    state.pdfDocument = pdf;
+
+    const page = await pdf.getPage(1);
+    const baseViewport = page.getViewport({
+      scale: 1,
+    });
+
+    const availableWidth =
+      Math.max(elements.mapCanvas.clientWidth - 48, 1);
+    const availableHeight =
+      Math.max(elements.mapCanvas.clientHeight - 48, 1);
+
+    state.pdfScale = Math.min(
+      availableWidth / baseViewport.width,
+      availableHeight / baseViewport.height,
+    );
+
+    const viewport = page.getViewport({
+      scale: state.pdfScale,
+    });
+
+    const canvas = document.createElement("canvas");
+    canvas.className = "pdf-page-canvas";
+    canvas.setAttribute(
+      "aria-label",
+      `Page 1 of ${pdf.numPages}`,
+    );
+
+    const outputScale =
+      window.devicePixelRatio || 1;
+
+    canvas.width = Math.floor(
+      viewport.width * outputScale,
+    );
+    canvas.height = Math.floor(
+      viewport.height * outputScale,
+    );
+    canvas.style.width = `${viewport.width}px`;
+    canvas.style.height = `${viewport.height}px`;
+
+    elements.mapCanvas.appendChild(canvas);
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      throw new Error(
+        "PDF canvas rendering context is unavailable.",
+      );
+    }
+
+    await page.render({
+      canvasContext: context,
+      viewport,
+      transform: outputScale === 1
+        ? null
+        : [
+          outputScale,
+          0,
+          0,
+          outputScale,
+          0,
+          0,
+        ],
+    }).promise;
+
+    elements.renderMessage.hidden = true;
+  } catch (error) {
+    console.error(
+      "Unable to render PDF map.",
+      error,
+    );
+
+    elements.renderMessage.hidden = false;
+    elements.renderMessage.querySelector("h2").textContent =
+      "Reference map unavailable";
+    elements.renderMessage.querySelector("p:last-child").textContent =
+      "The selected PDF map could not be opened.";
+  }
+}
+
 function renderPack(pack) {
   const viewerType =
     pack.viewer && typeof pack.viewer === "object"
@@ -726,6 +855,11 @@ function renderPack(pack) {
 
   if (viewerType === "pmtiles-vector") {
     renderPmtilesPack(pack);
+    return;
+  }
+
+  if (viewerType === "pdf") {
+    renderPdfPack(pack);
     return;
   }
 

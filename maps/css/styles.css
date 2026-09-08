@@ -288,6 +288,21 @@ main {
   min-height: 380px;
 }
 
+.map-canvas.pdf-viewer {
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 24px;
+  background: var(--surface-deep);
+}
+
+.pdf-page-canvas {
+  display: block;
+  max-width: none;
+  margin: 0 auto;
+  background: #ffffff;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.32);
+}
+
 .render-message {
   position: relative;
   z-index: 1;
