@@ -22,6 +22,15 @@ pass() {
 [[ -f "$READER_ROOT/js/app.js" ]] ||
   fail "Offline Maps reader JavaScript is missing."
 
+[[ -f "$READER_ROOT/vendor/pdfjs/build/pdf.mjs" ]] ||
+  fail "Bundled PDF.js renderer is missing."
+
+[[ -f "$READER_ROOT/vendor/pdfjs/build/pdf.worker.mjs" ]] ||
+  fail "Bundled PDF.js worker is missing."
+
+[[ -f "$READER_ROOT/vendor/pdfjs/LICENSE" ]] ||
+  fail "Bundled PDF.js license is missing."
+
 python3 - "$READER_ROOT" <<'PY'
 from html.parser import HTMLParser
 from pathlib import Path
@@ -162,6 +171,12 @@ grep -q '^\.map-help-panel {' "$READER_ROOT/css/styles.css" ||
 
 grep -q 'new pmtiles.Protocol' "$READER_ROOT/js/app.js" ||
   fail "Reader does not initialize the PMTiles protocol."
+
+grep -q 'vendor/pdfjs/build/pdf.mjs' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not load the bundled PDF.js module."
+
+grep -q 'GlobalWorkerOptions.workerSrc' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not configure the bundled PDF.js worker."
 
 grep -q 'maplibregl.addProtocol' "$READER_ROOT/js/app.js" ||
   fail "Reader does not register the PMTiles protocol with MapLibre."
@@ -307,8 +322,20 @@ if grep -q 'elements.mapWorkspace.hidden = true' "$READER_ROOT/js/app.js"; then
   fail "Selecting a map hides the renderer workspace."
 fi
 
-grep -q 'typeof pack.tile_schema_id === "string"' "$READER_ROOT/js/app.js" ||
-  fail "Reader does not validate the tile schema identifier."
+grep -q 'pack.viewer' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not validate normalized viewer metadata."
+
+grep -q 'typeof pack.viewer.type !== "string"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not validate the viewer type."
+
+grep -q 'typeof pack.viewer.url !== "string"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not validate the viewer entrypoint URL."
+
+grep -q 'pack.viewer.type === "pmtiles-vector"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not validate PMTiles viewer metadata."
+
+grep -q 'pack.viewer.type === "pdf"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not recognize PDF viewer metadata."
 
 grep -q 'id="map-attribution"' "$READER_ROOT/index.html" ||
   fail "Reader is missing persistent map attribution."

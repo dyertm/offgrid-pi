@@ -23,6 +23,7 @@ const elements = {
   layerToggles: document.querySelectorAll("[data-layer-group]"),
   mapFullscreen: document.getElementById("map-fullscreen"),
   mapAttribution: document.getElementById("map-attribution"),
+  mapCenterCrosshair: document.getElementById("map-center-crosshair"),
   mapCoordinates: document.getElementById("map-coordinates"),
   detailsPanel: document.getElementById("details-panel"),
   selectedHeading: document.getElementById("selected-map-heading"),
@@ -42,6 +43,7 @@ const state = {
   protocol: null,
   archive: null,
   map: null,
+  pdfjs: null,
   measurementStart: null,
 };
 
@@ -172,6 +174,24 @@ function updateMapCoordinates() {
     + formatMeasurement(center);
 }
 
+function configureViewerControls(pack) {
+  const isPmtiles =
+    pack.viewer.type === "pmtiles-vector";
+
+  elements.mapMeasure.hidden = !isPmtiles;
+  elements.mapLayers.hidden = !isPmtiles;
+  elements.mapCenterCrosshair.hidden = !isPmtiles;
+  elements.mapCoordinates.hidden = !isPmtiles;
+
+  if (!isPmtiles) {
+    elements.mapLayersPanel.hidden = true;
+    elements.mapLayers.setAttribute(
+      "aria-expanded",
+      "false",
+    );
+  }
+}
+
 function dashboardUrl() {
   const hostname = window.location.hostname || "offgridpi";
 
@@ -242,7 +262,7 @@ function showErrorState() {
   elements.mapWorkspace.hidden = false;
 }
 
-function renderPack(pack) {
+function renderPmtilesPack(pack) {
   if (!state.protocol) {
     return;
   }
@@ -694,6 +714,26 @@ function renderPack(pack) {
   state.map.on("move", updateMapCoordinates);
 }
 
+function renderPack(pack) {
+  const viewerType =
+    pack.viewer && typeof pack.viewer === "object"
+      ? pack.viewer.type
+      : (
+        typeof pack.basemap_url === "string"
+          ? "pmtiles-vector"
+          : null
+      );
+
+  if (viewerType === "pmtiles-vector") {
+    renderPmtilesPack(pack);
+    return;
+  }
+
+  throw new Error(
+    `Unsupported offline map viewer: ${viewerType || "unknown"}`,
+  );
+}
+
 function selectPack(pack) {
   state.selectedKey = packKey(pack);
   state.measurementStart = null;
@@ -720,8 +760,14 @@ function selectPack(pack) {
   elements.selectedRegion.textContent = pack.region.name;
   elements.selectedVersion.textContent = pack.version;
   elements.selectedDataDate.textContent = formatDate(pack.data_date);
-  elements.selectedZoom.textContent =
-    `${pack.region.min_zoom}–${pack.region.max_zoom}`;
+  if (pack.viewer.type === "pmtiles-vector") {
+    elements.selectedZoom.textContent =
+      `${pack.region.min_zoom}–${pack.region.max_zoom}`;
+  } else if (pack.viewer.type === "pdf") {
+    elements.selectedZoom.textContent = "Document zoom";
+  } else {
+    elements.selectedZoom.textContent = "—";
+  }
 
   const attributionText = pack.attributions
     .map(
@@ -749,6 +795,7 @@ function selectPack(pack) {
   elements.mapWorkspace.hidden = false;
   elements.detailsPanel.hidden = false;
 
+  configureViewerControls(pack);
   renderPack(pack);
 }
 
@@ -807,19 +854,17 @@ function renderPacks(packs) {
 }
 
 function validPack(pack) {
-  return (
-    pack
-    && typeof pack === "object"
-    && typeof pack.pack_id === "string"
-    && typeof pack.name === "string"
-    && typeof pack.version === "string"
-    && typeof pack.status === "string"
-    && typeof pack.description === "string"
-    && typeof pack.data_date === "string"
-    && typeof pack.style_id === "string"
-    && typeof pack.tile_schema_id === "string"
-    && Array.isArray(pack.attributions)
-    && pack.attributions.every(
+  if (
+    !pack
+    || typeof pack !== "object"
+    || typeof pack.pack_id !== "string"
+    || typeof pack.name !== "string"
+    || typeof pack.version !== "string"
+    || typeof pack.status !== "string"
+    || typeof pack.description !== "string"
+    || typeof pack.data_date !== "string"
+    || !Array.isArray(pack.attributions)
+    || !pack.attributions.every(
       (item) => (
         item
         && typeof item === "object"
@@ -829,22 +874,42 @@ function validPack(pack) {
         && item.attribution.length > 0
       ),
     )
-    && Array.isArray(pack.limitations)
-    && pack.limitations.every(
+    || !Array.isArray(pack.limitations)
+    || !pack.limitations.every(
       (item) => typeof item === "string",
     )
-    && pack.region
-    && typeof pack.region === "object"
-    && typeof pack.region.name === "string"
-    && Array.isArray(pack.region.bounds)
-    && pack.region.bounds.length === 4
-    && Array.isArray(pack.region.default_center)
-    && pack.region.default_center.length === 2
-    && Number.isFinite(pack.region.min_zoom)
-    && Number.isFinite(pack.region.max_zoom)
-    && typeof pack.manifest_url === "string"
-    && typeof pack.basemap_url === "string"
-  );
+    || !pack.region
+    || typeof pack.region !== "object"
+    || typeof pack.region.name !== "string"
+    || typeof pack.manifest_url !== "string"
+    || !pack.viewer
+    || typeof pack.viewer !== "object"
+    || typeof pack.viewer.type !== "string"
+    || typeof pack.viewer.url !== "string"
+  ) {
+    return false;
+  }
+
+  if (pack.viewer.type === "pmtiles-vector") {
+    return (
+      typeof pack.viewer.style_id === "string"
+      && typeof pack.viewer.tile_schema_id === "string"
+      && Array.isArray(pack.region.bounds)
+      && pack.region.bounds.length === 4
+      && pack.region.bounds.every(Number.isFinite)
+      && Array.isArray(pack.region.default_center)
+      && pack.region.default_center.length === 2
+      && pack.region.default_center.every(Number.isFinite)
+      && Number.isFinite(pack.region.min_zoom)
+      && Number.isFinite(pack.region.max_zoom)
+    );
+  }
+
+  if (pack.viewer.type === "pdf") {
+    return true;
+  }
+
+  return false;
 }
 
 async function loadPacks() {
@@ -885,6 +950,29 @@ async function loadPacks() {
 
     showErrorState();
   }
+}
+
+async function initializePdfRenderer() {
+  if (state.pdfjs) {
+    return state.pdfjs;
+  }
+
+  const moduleUrl = new URL(
+    "vendor/pdfjs/build/pdf.mjs",
+    window.location.href,
+  ).href;
+
+  const workerUrl = new URL(
+    "vendor/pdfjs/build/pdf.worker.mjs",
+    window.location.href,
+  ).href;
+
+  const pdfjs = await import(moduleUrl);
+
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  state.pdfjs = pdfjs;
+
+  return pdfjs;
 }
 
 function initializeRenderer() {
