@@ -53,6 +53,48 @@ ROLE_RULES = {
 APPROVED_STYLES = {"emergency-basic"}
 APPROVED_TILE_SCHEMAS = {"protomaps-basemap-v4"}
 
+TOP_FIELDS_V2 = {
+    "schema_version", "pack_format", "pack_id", "name", "version",
+    "status", "reader_compatibility", "description", "region",
+    "data_date", "estimated_installed_bytes", "viewer",
+    "files", "sources", "limitations",
+}
+
+VIEWER_PMtiles_FIELDS = {
+    "type", "entrypoint", "style_id", "tile_schema_id",
+}
+
+VIEWER_PDF_FIELDS = {
+    "type", "entrypoint",
+}
+
+REGION_FIELDS_V2 = {
+    "name", "bounds", "default_center", "min_zoom", "max_zoom",
+}
+
+ROLE_RULES_V2 = {
+    "basemap": (
+        "application/vnd.pmtiles",
+        re.compile(r"^data/[A-Za-z0-9._-]+[.]pmtiles$"),
+    ),
+    "document": (
+        "application/pdf",
+        re.compile(r"^documents/[A-Za-z0-9._-]+[.]pdf$"),
+    ),
+    "overlay": (
+        "application/geo+json",
+        re.compile(r"^overlays/[A-Za-z0-9._-]+[.]geojson$"),
+    ),
+    "license": (
+        "text/plain",
+        re.compile(r"^licenses/[A-Za-z0-9._-]+[.]txt$"),
+    ),
+    "readme": (
+        "text/plain",
+        re.compile(r"^README[.]txt$"),
+    ),
+}
+
 def require(condition, message):
     if not condition:
         raise ValueError(message)
@@ -218,7 +260,7 @@ def validate_sources(sources, status, pack_date):
         require(isinstance(source["notes"], str),
                 f"{label}.notes must be a string.")
 
-def validate_manifest(data):
+def validate_manifest_v1(data):
     require_exact_fields(data, TOP_FIELDS, "manifest")
     require(data["schema_version"] == 1,
             "schema_version must be 1.")
@@ -257,6 +299,339 @@ def validate_manifest(data):
             "limitations must be an array.")
     for index, limitation in enumerate(limitations):
         require_text(limitation, f"limitations[{index}]")
+
+def validate_region_v2(region, require_geography):
+    require(isinstance(region, dict), "region must be an object.")
+
+    actual = set(region)
+    extra = sorted(actual - REGION_FIELDS_V2)
+    require(not extra, f"region has unsupported fields: {extra}")
+
+    require("name" in region, "region is missing fields: ['name']")
+    require_text(region["name"], "region.name")
+
+    geographic_fields = {
+        "bounds", "default_center", "min_zoom", "max_zoom",
+    }
+
+    if require_geography:
+        missing = sorted(geographic_fields - actual)
+        require(
+            not missing,
+            f"region is missing fields: {missing}",
+        )
+
+    bounds = region.get("bounds")
+    center = region.get("default_center")
+    min_zoom = region.get("min_zoom")
+    max_zoom = region.get("max_zoom")
+
+    if bounds is not None:
+        require(
+            isinstance(bounds, list) and len(bounds) == 4,
+            "region.bounds must contain west, south, east, north.",
+        )
+
+        for index, coordinate in enumerate(bounds):
+            require_number(coordinate, f"region.bounds[{index}]")
+
+        west, south, east, north = bounds
+
+        require(
+            -180 <= west <= 180 and -180 <= east <= 180,
+            "Region longitudes must be between -180 and 180.",
+        )
+        require(
+            -90 <= south <= 90 and -90 <= north <= 90,
+            "Region latitudes must be between -90 and 90.",
+        )
+        require(
+            west < east,
+            "Region west longitude must be less than east.",
+        )
+        require(
+            south < north,
+            "Region south latitude must be less than north.",
+        )
+
+    if center is not None:
+        require(
+            isinstance(center, list) and len(center) == 2,
+            "region.default_center must contain longitude and latitude.",
+        )
+        require_number(center[0], "region.default_center[0]")
+        require_number(center[1], "region.default_center[1]")
+
+        if bounds is not None:
+            west, south, east, north = bounds
+            require(
+                west <= center[0] <= east
+                and south <= center[1] <= north,
+                "Default center must fall inside the region bounds.",
+            )
+
+    if min_zoom is not None:
+        require_integer(min_zoom, "region.min_zoom", 0, 24)
+
+    if max_zoom is not None:
+        require_integer(max_zoom, "region.max_zoom", 0, 24)
+
+    if min_zoom is not None and max_zoom is not None:
+        require(
+            min_zoom <= max_zoom,
+            "Minimum zoom must not exceed maximum zoom.",
+        )
+
+
+def validate_files_v2(files, estimated_bytes, viewer):
+    require(
+        isinstance(files, list) and bool(files),
+        "files must be a non-empty array.",
+    )
+
+    paths = set()
+    role_counts = {role: 0 for role in ROLE_RULES_V2}
+    declarations = {}
+    total_bytes = 0
+
+    for index, item in enumerate(files):
+        label = f"files[{index}]"
+        require_exact_fields(item, FILE_FIELDS, label)
+
+        path = item["path"]
+        role = item["role"]
+        media_type = item["media_type"]
+
+        require_text(path, f"{label}.path")
+        require(
+            role in ROLE_RULES_V2,
+            f"{label}.role is unsupported.",
+        )
+        require(path not in paths, f"Duplicate file path: {path}")
+        paths.add(path)
+
+        expected_media, path_pattern = ROLE_RULES_V2[role]
+
+        require(
+            bool(path_pattern.fullmatch(path)),
+            f"{path} is not valid for role {role}.",
+        )
+        require(
+            media_type == expected_media,
+            f"{path} has the wrong media type for role {role}.",
+        )
+
+        require_integer(
+            item["size_bytes"],
+            f"{label}.size_bytes",
+            1,
+        )
+        require(
+            isinstance(item["sha256"], str)
+            and bool(SHA256.fullmatch(item["sha256"])),
+            f"{label}.sha256 must be 64 lowercase hexadecimal characters.",
+        )
+        require(
+            type(item["required"]) is bool,
+            f"{label}.required must be a boolean.",
+        )
+
+        if role in {"license", "readme"}:
+            require(item["required"], f"{path} must be required.")
+
+        role_counts[role] += 1
+        declarations[path] = item
+        total_bytes += item["size_bytes"]
+
+    require(
+        role_counts["readme"] == 1,
+        "A map pack must contain exactly one README.txt.",
+    )
+    require(
+        role_counts["license"] >= 1,
+        "A map pack must contain at least one license file.",
+    )
+
+    viewer_type = viewer["type"]
+    entrypoint = viewer["entrypoint"]
+
+    require(
+        entrypoint in declarations,
+        f"viewer.entrypoint is not declared in files: {entrypoint}",
+    )
+
+    entry = declarations[entrypoint]
+
+    if viewer_type == "pmtiles-vector":
+        require(
+            role_counts["basemap"] == 1,
+            "A PMTiles map pack must contain exactly one basemap.",
+        )
+        require(
+            role_counts["document"] == 0,
+            "A PMTiles map pack may not contain a PDF document role.",
+        )
+        require(
+            entry["role"] == "basemap",
+            "PMTiles viewer.entrypoint must reference the basemap.",
+        )
+        require(
+            entry["media_type"] == "application/vnd.pmtiles",
+            "PMTiles viewer.entrypoint has the wrong media type.",
+        )
+        require(
+            entry["required"],
+            "PMTiles viewer.entrypoint must be required.",
+        )
+
+    elif viewer_type == "pdf":
+        require(
+            role_counts["document"] == 1,
+            "A PDF map pack must contain exactly one document.",
+        )
+        require(
+            role_counts["basemap"] == 0,
+            "A PDF map pack may not contain a basemap role.",
+        )
+        require(
+            entry["role"] == "document",
+            "PDF viewer.entrypoint must reference the document.",
+        )
+        require(
+            entry["media_type"] == "application/pdf",
+            "PDF viewer.entrypoint has the wrong media type.",
+        )
+        require(
+            entry["required"],
+            "PDF viewer.entrypoint must be required.",
+        )
+
+    require(
+        total_bytes == estimated_bytes,
+        "estimated_installed_bytes must equal the declared file-size total.",
+    )
+
+
+def validate_manifest_v2(data):
+    require_exact_fields(data, TOP_FIELDS_V2, "manifest")
+
+    require(
+        data["schema_version"] == 2,
+        "schema_version must be 2.",
+    )
+    require(
+        data["pack_format"] == "ogmap-zip-v1",
+        "pack_format must be ogmap-zip-v1.",
+    )
+
+    require_identifier(data["pack_id"], "pack_id")
+    require_text(data["name"], "name")
+    require_version(data["version"], "version")
+    require(
+        data["status"] in {"draft", "published", "deprecated"},
+        "status is unsupported.",
+    )
+
+    compatibility = data["reader_compatibility"]
+    require_exact_fields(
+        compatibility,
+        READER_FIELDS,
+        "reader_compatibility",
+    )
+    require_version(
+        compatibility["minimum_version"],
+        "reader_compatibility.minimum_version",
+    )
+
+    require_text(data["description"], "description")
+
+    viewer = data["viewer"]
+    require(isinstance(viewer, dict), "viewer must be an object.")
+
+    viewer_type = viewer.get("type")
+
+    if viewer_type == "pmtiles-vector":
+        require_exact_fields(
+            viewer,
+            VIEWER_PMtiles_FIELDS,
+            "viewer",
+        )
+        require_text(viewer["entrypoint"], "viewer.entrypoint")
+        require_identifier(viewer["style_id"], "viewer.style_id")
+        require(
+            viewer["style_id"] in APPROVED_STYLES,
+            f"Unsupported reader-owned style: {viewer['style_id']}",
+        )
+        require_identifier(
+            viewer["tile_schema_id"],
+            "viewer.tile_schema_id",
+        )
+        require(
+            viewer["tile_schema_id"] in APPROVED_TILE_SCHEMAS,
+            f"Unsupported tile schema: {viewer['tile_schema_id']}",
+        )
+        validate_region_v2(data["region"], True)
+
+    elif viewer_type == "pdf":
+        require_exact_fields(
+            viewer,
+            VIEWER_PDF_FIELDS,
+            "viewer",
+        )
+        require_text(viewer["entrypoint"], "viewer.entrypoint")
+        validate_region_v2(data["region"], False)
+
+    else:
+        raise ValueError(
+            f"Unsupported map viewer type: {viewer_type}"
+        )
+
+    pack_date = parse_date(data["data_date"], "data_date")
+    require_integer(
+        data["estimated_installed_bytes"],
+        "estimated_installed_bytes",
+        1,
+    )
+
+    validate_files_v2(
+        data["files"],
+        data["estimated_installed_bytes"],
+        viewer,
+    )
+    validate_sources(
+        data["sources"],
+        data["status"],
+        pack_date,
+    )
+
+    limitations = data["limitations"]
+    require(
+        isinstance(limitations, list),
+        "limitations must be an array.",
+    )
+
+    for index, limitation in enumerate(limitations):
+        require_text(
+            limitation,
+            f"limitations[{index}]",
+        )
+
+
+def validate_manifest(data):
+    require(isinstance(data, dict), "manifest must be an object.")
+
+    schema_version = data.get("schema_version")
+
+    if schema_version == 1:
+        return validate_manifest_v1(data)
+
+    if schema_version == 2:
+        return validate_manifest_v2(data)
+
+    raise ValueError(
+        f"Unsupported map-pack schema_version: {schema_version}"
+    )
+
 
 def parse_args():
     parser = argparse.ArgumentParser(

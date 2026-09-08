@@ -1,0 +1,63 @@
+{
+  "schema_version": 2,
+  "pack_format": "ogmap-zip-v1",
+  "pack_id": "synthetic-pdf-test",
+  "name": "Synthetic PDF Test Map Pack",
+  "version": "0.1.0",
+  "status": "draft",
+  "reader_compatibility": {
+    "minimum_version": "0.1.0"
+  },
+  "description": "Manifest-only fixture for testing PDF reference-map support.",
+  "region": {
+    "name": "Synthetic Test Region"
+  },
+  "data_date": "2026-09-07",
+  "estimated_installed_bytes": 3,
+  "viewer": {
+    "type": "pdf",
+    "entrypoint": "documents/map.pdf"
+  },
+  "files": [
+    {
+      "path": "documents/map.pdf",
+      "role": "document",
+      "media_type": "application/pdf",
+      "size_bytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "required": true
+    },
+    {
+      "path": "licenses/public-domain.txt",
+      "role": "license",
+      "media_type": "text/plain",
+      "size_bytes": 1,
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "required": true
+    },
+    {
+      "path": "README.txt",
+      "role": "readme",
+      "media_type": "text/plain",
+      "size_bytes": 1,
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "required": true
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "synthetic",
+      "name": "Synthetic Test Data",
+      "source_page": "https://example.invalid/offgridpi/synthetic-pdf-map",
+      "source_version": "0.1.0",
+      "data_date": "2026-09-07",
+      "license": "Public domain test fixture",
+      "redistribution": "permitted",
+      "attribution": "Synthetic test data",
+      "notes": "Contains no real map data."
+    }
+  ],
+  "limitations": [
+    "Manifest-only fixture; no real PDF is included."
+  ]
+}

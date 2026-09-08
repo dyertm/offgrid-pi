@@ -333,21 +333,23 @@ def discovery_entry(
     ):
         return None
 
+    schema_version = manifest.get("schema_version")
     pack_id = manifest.get("pack_id")
     version = manifest.get("version")
     name = manifest.get("name")
     status = manifest.get("status")
     description = manifest.get("description")
     data_date = manifest.get("data_date")
-    style_id = manifest.get("style_id")
-    tile_schema_id = manifest.get("tile_schema_id")
     sources = manifest.get("sources")
     limitations = manifest.get("limitations")
     region = manifest.get("region")
     files = manifest.get("files")
 
     if (
-        not isinstance(pack_id, str)
+        not isinstance(schema_version, int)
+        or isinstance(schema_version, bool)
+        or schema_version not in {1, 2}
+        or not isinstance(pack_id, str)
         or pack_id != directory_pack_id
         or not isinstance(version, str)
         or version != directory_version
@@ -355,8 +357,6 @@ def discovery_entry(
         or not isinstance(status, str)
         or not isinstance(description, str)
         or not isinstance(data_date, str)
-        or not isinstance(style_id, str)
-        or not isinstance(tile_schema_id, str)
         or not isinstance(sources, list)
         or not isinstance(limitations, list)
         or not all(
@@ -369,58 +369,236 @@ def discovery_entry(
         return None
 
     region_name = region.get("name")
-    bounds = region.get("bounds")
-    default_center = region.get(
-        "default_center"
-    )
-    min_zoom = region.get("min_zoom")
-    max_zoom = region.get("max_zoom")
 
-    if (
-        not isinstance(region_name, str)
-        or not isinstance(bounds, list)
-        or len(bounds) != 4
-        or not all(
-            isinstance(value, (int, float))
-            and not isinstance(value, bool)
-            for value in bounds
-        )
-        or not isinstance(default_center, list)
-        or len(default_center) != 2
-        or not all(
-            isinstance(value, (int, float))
-            and not isinstance(value, bool)
-            for value in default_center
-        )
-        or not isinstance(min_zoom, (int, float))
-        or isinstance(min_zoom, bool)
-        or not isinstance(max_zoom, (int, float))
-        or isinstance(max_zoom, bool)
-    ):
+    if not isinstance(region_name, str):
         return None
 
-    basemap_path: str | None = None
+    region_output: dict[str, object] = {
+        "name": region_name,
+    }
 
-    for declaration in files:
-        if not isinstance(declaration, dict):
-            return None
+    def load_geographic_region(
+        require_all: bool,
+    ) -> bool:
+        bounds = region.get("bounds")
+        default_center = region.get(
+            "default_center"
+        )
+        min_zoom = region.get("min_zoom")
+        max_zoom = region.get("max_zoom")
 
-        if declaration.get("role") != "basemap":
-            continue
+        values = (
+            bounds,
+            default_center,
+            min_zoom,
+            max_zoom,
+        )
 
-        candidate = declaration.get("path")
+        if require_all and any(
+            value is None for value in values
+        ):
+            return False
+
+        if bounds is not None:
+            if (
+                not isinstance(bounds, list)
+                or len(bounds) != 4
+                or not all(
+                    isinstance(value, (int, float))
+                    and not isinstance(value, bool)
+                    for value in bounds
+                )
+            ):
+                return False
+
+            region_output["bounds"] = bounds
+
+        if default_center is not None:
+            if (
+                not isinstance(default_center, list)
+                or len(default_center) != 2
+                or not all(
+                    isinstance(value, (int, float))
+                    and not isinstance(value, bool)
+                    for value in default_center
+                )
+            ):
+                return False
+
+            region_output[
+                "default_center"
+            ] = default_center
+
+        if min_zoom is not None:
+            if (
+                not isinstance(min_zoom, (int, float))
+                or isinstance(min_zoom, bool)
+            ):
+                return False
+
+            region_output["min_zoom"] = min_zoom
+
+        if max_zoom is not None:
+            if (
+                not isinstance(max_zoom, (int, float))
+                or isinstance(max_zoom, bool)
+            ):
+                return False
+
+            region_output["max_zoom"] = max_zoom
+
+        return True
+
+    style_id: str | None = None
+    tile_schema_id: str | None = None
+    viewer_type: str
+    entrypoint: str
+    expected_role: str
+    expected_media_type: str
+
+    if schema_version == 1:
+        style_id = manifest.get("style_id")
+        tile_schema_id = manifest.get(
+            "tile_schema_id"
+        )
 
         if (
-            basemap_path is not None
-            or not isinstance(candidate, str)
-            or not candidate
+            not isinstance(style_id, str)
+            or not isinstance(
+                tile_schema_id,
+                str,
+            )
+            or not load_geographic_region(True)
+        ):
+            return None
+
+        basemap_path: str | None = None
+
+        for declaration in files:
+            if not isinstance(declaration, dict):
+                return None
+
+            if declaration.get("role") != "basemap":
+                continue
+
+            candidate = declaration.get("path")
+
+            if (
+                basemap_path is not None
+                or not isinstance(candidate, str)
+                or not candidate
+            ):
+                return None
+
+            try:
+                safe_file(
+                    pack_directory,
+                    Path(candidate),
+                )
+            except (
+                FileNotFoundError,
+                OSError,
+                ValueError,
+            ):
+                return None
+
+            basemap_path = candidate
+
+        if basemap_path is None:
+            return None
+
+        viewer_type = "pmtiles-vector"
+        entrypoint = basemap_path
+        expected_role = "basemap"
+        expected_media_type = (
+            "application/vnd.pmtiles"
+        )
+
+    else:
+        viewer = manifest.get("viewer")
+
+        if not isinstance(viewer, dict):
+            return None
+
+        viewer_type = viewer.get("type")
+        entrypoint = viewer.get("entrypoint")
+
+        if (
+            not isinstance(viewer_type, str)
+            or not isinstance(entrypoint, str)
+            or not entrypoint
+        ):
+            return None
+
+        if viewer_type == "pmtiles-vector":
+            style_id = viewer.get("style_id")
+            tile_schema_id = viewer.get(
+                "tile_schema_id"
+            )
+
+            if (
+                not isinstance(style_id, str)
+                or not isinstance(
+                    tile_schema_id,
+                    str,
+                )
+                or not load_geographic_region(
+                    True
+                )
+            ):
+                return None
+
+            expected_role = "basemap"
+            expected_media_type = (
+                "application/vnd.pmtiles"
+            )
+
+        elif viewer_type == "pdf":
+            if not load_geographic_region(False):
+                return None
+
+            expected_role = "document"
+            expected_media_type = (
+                "application/pdf"
+            )
+
+        else:
+            return None
+
+        matching_declaration: dict[
+            str,
+            object,
+        ] | None = None
+
+        for declaration in files:
+            if not isinstance(declaration, dict):
+                return None
+
+            candidate = declaration.get("path")
+
+            if candidate != entrypoint:
+                continue
+
+            if matching_declaration is not None:
+                return None
+
+            matching_declaration = declaration
+
+        if matching_declaration is None:
+            return None
+
+        if (
+            matching_declaration.get("role")
+            != expected_role
+            or matching_declaration.get("media_type")
+            != expected_media_type
         ):
             return None
 
         try:
             safe_file(
                 pack_directory,
-                Path(candidate),
+                Path(entrypoint),
             )
         except (
             FileNotFoundError,
@@ -429,11 +607,6 @@ def discovery_entry(
         ):
             return None
 
-        basemap_path = candidate
-
-    if basemap_path is None:
-        return None
-
     attributions: list[dict[str, str]] = []
 
     for source in sources:
@@ -441,12 +614,17 @@ def discovery_entry(
             return None
 
         source_name = source.get("name")
-        source_attribution = source.get("attribution")
+        source_attribution = source.get(
+            "attribution"
+        )
 
         if (
             not isinstance(source_name, str)
             or not source_name
-            or not isinstance(source_attribution, str)
+            or not isinstance(
+                source_attribution,
+                str,
+            )
             or not source_attribution
         ):
             return None
@@ -466,40 +644,55 @@ def discovery_entry(
         version,
         safe="",
     )
-    encoded_basemap = "/".join(
+    encoded_entrypoint = "/".join(
         quote(part, safe="")
-        for part in Path(
-            basemap_path
-        ).parts
+        for part in Path(entrypoint).parts
     )
 
-    return {
+    entrypoint_url = (
+        f"/packs/{encoded_pack_id}/"
+        f"{encoded_version}/"
+        f"{encoded_entrypoint}"
+    )
+
+    viewer_output: dict[str, object] = {
+        "type": viewer_type,
+        "url": entrypoint_url,
+    }
+
+    if viewer_type == "pmtiles-vector":
+        viewer_output["style_id"] = style_id
+        viewer_output[
+            "tile_schema_id"
+        ] = tile_schema_id
+
+    result: dict[str, object] = {
         "pack_id": pack_id,
         "name": name,
         "version": version,
         "status": status,
         "description": description,
         "data_date": data_date,
-        "style_id": style_id,
-        "tile_schema_id": tile_schema_id,
         "attributions": attributions,
         "limitations": limitations,
-        "region": {
-            "name": region_name,
-            "bounds": bounds,
-            "default_center": default_center,
-            "min_zoom": min_zoom,
-            "max_zoom": max_zoom,
-        },
+        "region": region_output,
         "manifest_url": (
             f"/packs/{encoded_pack_id}/"
             f"{encoded_version}/manifest.json"
         ),
-        "basemap_url": (
-            f"/packs/{encoded_pack_id}/"
-            f"{encoded_version}/{encoded_basemap}"
-        ),
+        "viewer": viewer_output,
     }
+
+    if viewer_type == "pmtiles-vector":
+        result["style_id"] = style_id
+        result["tile_schema_id"] = (
+            tile_schema_id
+        )
+        result["basemap_url"] = (
+            entrypoint_url
+        )
+
+    return result
 
 
 def discover_installed_packs(

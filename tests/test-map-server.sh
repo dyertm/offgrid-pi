@@ -8,6 +8,7 @@ TEMP_DIR="$(mktemp -d)"
 READER_ROOT="$TEMP_DIR/reader"
 PACK_ROOT="$TEMP_DIR/packs"
 PACK_DIR="$PACK_ROOT/test-pack/0.1.0"
+PDF_PACK_DIR="$PACK_ROOT/test-pdf-pack/0.1.0"
 OUTPUT="$TEMP_DIR/server.log"
 PORT=18084
 PID=""
@@ -41,7 +42,9 @@ pass "Map-server syntax is valid."
 mkdir -p \
   "$READER_ROOT" \
   "$PACK_DIR/data" \
-  "$PACK_DIR/licenses"
+  "$PACK_DIR/licenses" \
+  "$PDF_PACK_DIR/documents" \
+  "$PDF_PACK_DIR/licenses"
 
 cat > "$READER_ROOT/index.html" <<'HTML'
 <!doctype html>
@@ -147,6 +150,99 @@ manifest = {
 )
 PY
 
+printf '%s\n' '%PDF-1.4 synthetic map' \
+  > "$PDF_PACK_DIR/documents/map.pdf"
+
+printf 'Synthetic PDF license\n' \
+  > "$PDF_PACK_DIR/licenses/test.txt"
+
+printf 'Synthetic PDF map pack\n' \
+  > "$PDF_PACK_DIR/README.txt"
+
+python3 - "$PDF_PACK_DIR" <<'PYTESTPDF'
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+pack = Path(sys.argv[1])
+files = []
+
+for relative, role, media_type in [
+    (
+        "documents/map.pdf",
+        "document",
+        "application/pdf",
+    ),
+    (
+        "licenses/test.txt",
+        "license",
+        "text/plain",
+    ),
+    (
+        "README.txt",
+        "readme",
+        "text/plain",
+    ),
+]:
+    data = (pack / relative).read_bytes()
+
+    files.append(
+        {
+            "path": relative,
+            "role": role,
+            "media_type": media_type,
+            "size_bytes": len(data),
+            "sha256": hashlib.sha256(data).hexdigest(),
+            "required": True,
+        }
+    )
+
+manifest = {
+    "schema_version": 2,
+    "pack_format": "ogmap-zip-v1",
+    "pack_id": "test-pdf-pack",
+    "name": "Synthetic PDF Reader Test",
+    "version": "0.1.0",
+    "status": "draft",
+    "reader_compatibility": {
+        "minimum_version": "0.1.0"
+    },
+    "description": "Synthetic PDF reader fixture.",
+    "region": {
+        "name": "Synthetic PDF Region"
+    },
+    "data_date": "2026-09-07",
+    "estimated_installed_bytes": sum(
+        item["size_bytes"] for item in files
+    ),
+    "viewer": {
+        "type": "pdf",
+        "entrypoint": "documents/map.pdf"
+    },
+    "files": files,
+    "sources": [
+        {
+            "source_id": "synthetic-pdf",
+            "name": "Synthetic PDF Test Data",
+            "source_page": "https://example.invalid/offgridpi/pdf-reader-test",
+            "source_version": "0.1.0",
+            "data_date": "2026-09-07",
+            "license": "Synthetic test license",
+            "redistribution": "permitted",
+            "attribution": "Synthetic PDF test attribution",
+            "notes": "Contains no real map data."
+        }
+    ],
+    "limitations": ["Synthetic PDF test only."]
+}
+
+(pack / "manifest.json").write_text(
+    json.dumps(manifest, indent=2) + "\n",
+    encoding="utf-8",
+)
+PYTESTPDF
+
 mkdir -p "$PACK_ROOT/broken-pack/0.1.0"
 printf '{not valid json\n' \
   > "$PACK_ROOT/broken-pack/0.1.0/manifest.json"
@@ -230,12 +326,23 @@ if payload.get("schema_version") != 1:
 
 packs = payload.get("packs")
 
-if not isinstance(packs, list) or len(packs) != 1:
+if not isinstance(packs, list) or len(packs) != 2:
     raise SystemExit(
-        "Discovery did not return exactly one installed pack."
+        "Discovery did not return exactly two installed packs."
     )
 
-pack = packs[0]
+packs_by_id = {
+    item.get("pack_id"): item
+    for item in packs
+    if isinstance(item, dict)
+}
+
+pack = packs_by_id.get("test-pack")
+
+if not isinstance(pack, dict):
+    raise SystemExit(
+        "PMTiles test pack is missing from discovery."
+    )
 
 expected = {
     "pack_id": "test-pack",
@@ -257,6 +364,12 @@ expected = {
     "basemap_url": (
         "/packs/test-pack/0.1.0/data/basemap.pmtiles"
     ),
+    "viewer": {
+        "type": "pmtiles-vector",
+        "url": "/packs/test-pack/0.1.0/data/basemap.pmtiles",
+        "style_id": "emergency-basic",
+        "tile_schema_id": "protomaps-basemap-v4",
+    },
 }
 
 for key, value in expected.items():
@@ -295,6 +408,51 @@ if region.get("min_zoom") != 0:
 if region.get("max_zoom") != 10:
     raise SystemExit(
         "Discovery maximum zoom is incorrect."
+    )
+
+pdf_pack = packs_by_id.get("test-pdf-pack")
+
+if not isinstance(pdf_pack, dict):
+    raise SystemExit(
+        "PDF test pack is missing from discovery."
+    )
+
+expected_pdf = {
+    "pack_id": "test-pdf-pack",
+    "name": "Synthetic PDF Reader Test",
+    "version": "0.1.0",
+    "status": "draft",
+    "description": "Synthetic PDF reader fixture.",
+    "data_date": "2026-09-07",
+    "attributions": [
+        {
+            "name": "Synthetic PDF Test Data",
+            "attribution": "Synthetic PDF test attribution",
+        }
+    ],
+    "limitations": ["Synthetic PDF test only."],
+    "manifest_url": (
+        "/packs/test-pdf-pack/0.1.0/manifest.json"
+    ),
+    "viewer": {
+        "type": "pdf",
+        "url": (
+            "/packs/test-pdf-pack/0.1.0/documents/map.pdf"
+        ),
+    },
+}
+
+for key, value in expected_pdf.items():
+    if pdf_pack.get(key) != value:
+        raise SystemExit(
+            f"PDF discovery field {key!r} is incorrect."
+        )
+
+pdf_region = pdf_pack.get("region")
+
+if pdf_region != {"name": "Synthetic PDF Region"}:
+    raise SystemExit(
+        "PDF discovery region metadata is incorrect."
     )
 PYTEST
 
