@@ -190,6 +190,27 @@ grep -q '^async function renderPdfPack(pack)' "$READER_ROOT/js/app.js" ||
 grep -q 'pdfjs.getDocument' "$READER_ROOT/js/app.js" ||
   fail "PDF renderer does not load documents through PDF.js."
 
+grep -q '^async function renderPdfPage' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not provide reusable page rendering."
+
+grep -q '^async function zoomPdf' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not provide document zoom controls."
+
+grep -q '^async function resetPdfView' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not provide a reset/home action."
+
+grep -A12 'elements.mapZoomIn.addEventListener' "$READER_ROOT/js/app.js" |
+  grep -q 'zoomPdf(1.25)' ||
+  fail "Zoom-in control does not support PDF maps."
+
+grep -A12 'elements.mapZoomOut.addEventListener' "$READER_ROOT/js/app.js" |
+  grep -q 'zoomPdf(0.8)' ||
+  fail "Zoom-out control does not support PDF maps."
+
+grep -A20 'elements.mapResetView.addEventListener' "$READER_ROOT/js/app.js" |
+  grep -q 'resetPdfView' ||
+  fail "Home/reset control does not support PDF maps."
+
 grep -q 'maplibregl.addProtocol' "$READER_ROOT/js/app.js" ||
   fail "Reader does not register the PMTiles protocol with MapLibre."
 
@@ -326,6 +347,22 @@ grep -q 'state.map.panBy(\[panDistance, 0\])' "$READER_ROOT/js/app.js" ||
 
 grep -q 'event.key === "Home"' "$READER_ROOT/js/app.js" ||
   fail "Reader keyboard navigation does not support Home reset."
+
+grep -A80 'addEventListener("keydown"' "$READER_ROOT/js/app.js" |
+  grep -q 'zoomPdf(1.25)' ||
+  fail "Keyboard zoom-in does not support PDF maps."
+
+grep -A80 'addEventListener("keydown"' "$READER_ROOT/js/app.js" |
+  grep -q 'zoomPdf(0.8)' ||
+  fail "Keyboard zoom-out does not support PDF maps."
+
+grep -A100 'addEventListener("keydown"' "$READER_ROOT/js/app.js" |
+  grep -q 'resetPdfView' ||
+  fail "Keyboard Home does not reset PDF maps."
+
+grep -A100 'addEventListener("keydown"' "$READER_ROOT/js/app.js" |
+  grep -q 'elements.mapCanvas.scrollBy' ||
+  fail "Keyboard arrow navigation does not pan PDF maps."
 
 grep -q 'getElementById("map-canvas")' "$READER_ROOT/js/app.js" ||
   fail "Reader does not bind the MapLibre canvas."

@@ -721,6 +721,111 @@ function renderPmtilesPack(pack) {
   state.map.on("move", updateMapCoordinates);
 }
 
+async function renderPdfPage() {
+  if (!state.pdfDocument) {
+    return;
+  }
+
+  const page = await state.pdfDocument.getPage(1);
+  const viewport = page.getViewport({
+    scale: state.pdfScale,
+  });
+
+  clearChildren(elements.mapCanvas);
+
+  const canvas = document.createElement("canvas");
+  canvas.className = "pdf-page-canvas";
+  canvas.setAttribute(
+    "aria-label",
+    `Page 1 of ${state.pdfDocument.numPages}`,
+  );
+
+  const outputScale =
+    window.devicePixelRatio || 1;
+
+  canvas.width = Math.floor(
+    viewport.width * outputScale,
+  );
+  canvas.height = Math.floor(
+    viewport.height * outputScale,
+  );
+  canvas.style.width = `${viewport.width}px`;
+  canvas.style.height = `${viewport.height}px`;
+
+  elements.mapCanvas.appendChild(canvas);
+
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error(
+      "PDF canvas rendering context is unavailable.",
+    );
+  }
+
+  await page.render({
+    canvasContext: context,
+    viewport,
+    transform: outputScale === 1
+      ? null
+      : [
+        outputScale,
+        0,
+        0,
+        outputScale,
+        0,
+        0,
+      ],
+  }).promise;
+}
+
+async function resetPdfView() {
+  if (!state.pdfDocument) {
+    return;
+  }
+
+  const page = await state.pdfDocument.getPage(1);
+  const baseViewport = page.getViewport({
+    scale: 1,
+  });
+
+  const availableWidth =
+    Math.max(elements.mapCanvas.clientWidth - 48, 1);
+  const availableHeight =
+    Math.max(elements.mapCanvas.clientHeight - 48, 1);
+
+  state.pdfScale = Math.min(
+    availableWidth / baseViewport.width,
+    availableHeight / baseViewport.height,
+  );
+
+  await renderPdfPage();
+
+  elements.mapCanvas.scrollLeft = 0;
+  elements.mapCanvas.scrollTop = 0;
+}
+
+async function zoomPdf(factor) {
+  if (
+    !state.pdfDocument
+    || !Number.isFinite(factor)
+    || factor <= 0
+  ) {
+    return;
+  }
+
+  const nextScale = Math.min(
+    Math.max(state.pdfScale * factor, 0.25),
+    6,
+  );
+
+  if (Math.abs(nextScale - state.pdfScale) < 0.001) {
+    return;
+  }
+
+  state.pdfScale = nextScale;
+  await renderPdfPage();
+}
+
 async function renderPdfPack(pack) {
   if (state.map) {
     state.map.remove();
@@ -762,71 +867,9 @@ async function renderPdfPack(pack) {
       iccUrl: `${assetRoot}iccs/`,
     });
 
-    const pdf = await loadingTask.promise;
-    state.pdfDocument = pdf;
+    state.pdfDocument = await loadingTask.promise;
 
-    const page = await pdf.getPage(1);
-    const baseViewport = page.getViewport({
-      scale: 1,
-    });
-
-    const availableWidth =
-      Math.max(elements.mapCanvas.clientWidth - 48, 1);
-    const availableHeight =
-      Math.max(elements.mapCanvas.clientHeight - 48, 1);
-
-    state.pdfScale = Math.min(
-      availableWidth / baseViewport.width,
-      availableHeight / baseViewport.height,
-    );
-
-    const viewport = page.getViewport({
-      scale: state.pdfScale,
-    });
-
-    const canvas = document.createElement("canvas");
-    canvas.className = "pdf-page-canvas";
-    canvas.setAttribute(
-      "aria-label",
-      `Page 1 of ${pdf.numPages}`,
-    );
-
-    const outputScale =
-      window.devicePixelRatio || 1;
-
-    canvas.width = Math.floor(
-      viewport.width * outputScale,
-    );
-    canvas.height = Math.floor(
-      viewport.height * outputScale,
-    );
-    canvas.style.width = `${viewport.width}px`;
-    canvas.style.height = `${viewport.height}px`;
-
-    elements.mapCanvas.appendChild(canvas);
-
-    const context = canvas.getContext("2d");
-
-    if (!context) {
-      throw new Error(
-        "PDF canvas rendering context is unavailable.",
-      );
-    }
-
-    await page.render({
-      canvasContext: context,
-      viewport,
-      transform: outputScale === 1
-        ? null
-        : [
-          outputScale,
-          0,
-          0,
-          outputScale,
-          0,
-          0,
-        ],
-    }).promise;
+    await resetPdfView();
 
     elements.renderMessage.hidden = true;
   } catch (error) {
@@ -1132,22 +1175,45 @@ function initialize() {
   elements.readerHost.textContent = hostname;
   elements.dashboardLink.href = dashboardUrl();
 
-  elements.mapZoomIn.addEventListener("click", () => {
+  elements.mapZoomIn.addEventListener("click", async () => {
+    const pack = selectedPack();
+
+    if (pack?.viewer.type === "pdf") {
+      await zoomPdf(1.25);
+      return;
+    }
+
     if (state.map) {
       state.map.zoomIn();
     }
   });
 
-  elements.mapZoomOut.addEventListener("click", () => {
+  elements.mapZoomOut.addEventListener("click", async () => {
+    const pack = selectedPack();
+
+    if (pack?.viewer.type === "pdf") {
+      await zoomPdf(0.8);
+      return;
+    }
+
     if (state.map) {
       state.map.zoomOut();
     }
   });
 
-  elements.mapResetView.addEventListener("click", () => {
+  elements.mapResetView.addEventListener("click", async () => {
     const pack = selectedPack();
 
-    if (state.map && pack) {
+    if (!pack) {
+      return;
+    }
+
+    if (pack.viewer.type === "pdf") {
+      await resetPdfView();
+      return;
+    }
+
+    if (state.map) {
       state.map.fitBounds(
         pack.region.bounds,
         {
@@ -1271,20 +1337,36 @@ function initialize() {
     }
   });
 
-  document.addEventListener("keydown", (event) => {
-    if (!state.map) {
+  document.addEventListener("keydown", async (event) => {
+    const pack = selectedPack();
+
+    if (!pack) {
       return;
     }
 
+    const isPdf = pack.viewer.type === "pdf";
+
     if (event.key === "+" || event.key === "=") {
       event.preventDefault();
-      state.map.zoomIn();
+
+      if (isPdf) {
+        await zoomPdf(1.25);
+      } else if (state.map) {
+        state.map.zoomIn();
+      }
+
       return;
     }
 
     if (event.key === "-" || event.key === "_") {
       event.preventDefault();
-      state.map.zoomOut();
+
+      if (isPdf) {
+        await zoomPdf(0.8);
+      } else if (state.map) {
+        state.map.zoomOut();
+      }
+
       return;
     }
 
@@ -1292,33 +1374,70 @@ function initialize() {
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      state.map.panBy([0, -panDistance]);
+
+      if (isPdf) {
+        elements.mapCanvas.scrollBy({
+          left: 0,
+          top: -panDistance,
+        });
+      } else if (state.map) {
+        state.map.panBy([0, -panDistance]);
+      }
+
       return;
     }
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      state.map.panBy([0, panDistance]);
+
+      if (isPdf) {
+        elements.mapCanvas.scrollBy({
+          left: 0,
+          top: panDistance,
+        });
+      } else if (state.map) {
+        state.map.panBy([0, panDistance]);
+      }
+
       return;
     }
 
     if (event.key === "ArrowLeft") {
       event.preventDefault();
-      state.map.panBy([-panDistance, 0]);
+
+      if (isPdf) {
+        elements.mapCanvas.scrollBy({
+          left: -panDistance,
+          top: 0,
+        });
+      } else if (state.map) {
+        state.map.panBy([-panDistance, 0]);
+      }
+
       return;
     }
 
     if (event.key === "ArrowRight") {
       event.preventDefault();
-      state.map.panBy([panDistance, 0]);
+
+      if (isPdf) {
+        elements.mapCanvas.scrollBy({
+          left: panDistance,
+          top: 0,
+        });
+      } else if (state.map) {
+        state.map.panBy([panDistance, 0]);
+      }
+
       return;
     }
 
     if (event.key === "Home") {
-      const pack = selectedPack();
+      event.preventDefault();
 
-      if (pack) {
-        event.preventDefault();
+      if (isPdf) {
+        await resetPdfView();
+      } else if (state.map) {
         state.map.fitBounds(
           pack.region.bounds,
           {
@@ -1328,6 +1447,7 @@ function initialize() {
         );
       }
     }
+
   });
 
   try {
