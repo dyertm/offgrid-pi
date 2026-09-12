@@ -22,6 +22,15 @@ pass() {
 [[ -f "$READER_ROOT/js/app.js" ]] ||
   fail "Offline Maps reader JavaScript is missing."
 
+[[ -f "$READER_ROOT/vendor/pdfjs/build/pdf.mjs" ]] ||
+  fail "Bundled PDF.js renderer is missing."
+
+[[ -f "$READER_ROOT/vendor/pdfjs/build/pdf.worker.mjs" ]] ||
+  fail "Bundled PDF.js worker is missing."
+
+[[ -f "$READER_ROOT/vendor/pdfjs/LICENSE" ]] ||
+  fail "Bundled PDF.js license is missing."
+
 python3 - "$READER_ROOT" <<'PY'
 from html.parser import HTMLParser
 from pathlib import Path
@@ -148,6 +157,12 @@ grep -q '"/api/packs"' "$READER_ROOT/js/app.js" ||
 grep -q '^\.map-canvas {' "$READER_ROOT/css/styles.css" ||
   fail "Reader stylesheet lacks the map canvas."
 
+grep -q '^\.map-canvas.pdf-viewer {' "$READER_ROOT/css/styles.css" ||
+  fail "Reader stylesheet lacks PDF viewer layout."
+
+grep -q '^\.pdf-page-canvas {' "$READER_ROOT/css/styles.css" ||
+  fail "Reader stylesheet lacks PDF page canvas styling."
+
 grep -q '^\.render-message {' "$READER_ROOT/css/styles.css" ||
   fail "Reader stylesheet lacks the render-status overlay."
 
@@ -162,6 +177,78 @@ grep -q '^\.map-help-panel {' "$READER_ROOT/css/styles.css" ||
 
 grep -q 'new pmtiles.Protocol' "$READER_ROOT/js/app.js" ||
   fail "Reader does not initialize the PMTiles protocol."
+
+grep -q 'vendor/pdfjs/build/pdf.mjs' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not load the bundled PDF.js module."
+
+grep -q 'GlobalWorkerOptions.workerSrc' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not configure the bundled PDF.js worker."
+
+grep -q '^async function renderPdfPack(pack)' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not provide a dedicated PDF renderer."
+
+grep -q 'pdfjs.getDocument' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not load documents through PDF.js."
+
+grep -q '^async function renderPdfPage' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not provide reusable page rendering."
+
+grep -q '^async function zoomPdf' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not provide document zoom controls."
+
+grep -q '^async function resetPdfView' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not provide a reset/home action."
+
+grep -q 'id="map-rotate"' "$READER_ROOT/index.html" ||
+  fail "Reader does not provide a PDF rotate control."
+
+grep -q '^async function rotatePdf' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not provide document rotation."
+
+grep -q 'id="map-pdf-previous"' "$READER_ROOT/index.html" ||
+  fail "Reader does not provide a Previous PDF page control."
+
+grep -q 'id="map-pdf-page"' "$READER_ROOT/index.html" ||
+  fail "Reader does not provide a PDF page indicator."
+
+grep -q 'id="map-pdf-next"' "$READER_ROOT/index.html" ||
+  fail "Reader does not provide a Next PDF page control."
+
+grep -q 'pdfPageNumber: 1' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not track the current page."
+
+grep -q '^async function changePdfPage' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not provide page navigation."
+
+grep -A30 'function configureViewerControls' "$READER_ROOT/js/app.js" |
+  grep -q 'elements.mapRotate.hidden = !isPdf' ||
+  fail "Reader does not show Rotate only for PDF viewers."
+
+grep -q 'id="map-help-rotate"' "$READER_ROOT/index.html" ||
+  fail "Reader help does not identify the Rotate help row."
+
+grep -A30 'function configureViewerControls' "$READER_ROOT/js/app.js" |
+  grep -q 'elements.mapHelpRotate.hidden = !isPdf' ||
+  fail "Reader does not show Rotate help only for PDF viewers."
+
+grep -q 'id="map-help-measure"' "$READER_ROOT/index.html" ||
+  fail "Reader help does not identify the Measure help row."
+
+grep -A25 'function configureViewerControls' "$READER_ROOT/js/app.js" |
+  grep -q 'elements.mapHelpMeasure.hidden = !isPmtiles' ||
+  fail "Reader does not hide Measure help for non-PMTiles viewers."
+
+grep -A12 'elements.mapZoomIn.addEventListener' "$READER_ROOT/js/app.js" |
+  grep -q 'zoomPdf(1.25)' ||
+  fail "Zoom-in control does not support PDF maps."
+
+grep -A12 'elements.mapZoomOut.addEventListener' "$READER_ROOT/js/app.js" |
+  grep -q 'zoomPdf(0.8)' ||
+  fail "Zoom-out control does not support PDF maps."
+
+grep -A20 'elements.mapResetView.addEventListener' "$READER_ROOT/js/app.js" |
+  grep -q 'resetPdfView' ||
+  fail "Home/reset control does not support PDF maps."
 
 grep -q 'maplibregl.addProtocol' "$READER_ROOT/js/app.js" ||
   fail "Reader does not register the PMTiles protocol with MapLibre."
@@ -255,6 +342,31 @@ grep -q 'exitFullscreen' "$READER_ROOT/js/app.js" ||
 grep -q 'state.map.resize' "$READER_ROOT/js/app.js" ||
   fail "Reader does not resize MapLibre after fullscreen changes."
 
+python3 - "$READER_ROOT/js/app.js" <<'CHECK'
+import sys
+from pathlib import Path
+
+source = Path(sys.argv[1]).read_text()
+
+start = source.find('document.addEventListener("fullscreenchange"')
+end = source.find('document.addEventListener("keydown"', start)
+
+if start == -1 or end == -1 or "resetPdfView" not in source[start:end]:
+    raise SystemExit(
+        "FAIL: Reader does not refit PDF documents after fullscreen changes."
+    )
+
+if "waitForViewerSizeToSettle" not in source[start:end]:
+    raise SystemExit(
+        "FAIL: Reader does not wait for the PDF viewer size to settle."
+    )
+
+if "ResizeObserver" not in source:
+    raise SystemExit(
+        "FAIL: Reader does not observe PDF viewer resize changes."
+    )
+CHECK
+
 grep -q 'new maplibregl.ScaleControl' "$READER_ROOT/js/app.js" ||
   fail "Reader does not provide an on-map distance scale."
 
@@ -300,6 +412,22 @@ grep -q 'state.map.panBy(\[panDistance, 0\])' "$READER_ROOT/js/app.js" ||
 grep -q 'event.key === "Home"' "$READER_ROOT/js/app.js" ||
   fail "Reader keyboard navigation does not support Home reset."
 
+grep -A80 'addEventListener("keydown"' "$READER_ROOT/js/app.js" |
+  grep -q 'zoomPdf(1.25)' ||
+  fail "Keyboard zoom-in does not support PDF maps."
+
+grep -A80 'addEventListener("keydown"' "$READER_ROOT/js/app.js" |
+  grep -q 'zoomPdf(0.8)' ||
+  fail "Keyboard zoom-out does not support PDF maps."
+
+grep -A100 'addEventListener("keydown"' "$READER_ROOT/js/app.js" |
+  grep -q 'resetPdfView' ||
+  fail "Keyboard Home does not reset PDF maps."
+
+grep -A100 'addEventListener("keydown"' "$READER_ROOT/js/app.js" |
+  grep -q 'elements.mapCanvas.scrollBy' ||
+  fail "Keyboard arrow navigation does not pan PDF maps."
+
 grep -q 'getElementById("map-canvas")' "$READER_ROOT/js/app.js" ||
   fail "Reader does not bind the MapLibre canvas."
 
@@ -307,8 +435,20 @@ if grep -q 'elements.mapWorkspace.hidden = true' "$READER_ROOT/js/app.js"; then
   fail "Selecting a map hides the renderer workspace."
 fi
 
-grep -q 'typeof pack.tile_schema_id === "string"' "$READER_ROOT/js/app.js" ||
-  fail "Reader does not validate the tile schema identifier."
+grep -q 'pack.viewer' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not validate normalized viewer metadata."
+
+grep -q 'typeof pack.viewer.type !== "string"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not validate the viewer type."
+
+grep -q 'typeof pack.viewer.url !== "string"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not validate the viewer entrypoint URL."
+
+grep -q 'pack.viewer.type === "pmtiles-vector"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not validate PMTiles viewer metadata."
+
+grep -q 'pack.viewer.type === "pdf"' "$READER_ROOT/js/app.js" ||
+  fail "Reader does not recognize PDF viewer metadata."
 
 grep -q 'id="map-attribution"' "$READER_ROOT/index.html" ||
   fail "Reader is missing persistent map attribution."

@@ -5,6 +5,9 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VALIDATOR="$ROOT/content-packs/validate-map-pack.py"
 MANIFEST="$ROOT/content-packs/manifests/maps/synthetic-test.json"
 SCHEMA="$ROOT/content-packs/schema/map-pack.schema.json"
+MANIFEST_V2_PDF="$ROOT/content-packs/manifests/maps/synthetic-pdf-test.json"
+MANIFEST_V2_PMTILES="$ROOT/content-packs/manifests/maps/synthetic-pmtiles-v2-test.json"
+SCHEMA_V2="$ROOT/content-packs/schema/map-pack-v2.schema.json"
 
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
@@ -20,10 +23,19 @@ trap 'rm -rf -- "$TEMP_ROOT"' EXIT
 
 python3 -m json.tool "$SCHEMA" >/dev/null
 python3 -m json.tool "$MANIFEST" >/dev/null
-pass "Map-pack schema and synthetic manifest are valid JSON."
+python3 -m json.tool "$SCHEMA_V2" >/dev/null
+python3 -m json.tool "$MANIFEST_V2_PDF" >/dev/null
+python3 -m json.tool "$MANIFEST_V2_PMTILES" >/dev/null
+pass "Map-pack schemas and synthetic manifests are valid JSON."
 
 "$VALIDATOR" "$MANIFEST"
-pass "Known-good synthetic map manifest was accepted."
+pass "Known-good v1 PMTiles manifest was accepted."
+
+"$VALIDATOR" "$MANIFEST_V2_PDF"
+pass "Known-good v2 PDF manifest was accepted."
+
+"$VALIDATOR" "$MANIFEST_V2_PMTILES"
+pass "Known-good v2 PMTiles manifest was accepted."
 
 create_fixture() {
   local mutation="$1"

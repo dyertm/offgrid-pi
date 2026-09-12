@@ -13,16 +13,24 @@ const elements = {
   mapZoomIn: document.getElementById("map-zoom-in"),
   mapZoomOut: document.getElementById("map-zoom-out"),
   mapResetView: document.getElementById("map-reset-view"),
+  mapRotate: document.getElementById("map-rotate"),
+  mapPdfPages: document.getElementById("map-pdf-pages"),
+  mapPdfPrevious: document.getElementById("map-pdf-previous"),
+  mapPdfPage: document.getElementById("map-pdf-page"),
+  mapPdfNext: document.getElementById("map-pdf-next"),
   mapMeasure: document.getElementById("map-measure"),
   mapHelp: document.getElementById("map-help"),
   mapHelpPanel: document.getElementById("map-help-panel"),
   mapHelpClose: document.getElementById("map-help-close"),
+  mapHelpRotate: document.getElementById("map-help-rotate"),
+  mapHelpMeasure: document.getElementById("map-help-measure"),
   mapLayers: document.getElementById("map-layers"),
   mapLayersPanel: document.getElementById("map-layers-panel"),
   mapLayersClose: document.getElementById("map-layers-close"),
   layerToggles: document.querySelectorAll("[data-layer-group]"),
   mapFullscreen: document.getElementById("map-fullscreen"),
   mapAttribution: document.getElementById("map-attribution"),
+  mapCenterCrosshair: document.getElementById("map-center-crosshair"),
   mapCoordinates: document.getElementById("map-coordinates"),
   detailsPanel: document.getElementById("details-panel"),
   selectedHeading: document.getElementById("selected-map-heading"),
@@ -42,6 +50,11 @@ const state = {
   protocol: null,
   archive: null,
   map: null,
+  pdfjs: null,
+  pdfDocument: null,
+  pdfScale: 1,
+  pdfRotation: 0,
+  pdfPageNumber: 1,
   measurementStart: null,
 };
 
@@ -172,6 +185,33 @@ function updateMapCoordinates() {
     + formatMeasurement(center);
 }
 
+function configureViewerControls(pack) {
+  const isPmtiles =
+    pack.viewer.type === "pmtiles-vector";
+  const isPdf =
+    pack.viewer.type === "pdf";
+
+  elements.mapRotate.hidden = !isPdf;
+  elements.mapPdfPages.hidden =
+    !isPdf
+    || !state.pdfDocument
+    || state.pdfDocument.numPages <= 1;
+  elements.mapMeasure.hidden = !isPmtiles;
+  elements.mapLayers.hidden = !isPmtiles;
+  elements.mapCenterCrosshair.hidden = !isPmtiles;
+  elements.mapCoordinates.hidden = !isPmtiles;
+  elements.mapHelpRotate.hidden = !isPdf;
+  elements.mapHelpMeasure.hidden = !isPmtiles;
+
+  if (!isPmtiles) {
+    elements.mapLayersPanel.hidden = true;
+    elements.mapLayers.setAttribute(
+      "aria-expanded",
+      "false",
+    );
+  }
+}
+
 function dashboardUrl() {
   const hostname = window.location.hostname || "offgridpi";
 
@@ -242,7 +282,7 @@ function showErrorState() {
   elements.mapWorkspace.hidden = false;
 }
 
-function renderPack(pack) {
+function renderPmtilesPack(pack) {
   if (!state.protocol) {
     return;
   }
@@ -251,6 +291,14 @@ function renderPack(pack) {
     state.map.remove();
     state.map = null;
   }
+
+  state.pdfDocument = null;
+  state.pdfScale = 1;
+  state.pdfRotation = 0;
+  state.pdfPageNumber = 1;
+  elements.mapPdfPages.hidden = true;
+  elements.mapCanvas.classList.remove("pdf-viewer");
+  clearChildren(elements.mapCanvas);
 
   const basemapUrl = new URL(
     pack.basemap_url,
@@ -694,6 +742,317 @@ function renderPack(pack) {
   state.map.on("move", updateMapCoordinates);
 }
 
+async function renderPdfPage() {
+  if (!state.pdfDocument) {
+    return;
+  }
+
+  const page = await state.pdfDocument.getPage(
+    state.pdfPageNumber,
+  );
+  const rotation =
+    (page.rotate + state.pdfRotation) % 360;
+  const viewport = page.getViewport({
+    scale: state.pdfScale,
+    rotation,
+  });
+
+  clearChildren(elements.mapCanvas);
+
+  const canvas = document.createElement("canvas");
+  canvas.className = "pdf-page-canvas";
+  canvas.setAttribute(
+    "aria-label",
+    `Page ${state.pdfPageNumber} of ${state.pdfDocument.numPages}`,
+  );
+
+  const outputScale =
+    window.devicePixelRatio || 1;
+
+  canvas.width = Math.floor(
+    viewport.width * outputScale,
+  );
+  canvas.height = Math.floor(
+    viewport.height * outputScale,
+  );
+  canvas.style.width = `${viewport.width}px`;
+  canvas.style.height = `${viewport.height}px`;
+
+  elements.mapCanvas.appendChild(canvas);
+
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error(
+      "PDF canvas rendering context is unavailable.",
+    );
+  }
+
+  await page.render({
+    canvasContext: context,
+    viewport,
+    transform: outputScale === 1
+      ? null
+      : [
+        outputScale,
+        0,
+        0,
+        outputScale,
+        0,
+        0,
+      ],
+  }).promise;
+}
+
+async function waitForViewerSizeToSettle() {
+  if (typeof ResizeObserver !== "function") {
+    await new Promise(requestAnimationFrame);
+    return;
+  }
+
+  await new Promise((resolve) => {
+    let settleTimer = null;
+    let fallbackTimer = null;
+    let finished = false;
+
+    const finish = () => {
+      if (finished) {
+        return;
+      }
+
+      finished = true;
+
+      if (settleTimer !== null) {
+        clearTimeout(settleTimer);
+      }
+
+      if (fallbackTimer !== null) {
+        clearTimeout(fallbackTimer);
+      }
+
+      observer.disconnect();
+      resolve();
+    };
+
+    const scheduleSettle = () => {
+      if (settleTimer !== null) {
+        clearTimeout(settleTimer);
+      }
+
+      settleTimer = setTimeout(finish, 100);
+    };
+
+    const observer = new ResizeObserver(() => {
+      scheduleSettle();
+    });
+
+    observer.observe(elements.mapCanvas);
+    scheduleSettle();
+
+    fallbackTimer = setTimeout(finish, 1000);
+  });
+}
+
+async function resetPdfView() {
+  if (!state.pdfDocument) {
+    return;
+  }
+
+  const page = await state.pdfDocument.getPage(
+    state.pdfPageNumber,
+  );
+  const rotation =
+    (page.rotate + state.pdfRotation) % 360;
+  const baseViewport = page.getViewport({
+    scale: 1,
+    rotation,
+  });
+
+  const availableWidth =
+    Math.max(elements.mapCanvas.clientWidth - 48, 1);
+  const availableHeight =
+    Math.max(elements.mapCanvas.clientHeight - 48, 1);
+
+  state.pdfScale = Math.min(
+    availableWidth / baseViewport.width,
+    availableHeight / baseViewport.height,
+  );
+
+  await renderPdfPage();
+
+  elements.mapCanvas.scrollLeft = 0;
+  elements.mapCanvas.scrollTop = 0;
+}
+
+async function zoomPdf(factor) {
+  if (
+    !state.pdfDocument
+    || !Number.isFinite(factor)
+    || factor <= 0
+  ) {
+    return;
+  }
+
+  const nextScale = Math.min(
+    Math.max(state.pdfScale * factor, 0.25),
+    6,
+  );
+
+  if (Math.abs(nextScale - state.pdfScale) < 0.001) {
+    return;
+  }
+
+  state.pdfScale = nextScale;
+  await renderPdfPage();
+}
+
+function updatePdfPageControls() {
+  if (!state.pdfDocument) {
+    elements.mapPdfPages.hidden = true;
+    elements.mapPdfPage.textContent = "1 / 1";
+    elements.mapPdfPrevious.disabled = true;
+    elements.mapPdfNext.disabled = true;
+    return;
+  }
+
+  const pageCount = state.pdfDocument.numPages;
+
+  elements.mapPdfPages.hidden = pageCount <= 1;
+  elements.mapPdfPage.textContent =
+    `${state.pdfPageNumber} / ${pageCount}`;
+  elements.mapPdfPrevious.disabled =
+    state.pdfPageNumber <= 1;
+  elements.mapPdfNext.disabled =
+    state.pdfPageNumber >= pageCount;
+}
+
+async function changePdfPage(delta) {
+  if (
+    !state.pdfDocument
+    || !Number.isInteger(delta)
+    || delta === 0
+  ) {
+    return;
+  }
+
+  const nextPage = Math.min(
+    Math.max(
+      state.pdfPageNumber + delta,
+      1,
+    ),
+    state.pdfDocument.numPages,
+  );
+
+  if (nextPage === state.pdfPageNumber) {
+    return;
+  }
+
+  state.pdfPageNumber = nextPage;
+  updatePdfPageControls();
+
+  await resetPdfView();
+}
+
+async function rotatePdf() {
+  if (!state.pdfDocument) {
+    return;
+  }
+
+  state.pdfRotation =
+    (state.pdfRotation + 90) % 360;
+
+  await resetPdfView();
+}
+
+async function renderPdfPack(pack) {
+  if (state.map) {
+    state.map.remove();
+    state.map = null;
+  }
+
+  state.archive = null;
+  state.pdfDocument = null;
+  state.pdfScale = 1;
+  state.pdfRotation = 0;
+  state.pdfPageNumber = 1;
+  updatePdfPageControls();
+
+  elements.mapCanvas.classList.add("pdf-viewer");
+  clearChildren(elements.mapCanvas);
+
+  elements.renderMessage.hidden = false;
+  elements.renderMessage.querySelector("h2").textContent =
+    "Preparing reference map";
+  elements.renderMessage.querySelector("p:last-child").textContent =
+    "Loading local PDF map data.";
+
+  try {
+    const pdfjs = await initializePdfRenderer();
+
+    const documentUrl = new URL(
+      pack.viewer.url,
+      window.location.href,
+    ).href;
+
+    const assetRoot = new URL(
+      "vendor/pdfjs/web/",
+      window.location.href,
+    ).href;
+
+    const loadingTask = pdfjs.getDocument({
+      url: documentUrl,
+      cMapUrl: `${assetRoot}cmaps/`,
+      cMapPacked: true,
+      standardFontDataUrl: `${assetRoot}standard_fonts/`,
+      wasmUrl: `${assetRoot}wasm/`,
+      iccUrl: `${assetRoot}iccs/`,
+    });
+
+    state.pdfDocument = await loadingTask.promise;
+    updatePdfPageControls();
+
+    await resetPdfView();
+
+    elements.renderMessage.hidden = true;
+  } catch (error) {
+    console.error(
+      "Unable to render PDF map.",
+      error,
+    );
+
+    elements.renderMessage.hidden = false;
+    elements.renderMessage.querySelector("h2").textContent =
+      "Reference map unavailable";
+    elements.renderMessage.querySelector("p:last-child").textContent =
+      "The selected PDF map could not be opened.";
+  }
+}
+
+function renderPack(pack) {
+  const viewerType =
+    pack.viewer && typeof pack.viewer === "object"
+      ? pack.viewer.type
+      : (
+        typeof pack.basemap_url === "string"
+          ? "pmtiles-vector"
+          : null
+      );
+
+  if (viewerType === "pmtiles-vector") {
+    renderPmtilesPack(pack);
+    return;
+  }
+
+  if (viewerType === "pdf") {
+    renderPdfPack(pack);
+    return;
+  }
+
+  throw new Error(
+    `Unsupported offline map viewer: ${viewerType || "unknown"}`,
+  );
+}
+
 function selectPack(pack) {
   state.selectedKey = packKey(pack);
   state.measurementStart = null;
@@ -720,8 +1079,14 @@ function selectPack(pack) {
   elements.selectedRegion.textContent = pack.region.name;
   elements.selectedVersion.textContent = pack.version;
   elements.selectedDataDate.textContent = formatDate(pack.data_date);
-  elements.selectedZoom.textContent =
-    `${pack.region.min_zoom}–${pack.region.max_zoom}`;
+  if (pack.viewer.type === "pmtiles-vector") {
+    elements.selectedZoom.textContent =
+      `${pack.region.min_zoom}–${pack.region.max_zoom}`;
+  } else if (pack.viewer.type === "pdf") {
+    elements.selectedZoom.textContent = "Document zoom";
+  } else {
+    elements.selectedZoom.textContent = "—";
+  }
 
   const attributionText = pack.attributions
     .map(
@@ -749,6 +1114,7 @@ function selectPack(pack) {
   elements.mapWorkspace.hidden = false;
   elements.detailsPanel.hidden = false;
 
+  configureViewerControls(pack);
   renderPack(pack);
 }
 
@@ -807,19 +1173,17 @@ function renderPacks(packs) {
 }
 
 function validPack(pack) {
-  return (
-    pack
-    && typeof pack === "object"
-    && typeof pack.pack_id === "string"
-    && typeof pack.name === "string"
-    && typeof pack.version === "string"
-    && typeof pack.status === "string"
-    && typeof pack.description === "string"
-    && typeof pack.data_date === "string"
-    && typeof pack.style_id === "string"
-    && typeof pack.tile_schema_id === "string"
-    && Array.isArray(pack.attributions)
-    && pack.attributions.every(
+  if (
+    !pack
+    || typeof pack !== "object"
+    || typeof pack.pack_id !== "string"
+    || typeof pack.name !== "string"
+    || typeof pack.version !== "string"
+    || typeof pack.status !== "string"
+    || typeof pack.description !== "string"
+    || typeof pack.data_date !== "string"
+    || !Array.isArray(pack.attributions)
+    || !pack.attributions.every(
       (item) => (
         item
         && typeof item === "object"
@@ -829,22 +1193,42 @@ function validPack(pack) {
         && item.attribution.length > 0
       ),
     )
-    && Array.isArray(pack.limitations)
-    && pack.limitations.every(
+    || !Array.isArray(pack.limitations)
+    || !pack.limitations.every(
       (item) => typeof item === "string",
     )
-    && pack.region
-    && typeof pack.region === "object"
-    && typeof pack.region.name === "string"
-    && Array.isArray(pack.region.bounds)
-    && pack.region.bounds.length === 4
-    && Array.isArray(pack.region.default_center)
-    && pack.region.default_center.length === 2
-    && Number.isFinite(pack.region.min_zoom)
-    && Number.isFinite(pack.region.max_zoom)
-    && typeof pack.manifest_url === "string"
-    && typeof pack.basemap_url === "string"
-  );
+    || !pack.region
+    || typeof pack.region !== "object"
+    || typeof pack.region.name !== "string"
+    || typeof pack.manifest_url !== "string"
+    || !pack.viewer
+    || typeof pack.viewer !== "object"
+    || typeof pack.viewer.type !== "string"
+    || typeof pack.viewer.url !== "string"
+  ) {
+    return false;
+  }
+
+  if (pack.viewer.type === "pmtiles-vector") {
+    return (
+      typeof pack.viewer.style_id === "string"
+      && typeof pack.viewer.tile_schema_id === "string"
+      && Array.isArray(pack.region.bounds)
+      && pack.region.bounds.length === 4
+      && pack.region.bounds.every(Number.isFinite)
+      && Array.isArray(pack.region.default_center)
+      && pack.region.default_center.length === 2
+      && pack.region.default_center.every(Number.isFinite)
+      && Number.isFinite(pack.region.min_zoom)
+      && Number.isFinite(pack.region.max_zoom)
+    );
+  }
+
+  if (pack.viewer.type === "pdf") {
+    return true;
+  }
+
+  return false;
 }
 
 async function loadPacks() {
@@ -887,6 +1271,29 @@ async function loadPacks() {
   }
 }
 
+async function initializePdfRenderer() {
+  if (state.pdfjs) {
+    return state.pdfjs;
+  }
+
+  const moduleUrl = new URL(
+    "vendor/pdfjs/build/pdf.mjs",
+    window.location.href,
+  ).href;
+
+  const workerUrl = new URL(
+    "vendor/pdfjs/build/pdf.worker.mjs",
+    window.location.href,
+  ).href;
+
+  const pdfjs = await import(moduleUrl);
+
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  state.pdfjs = pdfjs;
+
+  return pdfjs;
+}
+
 function initializeRenderer() {
   if (
     typeof maplibregl === "undefined"
@@ -910,22 +1317,45 @@ function initialize() {
   elements.readerHost.textContent = hostname;
   elements.dashboardLink.href = dashboardUrl();
 
-  elements.mapZoomIn.addEventListener("click", () => {
+  elements.mapZoomIn.addEventListener("click", async () => {
+    const pack = selectedPack();
+
+    if (pack?.viewer.type === "pdf") {
+      await zoomPdf(1.25);
+      return;
+    }
+
     if (state.map) {
       state.map.zoomIn();
     }
   });
 
-  elements.mapZoomOut.addEventListener("click", () => {
+  elements.mapZoomOut.addEventListener("click", async () => {
+    const pack = selectedPack();
+
+    if (pack?.viewer.type === "pdf") {
+      await zoomPdf(0.8);
+      return;
+    }
+
     if (state.map) {
       state.map.zoomOut();
     }
   });
 
-  elements.mapResetView.addEventListener("click", () => {
+  elements.mapResetView.addEventListener("click", async () => {
     const pack = selectedPack();
 
-    if (state.map && pack) {
+    if (!pack) {
+      return;
+    }
+
+    if (pack.viewer.type === "pdf") {
+      await resetPdfView();
+      return;
+    }
+
+    if (state.map) {
       state.map.fitBounds(
         pack.region.bounds,
         {
@@ -935,6 +1365,30 @@ function initialize() {
       );
     }
   });
+
+  elements.mapRotate.addEventListener("click", async () => {
+    const pack = selectedPack();
+
+    if (pack?.viewer.type !== "pdf") {
+      return;
+    }
+
+    await rotatePdf();
+  });
+
+  elements.mapPdfPrevious.addEventListener(
+    "click",
+    async () => {
+      await changePdfPage(-1);
+    },
+  );
+
+  elements.mapPdfNext.addEventListener(
+    "click",
+    async () => {
+      await changePdfPage(1);
+    },
+  );
 
   elements.mapMeasure.addEventListener("click", () => {
     if (!state.map) {
@@ -1027,7 +1481,7 @@ function initialize() {
     }
   });
 
-  document.addEventListener("fullscreenchange", () => {
+  document.addEventListener("fullscreenchange", async () => {
     const fullscreen =
       document.fullscreenElement === elements.mapWorkspace;
 
@@ -1047,22 +1501,43 @@ function initialize() {
     if (state.map) {
       state.map.resize();
     }
+
+    if (state.pdfDocument) {
+      await waitForViewerSizeToSettle();
+      await resetPdfView();
+    }
   });
 
-  document.addEventListener("keydown", (event) => {
-    if (!state.map) {
+  document.addEventListener("keydown", async (event) => {
+    const pack = selectedPack();
+
+    if (!pack) {
       return;
     }
 
+    const isPdf = pack.viewer.type === "pdf";
+
     if (event.key === "+" || event.key === "=") {
       event.preventDefault();
-      state.map.zoomIn();
+
+      if (isPdf) {
+        await zoomPdf(1.25);
+      } else if (state.map) {
+        state.map.zoomIn();
+      }
+
       return;
     }
 
     if (event.key === "-" || event.key === "_") {
       event.preventDefault();
-      state.map.zoomOut();
+
+      if (isPdf) {
+        await zoomPdf(0.8);
+      } else if (state.map) {
+        state.map.zoomOut();
+      }
+
       return;
     }
 
@@ -1070,33 +1545,70 @@ function initialize() {
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      state.map.panBy([0, -panDistance]);
+
+      if (isPdf) {
+        elements.mapCanvas.scrollBy({
+          left: 0,
+          top: -panDistance,
+        });
+      } else if (state.map) {
+        state.map.panBy([0, -panDistance]);
+      }
+
       return;
     }
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      state.map.panBy([0, panDistance]);
+
+      if (isPdf) {
+        elements.mapCanvas.scrollBy({
+          left: 0,
+          top: panDistance,
+        });
+      } else if (state.map) {
+        state.map.panBy([0, panDistance]);
+      }
+
       return;
     }
 
     if (event.key === "ArrowLeft") {
       event.preventDefault();
-      state.map.panBy([-panDistance, 0]);
+
+      if (isPdf) {
+        elements.mapCanvas.scrollBy({
+          left: -panDistance,
+          top: 0,
+        });
+      } else if (state.map) {
+        state.map.panBy([-panDistance, 0]);
+      }
+
       return;
     }
 
     if (event.key === "ArrowRight") {
       event.preventDefault();
-      state.map.panBy([panDistance, 0]);
+
+      if (isPdf) {
+        elements.mapCanvas.scrollBy({
+          left: panDistance,
+          top: 0,
+        });
+      } else if (state.map) {
+        state.map.panBy([panDistance, 0]);
+      }
+
       return;
     }
 
     if (event.key === "Home") {
-      const pack = selectedPack();
+      event.preventDefault();
 
-      if (pack) {
-        event.preventDefault();
+      if (isPdf) {
+        await resetPdfView();
+      } else if (state.map) {
         state.map.fitBounds(
           pack.region.bounds,
           {
@@ -1106,6 +1618,7 @@ function initialize() {
         );
       }
     }
+
   });
 
   try {

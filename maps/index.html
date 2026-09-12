@@ -137,6 +137,52 @@
               <button
                 type="button"
                 class="map-control-button map-control-wide"
+                id="map-rotate"
+                aria-label="Rotate PDF map clockwise"
+                title="Rotate PDF map clockwise"
+                hidden
+              >
+                Rotate
+              </button>
+
+              <div
+                class="map-pdf-pages"
+                id="map-pdf-pages"
+                aria-label="PDF page navigation"
+                hidden
+              >
+                <button
+                  type="button"
+                  class="map-control-button map-control-wide"
+                  id="map-pdf-previous"
+                  aria-label="Previous PDF page"
+                  title="Previous PDF page"
+                >
+                  Prev
+                </button>
+
+                <span
+                  class="map-page-indicator"
+                  id="map-pdf-page"
+                  aria-live="polite"
+                >
+                  1 / 1
+                </span>
+
+                <button
+                  type="button"
+                  class="map-control-button map-control-wide"
+                  id="map-pdf-next"
+                  aria-label="Next PDF page"
+                  title="Next PDF page"
+                >
+                  Next
+                </button>
+              </div>
+
+              <button
+                type="button"
+                class="map-control-button map-control-wide"
                 id="map-measure"
                 aria-label="Measure distance and bearing from map center"
                 title="Measure from map center"
@@ -216,7 +262,11 @@
                   <dt>Home</dt>
                   <dd>Return to the starting map view</dd>
                 </div>
-                <div>
+                <div id="map-help-rotate" hidden>
+                  <dt>Rotate</dt>
+                  <dd>Rotate the PDF map 90° clockwise</dd>
+                </div>
+                <div id="map-help-measure">
                   <dt>Measure</dt>
                   <dd>Measure from center, then move the map</dd>
                 </div>

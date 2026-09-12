@@ -288,6 +288,21 @@ main {
   min-height: 380px;
 }
 
+.map-canvas.pdf-viewer {
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 24px;
+  background: var(--surface-deep);
+}
+
+.pdf-page-canvas {
+  display: block;
+  max-width: none;
+  margin: 0 auto;
+  background: #ffffff;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.32);
+}
+
 .render-message {
   position: relative;
   z-index: 1;
@@ -372,6 +387,38 @@ main {
 .map-control-wide {
   min-width: 68px;
   font-size: 0.8rem;
+}
+
+.map-pdf-pages {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-page-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.map-control-button:disabled {
+  color: var(--muted);
+  cursor: default;
+  opacity: 0.55;
+}
+
+.map-control-button:disabled:hover {
+  border-color: var(--border);
 }
 
 .map-help-panel {

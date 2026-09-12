@@ -147,6 +147,7 @@ check_payload() {
     "$PROJECT_ROOT/content-packs/inspect-map-pack.py" \
     "$PROJECT_ROOT/content-packs/validate-map-pack.py" \
     "$PROJECT_ROOT/content-packs/schema/map-pack.schema.json" \
+    "$PROJECT_ROOT/content-packs/schema/map-pack-v2.schema.json" \
     "$PROJECT_ROOT/scripts/manage-installation.sh" \
     "$PROJECT_ROOT/tests/verify-installation.sh"
   do
@@ -325,6 +326,10 @@ install_map_module() {
   install -o root -g root -m 0644 \
     "$PROJECT_ROOT/content-packs/schema/map-pack.schema.json" \
     /opt/offgridpi/content-packs/schema/map-pack.schema.json
+
+  install -o root -g root -m 0644 \
+    "$PROJECT_ROOT/content-packs/schema/map-pack-v2.schema.json" \
+    /opt/offgridpi/content-packs/schema/map-pack-v2.schema.json
 
   install -o root -g root -m 0644 \
     "$PROJECT_ROOT/systemd/offgridpi-maps.service" \
