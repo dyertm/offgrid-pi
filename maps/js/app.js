@@ -13,6 +13,7 @@ const elements = {
   mapZoomIn: document.getElementById("map-zoom-in"),
   mapZoomOut: document.getElementById("map-zoom-out"),
   mapResetView: document.getElementById("map-reset-view"),
+  mapRotate: document.getElementById("map-rotate"),
   mapMeasure: document.getElementById("map-measure"),
   mapHelp: document.getElementById("map-help"),
   mapHelpPanel: document.getElementById("map-help-panel"),
@@ -47,6 +48,7 @@ const state = {
   pdfjs: null,
   pdfDocument: null,
   pdfScale: 1,
+  pdfRotation: 0,
   measurementStart: null,
 };
 
@@ -180,7 +182,10 @@ function updateMapCoordinates() {
 function configureViewerControls(pack) {
   const isPmtiles =
     pack.viewer.type === "pmtiles-vector";
+  const isPdf =
+    pack.viewer.type === "pdf";
 
+  elements.mapRotate.hidden = !isPdf;
   elements.mapMeasure.hidden = !isPmtiles;
   elements.mapLayers.hidden = !isPmtiles;
   elements.mapCenterCrosshair.hidden = !isPmtiles;
@@ -278,6 +283,7 @@ function renderPmtilesPack(pack) {
 
   state.pdfDocument = null;
   state.pdfScale = 1;
+  state.pdfRotation = 0;
   elements.mapCanvas.classList.remove("pdf-viewer");
   clearChildren(elements.mapCanvas);
 
@@ -729,8 +735,11 @@ async function renderPdfPage() {
   }
 
   const page = await state.pdfDocument.getPage(1);
+  const rotation =
+    (page.rotate + state.pdfRotation) % 360;
   const viewport = page.getViewport({
     scale: state.pdfScale,
+    rotation,
   });
 
   clearChildren(elements.mapCanvas);
@@ -835,8 +844,11 @@ async function resetPdfView() {
   }
 
   const page = await state.pdfDocument.getPage(1);
+  const rotation =
+    (page.rotate + state.pdfRotation) % 360;
   const baseViewport = page.getViewport({
     scale: 1,
+    rotation,
   });
 
   const availableWidth =
@@ -877,6 +889,17 @@ async function zoomPdf(factor) {
   await renderPdfPage();
 }
 
+async function rotatePdf() {
+  if (!state.pdfDocument) {
+    return;
+  }
+
+  state.pdfRotation =
+    (state.pdfRotation + 90) % 360;
+
+  await resetPdfView();
+}
+
 async function renderPdfPack(pack) {
   if (state.map) {
     state.map.remove();
@@ -886,6 +909,7 @@ async function renderPdfPack(pack) {
   state.archive = null;
   state.pdfDocument = null;
   state.pdfScale = 1;
+  state.pdfRotation = 0;
 
   elements.mapCanvas.classList.add("pdf-viewer");
   clearChildren(elements.mapCanvas);
@@ -1273,6 +1297,16 @@ function initialize() {
         },
       );
     }
+  });
+
+  elements.mapRotate.addEventListener("click", async () => {
+    const pack = selectedPack();
+
+    if (pack?.viewer.type !== "pdf") {
+      return;
+    }
+
+    await rotatePdf();
   });
 
   elements.mapMeasure.addEventListener("click", () => {

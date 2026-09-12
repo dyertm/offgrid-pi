@@ -199,6 +199,16 @@ grep -q '^async function zoomPdf' "$READER_ROOT/js/app.js" ||
 grep -q '^async function resetPdfView' "$READER_ROOT/js/app.js" ||
   fail "PDF renderer does not provide a reset/home action."
 
+grep -q 'id="map-rotate"' "$READER_ROOT/index.html" ||
+  fail "Reader does not provide a PDF rotate control."
+
+grep -q '^async function rotatePdf' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not provide document rotation."
+
+grep -A30 'function configureViewerControls' "$READER_ROOT/js/app.js" |
+  grep -q 'elements.mapRotate.hidden = !isPdf' ||
+  fail "Reader does not show Rotate only for PDF viewers."
+
 grep -q 'id="map-help-measure"' "$READER_ROOT/index.html" ||
   fail "Reader help does not identify the Measure help row."
 
