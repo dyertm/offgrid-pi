@@ -303,6 +303,21 @@ grep -q 'exitFullscreen' "$READER_ROOT/js/app.js" ||
 grep -q 'state.map.resize' "$READER_ROOT/js/app.js" ||
   fail "Reader does not resize MapLibre after fullscreen changes."
 
+python3 - "$READER_ROOT/js/app.js" <<'CHECK'
+import sys
+from pathlib import Path
+
+source = Path(sys.argv[1]).read_text()
+
+start = source.find('document.addEventListener("fullscreenchange"')
+end = source.find('document.addEventListener("keydown"', start)
+
+if start == -1 or end == -1 or "resetPdfView" not in source[start:end]:
+    raise SystemExit(
+        "FAIL: Reader does not refit PDF documents after fullscreen changes."
+    )
+CHECK
+
 grep -q 'new maplibregl.ScaleControl' "$READER_ROOT/js/app.js" ||
   fail "Reader does not provide an on-map distance scale."
 

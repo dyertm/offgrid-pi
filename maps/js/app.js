@@ -1315,7 +1315,7 @@ function initialize() {
     }
   });
 
-  document.addEventListener("fullscreenchange", () => {
+  document.addEventListener("fullscreenchange", async () => {
     const fullscreen =
       document.fullscreenElement === elements.mapWorkspace;
 
@@ -1334,6 +1334,11 @@ function initialize() {
 
     if (state.map) {
       state.map.resize();
+    }
+
+    if (state.pdfDocument) {
+      await new Promise(requestAnimationFrame);
+      await resetPdfView();
     }
   });
 
