@@ -199,6 +199,13 @@ grep -q '^async function zoomPdf' "$READER_ROOT/js/app.js" ||
 grep -q '^async function resetPdfView' "$READER_ROOT/js/app.js" ||
   fail "PDF renderer does not provide a reset/home action."
 
+grep -q 'id="map-help-measure"' "$READER_ROOT/index.html" ||
+  fail "Reader help does not identify the Measure help row."
+
+grep -A25 'function configureViewerControls' "$READER_ROOT/js/app.js" |
+  grep -q 'elements.mapHelpMeasure.hidden = !isPmtiles' ||
+  fail "Reader does not hide Measure help for non-PMTiles viewers."
+
 grep -A12 'elements.mapZoomIn.addEventListener' "$READER_ROOT/js/app.js" |
   grep -q 'zoomPdf(1.25)' ||
   fail "Zoom-in control does not support PDF maps."
@@ -315,6 +322,16 @@ end = source.find('document.addEventListener("keydown"', start)
 if start == -1 or end == -1 or "resetPdfView" not in source[start:end]:
     raise SystemExit(
         "FAIL: Reader does not refit PDF documents after fullscreen changes."
+    )
+
+if "waitForViewerSizeToSettle" not in source[start:end]:
+    raise SystemExit(
+        "FAIL: Reader does not wait for the PDF viewer size to settle."
+    )
+
+if "ResizeObserver" not in source:
+    raise SystemExit(
+        "FAIL: Reader does not observe PDF viewer resize changes."
     )
 CHECK
 

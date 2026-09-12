@@ -17,6 +17,7 @@ const elements = {
   mapHelp: document.getElementById("map-help"),
   mapHelpPanel: document.getElementById("map-help-panel"),
   mapHelpClose: document.getElementById("map-help-close"),
+  mapHelpMeasure: document.getElementById("map-help-measure"),
   mapLayers: document.getElementById("map-layers"),
   mapLayersPanel: document.getElementById("map-layers-panel"),
   mapLayersClose: document.getElementById("map-layers-close"),
@@ -184,6 +185,7 @@ function configureViewerControls(pack) {
   elements.mapLayers.hidden = !isPmtiles;
   elements.mapCenterCrosshair.hidden = !isPmtiles;
   elements.mapCoordinates.hidden = !isPmtiles;
+  elements.mapHelpMeasure.hidden = !isPmtiles;
 
   if (!isPmtiles) {
     elements.mapLayersPanel.hidden = true;
@@ -778,6 +780,55 @@ async function renderPdfPage() {
   }).promise;
 }
 
+async function waitForViewerSizeToSettle() {
+  if (typeof ResizeObserver !== "function") {
+    await new Promise(requestAnimationFrame);
+    return;
+  }
+
+  await new Promise((resolve) => {
+    let settleTimer = null;
+    let fallbackTimer = null;
+    let finished = false;
+
+    const finish = () => {
+      if (finished) {
+        return;
+      }
+
+      finished = true;
+
+      if (settleTimer !== null) {
+        clearTimeout(settleTimer);
+      }
+
+      if (fallbackTimer !== null) {
+        clearTimeout(fallbackTimer);
+      }
+
+      observer.disconnect();
+      resolve();
+    };
+
+    const scheduleSettle = () => {
+      if (settleTimer !== null) {
+        clearTimeout(settleTimer);
+      }
+
+      settleTimer = setTimeout(finish, 100);
+    };
+
+    const observer = new ResizeObserver(() => {
+      scheduleSettle();
+    });
+
+    observer.observe(elements.mapCanvas);
+    scheduleSettle();
+
+    fallbackTimer = setTimeout(finish, 1000);
+  });
+}
+
 async function resetPdfView() {
   if (!state.pdfDocument) {
     return;
@@ -1337,11 +1388,7 @@ function initialize() {
     }
 
     if (state.pdfDocument) {
-      await new Promise((resolve) => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(resolve);
-        });
-      });
+      await waitForViewerSizeToSettle();
       await resetPdfView();
     }
   });
