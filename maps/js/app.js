@@ -1337,7 +1337,11 @@ function initialize() {
     }
 
     if (state.pdfDocument) {
-      await new Promise(requestAnimationFrame);
+      await new Promise((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(resolve);
+        });
+      });
       await resetPdfView();
     }
   });
