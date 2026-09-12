@@ -205,6 +205,21 @@ grep -q 'id="map-rotate"' "$READER_ROOT/index.html" ||
 grep -q '^async function rotatePdf' "$READER_ROOT/js/app.js" ||
   fail "PDF renderer does not provide document rotation."
 
+grep -q 'id="map-pdf-previous"' "$READER_ROOT/index.html" ||
+  fail "Reader does not provide a Previous PDF page control."
+
+grep -q 'id="map-pdf-page"' "$READER_ROOT/index.html" ||
+  fail "Reader does not provide a PDF page indicator."
+
+grep -q 'id="map-pdf-next"' "$READER_ROOT/index.html" ||
+  fail "Reader does not provide a Next PDF page control."
+
+grep -q 'pdfPageNumber: 1' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not track the current page."
+
+grep -q '^async function changePdfPage' "$READER_ROOT/js/app.js" ||
+  fail "PDF renderer does not provide page navigation."
+
 grep -A30 'function configureViewerControls' "$READER_ROOT/js/app.js" |
   grep -q 'elements.mapRotate.hidden = !isPdf' ||
   fail "Reader does not show Rotate only for PDF viewers."

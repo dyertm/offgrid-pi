@@ -14,6 +14,10 @@ const elements = {
   mapZoomOut: document.getElementById("map-zoom-out"),
   mapResetView: document.getElementById("map-reset-view"),
   mapRotate: document.getElementById("map-rotate"),
+  mapPdfPages: document.getElementById("map-pdf-pages"),
+  mapPdfPrevious: document.getElementById("map-pdf-previous"),
+  mapPdfPage: document.getElementById("map-pdf-page"),
+  mapPdfNext: document.getElementById("map-pdf-next"),
   mapMeasure: document.getElementById("map-measure"),
   mapHelp: document.getElementById("map-help"),
   mapHelpPanel: document.getElementById("map-help-panel"),
@@ -50,6 +54,7 @@ const state = {
   pdfDocument: null,
   pdfScale: 1,
   pdfRotation: 0,
+  pdfPageNumber: 1,
   measurementStart: null,
 };
 
@@ -187,6 +192,10 @@ function configureViewerControls(pack) {
     pack.viewer.type === "pdf";
 
   elements.mapRotate.hidden = !isPdf;
+  elements.mapPdfPages.hidden =
+    !isPdf
+    || !state.pdfDocument
+    || state.pdfDocument.numPages <= 1;
   elements.mapMeasure.hidden = !isPmtiles;
   elements.mapLayers.hidden = !isPmtiles;
   elements.mapCenterCrosshair.hidden = !isPmtiles;
@@ -286,6 +295,8 @@ function renderPmtilesPack(pack) {
   state.pdfDocument = null;
   state.pdfScale = 1;
   state.pdfRotation = 0;
+  state.pdfPageNumber = 1;
+  elements.mapPdfPages.hidden = true;
   elements.mapCanvas.classList.remove("pdf-viewer");
   clearChildren(elements.mapCanvas);
 
@@ -736,7 +747,9 @@ async function renderPdfPage() {
     return;
   }
 
-  const page = await state.pdfDocument.getPage(1);
+  const page = await state.pdfDocument.getPage(
+    state.pdfPageNumber,
+  );
   const rotation =
     (page.rotate + state.pdfRotation) % 360;
   const viewport = page.getViewport({
@@ -750,7 +763,7 @@ async function renderPdfPage() {
   canvas.className = "pdf-page-canvas";
   canvas.setAttribute(
     "aria-label",
-    `Page 1 of ${state.pdfDocument.numPages}`,
+    `Page ${state.pdfPageNumber} of ${state.pdfDocument.numPages}`,
   );
 
   const outputScale =
@@ -845,7 +858,9 @@ async function resetPdfView() {
     return;
   }
 
-  const page = await state.pdfDocument.getPage(1);
+  const page = await state.pdfDocument.getPage(
+    state.pdfPageNumber,
+  );
   const rotation =
     (page.rotate + state.pdfRotation) % 360;
   const baseViewport = page.getViewport({
@@ -891,6 +906,53 @@ async function zoomPdf(factor) {
   await renderPdfPage();
 }
 
+function updatePdfPageControls() {
+  if (!state.pdfDocument) {
+    elements.mapPdfPages.hidden = true;
+    elements.mapPdfPage.textContent = "1 / 1";
+    elements.mapPdfPrevious.disabled = true;
+    elements.mapPdfNext.disabled = true;
+    return;
+  }
+
+  const pageCount = state.pdfDocument.numPages;
+
+  elements.mapPdfPages.hidden = pageCount <= 1;
+  elements.mapPdfPage.textContent =
+    `${state.pdfPageNumber} / ${pageCount}`;
+  elements.mapPdfPrevious.disabled =
+    state.pdfPageNumber <= 1;
+  elements.mapPdfNext.disabled =
+    state.pdfPageNumber >= pageCount;
+}
+
+async function changePdfPage(delta) {
+  if (
+    !state.pdfDocument
+    || !Number.isInteger(delta)
+    || delta === 0
+  ) {
+    return;
+  }
+
+  const nextPage = Math.min(
+    Math.max(
+      state.pdfPageNumber + delta,
+      1,
+    ),
+    state.pdfDocument.numPages,
+  );
+
+  if (nextPage === state.pdfPageNumber) {
+    return;
+  }
+
+  state.pdfPageNumber = nextPage;
+  updatePdfPageControls();
+
+  await resetPdfView();
+}
+
 async function rotatePdf() {
   if (!state.pdfDocument) {
     return;
@@ -912,6 +974,8 @@ async function renderPdfPack(pack) {
   state.pdfDocument = null;
   state.pdfScale = 1;
   state.pdfRotation = 0;
+  state.pdfPageNumber = 1;
+  updatePdfPageControls();
 
   elements.mapCanvas.classList.add("pdf-viewer");
   clearChildren(elements.mapCanvas);
@@ -945,6 +1009,7 @@ async function renderPdfPack(pack) {
     });
 
     state.pdfDocument = await loadingTask.promise;
+    updatePdfPageControls();
 
     await resetPdfView();
 
@@ -1310,6 +1375,20 @@ function initialize() {
 
     await rotatePdf();
   });
+
+  elements.mapPdfPrevious.addEventListener(
+    "click",
+    async () => {
+      await changePdfPage(-1);
+    },
+  );
+
+  elements.mapPdfNext.addEventListener(
+    "click",
+    async () => {
+      await changePdfPage(1);
+    },
+  );
 
   elements.mapMeasure.addEventListener("click", () => {
     if (!state.map) {
