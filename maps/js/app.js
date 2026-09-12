@@ -18,6 +18,7 @@ const elements = {
   mapHelp: document.getElementById("map-help"),
   mapHelpPanel: document.getElementById("map-help-panel"),
   mapHelpClose: document.getElementById("map-help-close"),
+  mapHelpRotate: document.getElementById("map-help-rotate"),
   mapHelpMeasure: document.getElementById("map-help-measure"),
   mapLayers: document.getElementById("map-layers"),
   mapLayersPanel: document.getElementById("map-layers-panel"),
@@ -190,6 +191,7 @@ function configureViewerControls(pack) {
   elements.mapLayers.hidden = !isPmtiles;
   elements.mapCenterCrosshair.hidden = !isPmtiles;
   elements.mapCoordinates.hidden = !isPmtiles;
+  elements.mapHelpRotate.hidden = !isPdf;
   elements.mapHelpMeasure.hidden = !isPmtiles;
 
   if (!isPmtiles) {

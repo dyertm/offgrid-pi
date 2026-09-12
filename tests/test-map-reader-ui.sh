@@ -209,6 +209,13 @@ grep -A30 'function configureViewerControls' "$READER_ROOT/js/app.js" |
   grep -q 'elements.mapRotate.hidden = !isPdf' ||
   fail "Reader does not show Rotate only for PDF viewers."
 
+grep -q 'id="map-help-rotate"' "$READER_ROOT/index.html" ||
+  fail "Reader help does not identify the Rotate help row."
+
+grep -A30 'function configureViewerControls' "$READER_ROOT/js/app.js" |
+  grep -q 'elements.mapHelpRotate.hidden = !isPdf' ||
+  fail "Reader does not show Rotate help only for PDF viewers."
+
 grep -q 'id="map-help-measure"' "$READER_ROOT/index.html" ||
   fail "Reader help does not identify the Measure help row."
 
