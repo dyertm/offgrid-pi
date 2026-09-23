@@ -55,6 +55,9 @@ const state = {
   pdfScale: 1,
   pdfRotation: 0,
   pdfPageNumber: 1,
+  pdfRenderTimer: null,
+  pdfRenderRevision: 0,
+  pdfRenderTask: null,
   measurementStart: null,
 };
 
@@ -292,6 +295,7 @@ function renderPmtilesPack(pack) {
     state.map = null;
   }
 
+  cancelPendingPdfRender();
   state.pdfDocument = null;
   state.pdfScale = 1;
   state.pdfRotation = 0;
@@ -747,6 +751,8 @@ async function renderPdfPage() {
     return;
   }
 
+  const renderRevision = state.pdfRenderRevision;
+
   const page = await state.pdfDocument.getPage(
     state.pdfPageNumber,
   );
@@ -756,8 +762,6 @@ async function renderPdfPage() {
     scale: state.pdfScale,
     rotation,
   });
-
-  clearChildren(elements.mapCanvas);
 
   const canvas = document.createElement("canvas");
   canvas.className = "pdf-page-canvas";
@@ -778,8 +782,6 @@ async function renderPdfPage() {
   canvas.style.width = `${viewport.width}px`;
   canvas.style.height = `${viewport.height}px`;
 
-  elements.mapCanvas.appendChild(canvas);
-
   const context = canvas.getContext("2d");
 
   if (!context) {
@@ -788,7 +790,7 @@ async function renderPdfPage() {
     );
   }
 
-  await page.render({
+  const renderTask = page.render({
     canvasContext: context,
     viewport,
     transform: outputScale === 1
@@ -801,7 +803,36 @@ async function renderPdfPage() {
         0,
         0,
       ],
-  }).promise;
+  });
+
+  state.pdfRenderTask = renderTask;
+
+  try {
+    await renderTask.promise;
+  } catch (error) {
+    if (error?.name === "RenderingCancelledException") {
+      return;
+    }
+
+    throw error;
+  } finally {
+    if (state.pdfRenderTask === renderTask) {
+      state.pdfRenderTask = null;
+    }
+  }
+
+  if (renderRevision !== state.pdfRenderRevision) {
+    return;
+  }
+
+  const scrollLeft = elements.mapCanvas.scrollLeft;
+  const scrollTop = elements.mapCanvas.scrollTop;
+
+  clearChildren(elements.mapCanvas);
+  elements.mapCanvas.appendChild(canvas);
+
+  elements.mapCanvas.scrollLeft = scrollLeft;
+  elements.mapCanvas.scrollTop = scrollTop;
 }
 
 async function waitForViewerSizeToSettle() {
@@ -853,10 +884,26 @@ async function waitForViewerSizeToSettle() {
   });
 }
 
+function cancelPendingPdfRender() {
+  if (state.pdfRenderTimer !== null) {
+    clearTimeout(state.pdfRenderTimer);
+    state.pdfRenderTimer = null;
+  }
+
+  state.pdfRenderRevision += 1;
+
+  if (state.pdfRenderTask) {
+    state.pdfRenderTask.cancel();
+    state.pdfRenderTask = null;
+  }
+}
+
 async function resetPdfView() {
   if (!state.pdfDocument) {
     return;
   }
+
+  cancelPendingPdfRender();
 
   const page = await state.pdfDocument.getPage(
     state.pdfPageNumber,
@@ -884,6 +931,17 @@ async function resetPdfView() {
   elements.mapCanvas.scrollTop = 0;
 }
 
+function schedulePdfRender() {
+  if (state.pdfRenderTimer !== null) {
+    clearTimeout(state.pdfRenderTimer);
+  }
+
+  state.pdfRenderTimer = setTimeout(async () => {
+    state.pdfRenderTimer = null;
+    await renderPdfPage();
+  }, 300);
+}
+
 async function zoomPdf(factor) {
   if (
     !state.pdfDocument
@@ -893,17 +951,34 @@ async function zoomPdf(factor) {
     return;
   }
 
+  const previousScale = state.pdfScale;
   const nextScale = Math.min(
-    Math.max(state.pdfScale * factor, 0.25),
+    Math.max(previousScale * factor, 0.25),
     6,
   );
 
-  if (Math.abs(nextScale - state.pdfScale) < 0.001) {
+  if (Math.abs(nextScale - previousScale) < 0.001) {
     return;
   }
 
   state.pdfScale = nextScale;
-  await renderPdfPage();
+  cancelPendingPdfRender();
+
+  const canvas =
+    elements.mapCanvas.querySelector(".pdf-page-canvas");
+
+  if (canvas) {
+    const ratio = nextScale / previousScale;
+    const width = parseFloat(canvas.style.width);
+    const height = parseFloat(canvas.style.height);
+
+    if (Number.isFinite(width) && Number.isFinite(height)) {
+      canvas.style.width = `${width * ratio}px`;
+      canvas.style.height = `${height * ratio}px`;
+    }
+  }
+
+  schedulePdfRender();
 }
 
 function updatePdfPageControls() {
@@ -971,6 +1046,7 @@ async function renderPdfPack(pack) {
   }
 
   state.archive = null;
+  cancelPendingPdfRender();
   state.pdfDocument = null;
   state.pdfScale = 1;
   state.pdfRotation = 0;
