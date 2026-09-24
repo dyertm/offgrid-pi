@@ -1,6 +1,6 @@
 # Offgrid Pi Roadmap
 
-**Reconciled:** August 4, 2026
+**Reconciled:** September 23, 2026
 
 ## Phase status summary
 
@@ -14,15 +14,16 @@
 | 5 — Reproducible installer | Completed — pristine clean-install validation passed |
 | 6 — Content-pack system | Completed — starter workflow validated |
 | 7 — System status and administration | Completed — pristine clean-install validation passed |
-| 8 — Offline maps | In progress — reader and pack standard |
-| 9 — Offline entertainment | Planned |
-| 10 — Local Wi-Fi hotspot | Deferred |
-| 11 — Storage architecture | Deferred |
-| 12 — Off-grid power optimization | Deferred |
-| 13 — Backup and recovery | Deferred |
-| 14 — Prebuilt release image | Deferred |
-| 15 — Physical protection | Deferred |
-| 16 — Community release | Future |
+| 8 — Offline maps | Completed — PMTiles/PDF reader, pack validation, import, and real-world GeoPDF acceptance passed |
+| 9 — Unified Offline Search | Planned — next development phase |
+| 10 — Offline Entertainment | Planned |
+| 11 — Local Networking & Connectivity Resilience | Deferred |
+| 12 — Storage & Content Management | Deferred |
+| 13 — Power & Platform Resilience | Deferred |
+| 14 — Backup, Restore & Private Data | Deferred |
+| 15 — Appliance UX & Release Image | Deferred |
+| 16 — Hardware Qualification & Physical Protection | Deferred |
+| 17 — Release Validation & Community Release | Future |
 
 ## Phase 0 — Project definition
 
@@ -193,7 +194,8 @@ Completed outcomes:
 
 Remaining content expansion:
 
-* Medical, preparedness, agriculture, repair, radio, education, Pacific Northwest, maps, and faith manifests remain to be created
+* Medical, preparedness, agriculture, repair, radio, education, Pacific Northwest, and faith manifests remain to be created
+* Additional regional map packs remain to be curated and validated
 * Additional content sources require individual licensing and checksum review
 
 Completion validation:
@@ -243,9 +245,11 @@ Completed outcomes:
 
 Current access model:
 
+* Kiwix library: TCP port `8080`
 * Public dashboard: TCP port `8081`
 * Public document library: TCP port `8082`
 * Protected read-only log viewer: `127.0.0.1:8083`
+* Offline Maps: TCP port `8084`
 * Administrative actions: protected command line only
 * Remote protected-log access: authenticated SSH port forwarding
 
@@ -266,60 +270,330 @@ Completion criteria:
 
 ## Phase 8 — Offline maps
 
-**Status:** In progress — reader and pack standard
+**Status:** Completed
 
-Build the read-only offline map reader, `.ogmap` pack schema and validator, range-capable map service, USB import workflow, authenticated Owner Mode foundation with protected map-pack management, private waypoint support, and public-domain demonstration packs. See `docs/MAPS.md` and Decision 027 in `docs/DECISIONS.md` for the approved architecture.
+Completed outcomes:
 
-## Phase 9 — Offline entertainment
+* Added a read-only offline map reader and local map service on TCP port `8084`
+* Added the `.ogmap` package format, schema validation, import preview, protected installation, and installed-pack discovery
+* Added schema v2 capability-aware viewer definitions while retaining compatibility with validated v1 PMTiles packs
+* Added interactive PMTiles support with byte-range serving
+* Added locally hosted PDF.js support for PDF and GeoPDF map documents
+* Added PDF page navigation, zoom, rotation, fullscreen, and Home behavior
+* Improved PDF responsiveness by keeping the prior render visible, providing immediate visual zoom feedback, cancelling obsolete render work, and preventing stale-render races
+* Preserved original GeoPDF files rather than flattening or converting them
+* Added validation for declared files, hashes, sizes, licensing metadata, geographic metadata, safe paths, permitted redistribution, and supported viewer types
+* Validated a real U.S. Geological Survey Maple Valley, Washington 1995 GeoPDF through the production package, validator, importer, service, and viewer workflow
+* Completed installed-system regression testing for serving, security headers, range requests, manifests, traversal protection, unsupported methods, schemas, and reader behavior
+* Confirmed stable live use on the Raspberry Pi 4 development system
+
+Known performance characteristic:
+
+* Large PDF/GeoPDF maps may require several seconds for their initial render on Raspberry Pi 4 hardware. The validated 17 MB USGS test map loaded in approximately six seconds and was accepted as reasonable for the current platform.
+
+Moved to later work rather than reopening Phase 8:
+
+* Graphical universal map import
+* Owner-facing map-pack management
+* Private waypoints and map notes
+* Optional GNSS integration
+* Additional map formats and adapters
+
+These items now belong primarily to Phase 12 — Storage & Content Management.
+
+## Phase 9 — Unified Offline Search
+
+**Status:** Planned — next development phase
+
+Build a fast, deterministic search layer for locally stored information without requiring AI or internet access.
+
+Primary scope:
+
+* Use SQLite FTS5 or an equivalently lightweight local full-text index
+* Index supported local PDFs, text files, Markdown, HTML, and DOCX content, with additional formats added where practical
+* Preserve useful document titles, headings, categories, tags, source metadata, and location information
+* Weight titles and headings more strongly than ordinary body text
+* Return useful snippets showing why a result matched
+* Support page- or section-aware results where the source format allows it
+* Deep-link or jump into the appropriate local viewer where technically practical
+* Add curated aliases, abbreviations, synonyms, common-language terms, and common misspellings
+* Support useful filters by category, source, and content type
+* Keep indexing and search responsive on Raspberry Pi 4 hardware
+* Keep all search processing and search data local
+* Avoid making AI, vector databases, or cloud services a dependency
+
+Design goal:
+
+> A user under stress should be able to type the problem they are facing and reach a useful authoritative source with as few steps as possible.
+
+## Phase 10 — Offline Entertainment
 
 **Status:** Planned
 
-Install and validate Kodi and VLC using attached storage. Test direct playback, subtitles, reboot mounts, offline operation, heat, power, undervoltage, and system stability.
+Provide dependable local entertainment and family media without requiring internet connectivity.
 
-## Phase 10 — Local Wi-Fi hotspot
+Primary scope:
 
-**Status:** Deferred
+* Kodi as the primary local media-library interface
+* VLC as a direct-playback fallback
+* Movies, television, music, audiobooks, and family media stored on attached local storage
+* Validate common formats including MP4, MKV, H.264, AAC, and SRT
+* Validate local metadata and artwork behavior
+* Validate attached-storage mounting across reboot
+* Test with networking disabled
+* Measure heat, power draw, undervoltage behavior, and long-duration playback stability
+* Provide a reliable path back to the Offgrid Pi dashboard or normal desktop
+* Support classic-game emulation such as NES and SNES
+* Require customers/users to supply their own ROMs; copyrighted commercial ROMs are not distributed with Offgrid Pi
 
-Provide local access without an existing router after the base networking and security design are stable.
+Not currently planned:
 
-## Phase 11 — Storage architecture
+* Jellyfin or other always-on streaming-server stacks
+* Transcoding-heavy media workflows
+* Cloud media services
 
-**Status:** Deferred
-
-Select final content storage, stable mount paths, reserved knowledge capacity, backup behavior, and drive-migration procedures.
-
-## Phase 12 — Off-grid power optimization
-
-**Status:** Deferred
-
-Measure runtime and charging behavior with the currently available EcoFlow, Renogy, Voltaic, and Arc equipment after software and storage stabilize.
-
-## Phase 13 — Backup and recovery
-
-**Status:** Deferred
-
-Create boot-media cloning, configuration export, content backup, and offline recovery procedures.
-
-## Phase 14 — Prebuilt release image
+## Phase 11 — Local Networking & Connectivity Resilience
 
 **Status:** Deferred
 
-Create only after scripted installation is stable and clean-install testing is repeatable.
+Provide useful local connectivity while ensuring networking never becomes a prerequisite for direct use.
 
-## Phase 15 — Physical protection
+Primary scope:
+
+* Offline Wi-Fi hotspot for phones, tablets, and laptops
+* Local access to approved Offgrid Pi services without an upstream internet connection
+* Network-health monitoring
+* Safe self-recovery for stuck `wlan0`, Avahi, and related local-connectivity failures
+* Human-readable network status and recovery information
+* Preserve full attached-display functionality when networking is unavailable
+
+Optional future consideration:
+
+* Simple local household bulletin/status board
+
+Not required:
+
+* Full local chat platform
+* Permanent router or internet-sharing role
+* Cloud-dependent networking
+
+## Phase 12 — Storage & Content Management
 
 **Status:** Deferred
 
-Evaluate environmental, shock, water, and long-term storage after the core system is complete.
+Finalize how Offgrid Pi stores, imports, updates, verifies, and preserves large content libraries.
 
-## Phase 16 — Community release
+Primary scope:
+
+* Separate system/boot storage from bulk content storage
+* Prefer external USB SSD storage for the main content library
+* Define stable mount paths and drive-migration procedures
+* Preserve user content through OS reinstall and system recovery
+* Add graphical user-document import
+* Add USB import/export workflows
+* Build the universal Offline Maps import workflow
+* Detect supported map types and route them through format-specific adapters
+* Install validated `.ogmap` packages directly
+* Preserve GeoPDF and other geospatial capabilities rather than converting everything to PDF
+* Add protected Owner-facing content management
+* Add content integrity checks using sizes and hashes where available
+* Support independent versioned content updates
+* Preserve licensing, source, review-date, and freshness metadata
+* Add map waypoints and notes as a high-value follow-on
+* Support optional GNSS devices separately from the Core hardware BOM
+* Add favorites/bookmarks or critical-information shortcuts where they fit naturally
+
+Not required for Core:
+
+* RAID
+* NAS dependency
+* Cloud storage dependency
+* Arbitrary unsupported USB-device compatibility
+
+## Phase 13 — Power & Platform Resilience
+
+**Status:** Deferred
+
+Optimize the system for dependable low-power operation and recovery from real household outage conditions.
+
+Primary scope:
+
+* Measure Raspberry Pi, display, and storage power consumption
+* Optimize unnecessary background resource use
+* Add clear safe-shutdown behavior
+* Improve tolerance of unexpected power removal
+* Test repeated hard-power-loss and restoration cycles
+* Surface undervoltage, temperature, storage, and service-health warnings
+* Validate automatic restart behavior after restored power where appropriate
+* Detect obviously incorrect system time
+* Provide offline manual date/time configuration
+* Evaluate a low-cost battery-backed RTC for production use
+* Keep internet-based NTP synchronization optional rather than required
+
+Optional hardware-specific capability:
+
+* Automatic graceful shutdown from supported UPS/battery telemetry
+
+## Phase 14 — Backup, Restore & Private Data
+
+**Status:** Deferred
+
+Protect user-added information and make system recovery understandable to nontechnical owners.
+
+Primary scope:
+
+* Offline configuration and user-data backup
+* Restore onto replacement media or a rebuilt system
+* Verify backups before reporting success
+* Preserve user-added content during repair or upgrade
+* Export important owner content
+* Define recovery-media procedures
+* Protect genuinely private household information separately from shared emergency content
+* Evaluate encrypted private-data storage
+* Protect private backups
+* Define Owner credential and encryption recovery procedures before encrypted storage is considered production-ready
+
+Design rule:
+
+* Shared emergency information must remain immediately usable after normal boot; protecting private information must not make the entire appliance inaccessible during an emergency.
+
+## Phase 15 — Appliance UX & Release Image
+
+**Status:** Deferred
+
+Turn the validated technical system into a cohesive appliance that does not require Linux knowledge for routine operation.
+
+Primary scope:
+
+* Complete the reusable first-run setup framework
+* Complete Owner Mode workflows and offline Owner recovery
+* Provide graphical configuration for normal appliance tasks
+* Add user-friendly software update workflows
+* Support signed/verified offline USB updates
+* Support optional online update checks without creating an internet dependency
+* Provide rollback or recovery after failed updates
+* Add simple system-health and diagnostics views
+* Add one-click or similarly simple health checks
+* Export privacy-safe support bundles to USB
+* Improve keyboard navigation, readable typography, scaling, contrast, focus states, and other accessibility fundamentals
+* Evaluate offline text-to-speech as a high-value accessibility feature
+* Add print-friendly/exportable emergency references and checklists
+* Produce a stable prebuilt release image only after the scripted installation and recovery paths remain reproducible
+
+Not required for Core:
+
+* Voice recognition
+* Cloud identity
+* Full Linux administration through the browser
+* Broad printer-driver compatibility
+
+## Phase 16 — Hardware Qualification & Physical Protection
+
+**Status:** Deferred
+
+Qualify the final physical platform under realistic household and emergency use.
+
+Primary scope:
+
+* Finalize the production Raspberry Pi enclosure
+* Protect or restrict casual access to the microSD card
+* Provide reliable SSD and cable retention/strain relief
+* Maintain replaceable/serviceable storage and cables where practical
+* Validate approved keyboards, pointing devices, storage, and other supported peripherals
+* Perform sustained thermal and throttling tests in the final enclosure
+* Perform extended runtime and burn-in testing
+* Test operation with maps, Kiwix, documents, search, and media under sustained use
+* Document realistic storage and operating limits
+* Validate transport and normal household emergency use
+
+Product direction:
+
+* Passive/fanless cooling is preferred where testing proves it reliable
+* Weatherproof, military-style, Faraday, and EMP hardening are not Core requirements
+
+## Phase 17 — Release Validation & Community Release
 
 **Status:** Future
 
-Publish a documented, reproducible, sanitized release with contribution and support guidance.
+Complete the repeatable validation, documentation, licensing, and release work required for a dependable public or commercial-quality build.
+
+Primary scope:
+
+* Automated hardware and software acceptance checks
+* Repeatable production QA checklist
+* Burn-in under realistic load
+* Thermal and throttling validation
+* Storage read/write validation
+* Installed-content integrity verification
+* Cold-boot, reboot, shutdown, unexpected-power-loss, and restoration testing
+* Validate display, input devices, USB, networking, and required local services
+* Smoke-test installed maps, Kiwix, documents, search, entertainment, and other enabled modules
+* Verify backup and recovery procedures
+* Record software image, content-pack, and relevant build versions
+* Maintain per-unit QA/support traceability where commercial production requires it
+* Complete licensing review
+* Complete public documentation and contribution/support guidance
+* Publish a sanitized and reproducible community release
+
+Release rule:
+
+* A unit or image with known failed required checks is not considered release-ready.
+
+## Continuous content workstream
+
+Curated content development continues alongside the software phases rather than waiting for one dedicated phase.
+
+Highest-priority content areas:
+
+* Medical, first aid, and triage
+* Water storage, treatment, filtration, and sourcing
+* Household repair, plumbing, electrical, mechanical, and equipment references
+* Gardening, seed saving, food preservation, and long-term food production
+* Food storage, deep-pantry management, shelf life, and outage food safety
+* Shelter, cooking, heating, sanitation, hygiene, and fire safety
+* Power stations, batteries, generators, solar, and household load management
+* Evacuation planning, family communication plans, checklists, and emergency documents
+* Weather, environmental hazards, and regional hazard maps
+* Radio and emergency-communications reference material
+* Education, homeschool material, public-domain books, and family morale resources
+* Practical household security and privacy guidance
+* Carefully curated regional edible-plant references
+
+Content principles:
+
+* Curation and fast retrieval matter more than raw storage volume
+* Prefer authoritative, legally redistributable, current sources
+* Retain source, license, date, version, and integrity metadata
+* Distinguish intentionally historical material from content that may be stale
+* Time-sensitive content should carry review/freshness information where appropriate
+* User-added private content must not be exposed or indexed publicly by default
+
+## Roadmap guardrails
+
+Offgrid Pi remains:
+
+* Offline-first
+* Workstation-first and directly usable from its attached display and input devices
+* Server-capable without becoming dependent on phones or other client devices
+* Designed for mainstream household resilience rather than niche doomsday scenarios
+* Focused on low power, modest hardware cost, reliability, and simple use under stress
+* Functional without cloud accounts, telemetry, or permanent internet connectivity
+* Built around strong curated information retrieval rather than maximum raw content volume
+
+Explicitly outside the Core roadmap unless revisited later:
+
+* Local AI as a Core requirement
+* EMP/Faraday-hardened product design
+* Full local chat
+* Full multi-user profile systems
+* Mandatory GNSS, SDR, radio, UPS, or other specialized hardware
+* Cloud-dependent services
+* RAID or NAS requirements
+* Voice recognition
+* Broad arbitrary peripheral compatibility
 
 ## Immediate next actions
 
-1. Create the medical and first-aid content-pack manifest.
-2. Create the emergency-preparedness content-pack manifest.
-3. Continue Phase 8 offline-map implementation and validation.
+1. Complete the September 2026 GitHub documentation reconciliation so project documentation reflects the finished Phase 8 work and revised roadmap.
+2. Begin Phase 9 Unified Offline Search architecture and implementation after documentation reconciliation.
+3. Continue acquiring, validating, licensing, and packaging high-priority curated content in parallel with software development.
