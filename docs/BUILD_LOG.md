@@ -1,6 +1,6 @@
 # Offgrid Pi Build Log
 
-**Reconciled:** August 3, 2026
+**Reconciled:** September 24, 2026
 
 ## Build environment
 
@@ -8,7 +8,7 @@
 |---|---|
 | Device | Raspberry Pi 4B, 4 GB RAM |
 | Case | Miuzei case with cooling fan and heatsinks |
-| Display | GeeekPi 10.1-inch HDMI, 1024 × 600 |
+| Display | 15.6-inch HDMI, 1920 × 1080 current development display; GeeekPi 10.1-inch 1024 × 600 retained as validated historical baseline |
 | Development power | 5V 3A USB-C supply |
 | Input | USB keyboard and mouse |
 | Network | Wi-Fi; Ethernet not used |
@@ -371,14 +371,14 @@ The verifier was also updated to accept an empty approved-ZIM library as a valid
 
 Clean-install validation on a separate Raspberry Pi OS card remains required before Phase 5 is marked complete.
 
-## Current known issues
+## Known issues at this checkpoint
 
 * `zimcheck` 3.5.0 disagrees with functional Kiwix behavior on the tested archives.
 * Dashboard HTTP serving uses a prototype Python server.
 * SSH success from the Windows development computer should be explicitly recorded if not already documented elsewhere.
 * Repository address remains to be added.
 
-## Next action
+## Next action at this checkpoint
 
 Continue Phase 6 by adding a staged download-and-verification workflow. Complete Phase 5 clean-install validation on a separate microSD card when available.
 
@@ -1041,3 +1041,146 @@ Offgrid Pi platform on the validated Raspberry Pi OS target.
 This closes the separate-card clean-install requirements for Phase 5 and
 Phase 7. Future development may add new modules or release-packaging
 requirements that will require their own validation.
+
+## August 15–23, 2026 — Phase 8 Offline Maps foundation
+
+**Status:** Completed and validated
+
+Established the first complete Offline Maps architecture.
+
+### Work completed
+
+* Added the versioned `.ogmap` package format and map-pack validator.
+* Added safe archive inspection and protected import tooling.
+* Added import preview behavior before installation.
+* Added installed-pack discovery for the map reader.
+* Added the read-only Offline Maps service on TCP port `8084`.
+* Added HTTP byte-range support required by PMTiles.
+* Added interactive offline PMTiles vector rendering.
+* Added reader-owned map presentation rather than allowing packs to provide executable presentation code.
+* Added map navigation controls, fullscreen aids, layer controls, coordinate display, and distance/bearing measurement.
+* Added security validation for unsafe paths, undeclared files, size/hash mismatches, unsupported content, storage limits, and licensing metadata.
+
+### Repository milestones
+
+* `96e2207` — Add Phase 8 map pack validation foundation
+* `7a70234` — Add safe Phase 8 map pack importer
+* `08c3091` — Add Phase 8 offline map reader service
+* `b437d78` — Add map pack discovery and reader catalog
+* `31a3d67` — Add offline PMTiles vector map rendering
+* `eafeb43` — Add offline map distance and bearing measurement
+
+This established the PMTiles-based map platform before PDF and GeoPDF support was added later in Phase 8.
+
+## August 23–29, 2026 — Owner Mode foundation
+
+**Status:** Foundation completed
+
+Established the protected Owner Mode architecture needed for future local configuration, private data, and map-management functions.
+
+### Work completed
+
+* Defined the Owner Mode security architecture.
+* Added the localhost-only Owner Mode service on TCP port `8085`.
+* Established `/var/lib/offgridpi/owner` for protected Owner state.
+* Established `/srv/offgridpi/content/maps/user-data` for private map-user data.
+* Defined Owner recovery and reusable first-run architecture.
+* Added Owner credential and authentication foundations.
+* Kept the public dashboard and map reader separate from protected Owner functions.
+* Kept browser-based privileged system administration outside the public interface.
+
+### Repository milestones
+
+* `55c8b5b` — Define Owner Mode security architecture
+* `ca3af56` — Add Owner Mode service foundation
+* `2aca7fd` — Define Owner recovery and first-run architecture
+* `8282272` — Add Owner credential foundation
+* `ecea5f3` — Add Owner authentication foundation
+
+The completed work establishes the security and service boundary. Full graphical Owner workflows remain later appliance-UX work rather than part of Phase 8.
+
+## September 5–6, 2026 — Large-display and kiosk UX refinement
+
+**Status:** Completed and validated
+
+Refined the existing Offgrid Pi interfaces for the newer 15.6-inch 1920 × 1080 development display while preserving the earlier 1024 × 600 baseline.
+
+### Work completed
+
+* Improved the main dashboard for larger displays and kiosk-oriented use.
+* Refined System Status layout and accessibility.
+* Improved the Legal & Notices page for larger displays.
+* Improved Local Documents presentation on larger displays.
+* Improved Offline Maps presentation on larger displays.
+* Improved Kiwix usability and accessibility on the larger development display.
+* Preserved the existing local/offline operating model and dashboard navigation.
+
+### Repository milestones
+
+* `86affca` — Improve dashboard for large displays and kiosk use
+* `7c2ff7b` — Adjust System Status layout for large displays
+* `76c452c` — Improve System Status accessibility on large displays
+* `95eae3a` — Improve Legal page for large displays
+* `564ac94` — Improve Local Documents for large displays
+* `e2cc11e` — Improve Offline Maps for large displays
+* `722b20e` — Improve Kiwix accessibility on large displays
+* `e5a598a` — Merge large-display Kiwix improvements
+
+The 15.6-inch 1080p display became the active development display. The earlier GeeekPi 10.1-inch 1024 × 600 display remains an important validated lower-resolution baseline.
+
+## September 8–23, 2026 — PDF/GeoPDF support and Phase 8 completion
+
+**Status:** Completed and accepted
+
+Expanded Offline Maps beyond PMTiles to support PDF and GeoPDF map documents while preserving fully offline operation.
+
+### Work completed
+
+* Added map-pack schema v2 with capability-aware viewer definitions.
+* Retained compatibility with the previously validated v1 PMTiles format.
+* Added PDF map-pack validation and installation support.
+* Added locally hosted PDF.js for completely offline PDF rendering.
+* Added PDF page navigation.
+* Added PDF rotation.
+* Added fullscreen fit and refit behavior.
+* Added zoom controls and immediate visual zoom feedback.
+* Improved rendering so the previous page/render remains visible while a new high-quality render is prepared.
+* Added cancellation of obsolete PDF.js render tasks.
+* Prevented stale render results from replacing newer user-requested views.
+* Preserved GeoPDF files in their original form rather than flattening or converting them.
+
+### Repository milestones
+
+* `65bb34f` — Add map-pack v2 PDF support
+* `9aa20c2` — Add offline PDF renderer foundation
+* `3db16e5` — Render PDF map packs offline
+* `ea1abee` — Add PDF map navigation controls
+* `9045e90` — Install map pack v2 schema
+* `e0c7333` — Add PDF map rotation
+* `1178256` — Add multi-page PDF navigation
+* `fec6ef7` — Merge Offline Maps PDF support
+* `3a0c69b` — Improve PDF map render responsiveness
+* `345dfcd` — Merge PDF map render performance improvements
+
+### Real-world acceptance
+
+The production workflow was validated with the official U.S. Geological Survey Maple Valley, Washington 1995 GeoPDF.
+
+Validated package:
+
+* Pack ID: `usgs-maple-valley-wa-1995`
+* Source: U.S. Geological Survey
+* File size: 17,183,904 bytes
+* SHA-256: `b35069fd932b7a3c8ef2d30af8b3a3a256bacb1312a8bed41dc7806ea936bf0e`
+
+The map passed package validation, protected import, installed-pack discovery, local serving, and viewer testing.
+
+Initial rendering of the approximately 17 MB GeoPDF took about six seconds on the Raspberry Pi 4 development system. After the responsiveness improvements, that performance was accepted for the current platform.
+
+### Phase 8 result
+
+Phase 8 Offline Maps is complete.
+
+Validated capabilities now include PMTiles, PDF/GeoPDF, versioned map packages, protected import, integrity and licensing validation, range-capable serving, offline rendering, navigation controls, and real-world map acceptance.
+
+Graphical universal map import, Owner-facing map management, private waypoints/notes, optional GNSS, and additional map formats were intentionally moved to later phases rather than reopening Phase 8.
