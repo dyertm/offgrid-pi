@@ -9,18 +9,22 @@ It is designed to provide locally stored reference material when internet access
 The development prototype currently provides:
 
 * Raspberry Pi OS 64-bit Desktop based on Debian 13
-* Native Kiwix service hosting a local ZIM archive
+* Native Kiwix service hosting local ZIM archives
 * A custom Offgrid Pi dashboard
-* Automatic Kiwix and dashboard startup through `systemd`
+* Automatic service startup through `systemd`
 * Automatic Chromium launch after desktop login
-* Local access through the attached 1024 × 600 display
-* Browser access from another device on the local network
-* Public document library with automatic indexing on TCP port `8082`
-* Protected personal-document storage that is neither served nor indexed
+* Direct workstation use through an attached display and local keyboard/mouse
+* Current development display at 1920 × 1080, with the earlier 10.1-inch 1024 × 600 display retained as a validated lower-resolution baseline
+* Browser access from another device on the same local network
+* Public document library with automatic indexing
+* Protected personal-document storage that is neither publicly served nor indexed
 * Read-only System Status and localhost management views
+* Offline Maps with PMTiles and PDF/GeoPDF support
+* Versioned `.ogmap` packages with validation, protected import, integrity checks, and installed-pack discovery
+* Local Owner Mode service foundation with isolated owner/map-user data
 * Offline Legal & Notices page with local software-license records
 * Confirmed reboot persistence and operation with internet connectivity disabled
-* Reproducible installer `0.7.5` with unified installation, verification, configuration snapshots, rollback, content-preserving uninstall, and offline legal-notice generation
+* Reproducible installer `0.7.6` with installation, verification, configuration snapshots, rollback, content-preserving uninstall, and offline legal-notice generation
 
 The current services use:
 
@@ -28,51 +32,80 @@ The current services use:
 * Dashboard: TCP port `8081`
 * Public documents: TCP port `8082`
 * Localhost management viewer: TCP port `8083`, bound only to `127.0.0.1`
+* Offline Maps: TCP port `8084`
+* Owner Mode foundation: TCP port `8085`, bound only to `127.0.0.1`
 
 ## Project goals
 
 Offgrid Pi is intended to be:
 
-* Offline-first
-* Easy to operate after installation
+* Offline-first, with no mandatory cloud dependency
+* Workstation-first, so the attached display and local input remain fully functional without another device
+* Simple to operate under stressful conditions
 * Reproducible from documented configuration and scripts
 * Modular rather than overloaded with unnecessary services
-* Accessible through an attached display and a local network
-* Expandable through optional content profiles
-* Easy to back up, restore, and migrate to larger storage
-* Shareable as an open public project without exposing personal data
+* Efficient enough to remain practical on Raspberry Pi 4-class hardware
+* Accessible from local-network clients without making them a requirement
+* Curated for fast retrieval rather than optimized for raw storage volume
+* Privacy-conscious, with no mandatory telemetry or cloud identity
+* Expandable through optional content, storage, networking, and hardware capabilities
+* Designed for backup, restore, migration, and long-term serviceability
+* Shareable as an open public project without exposing personal or private product data
 
 ## Planned content
 
-Potential content includes:
+Offgrid Pi content is intended to emphasize practical, legally distributable reference material that remains useful during common outages, emergencies, and connectivity loss.
 
-* Wikipedia and other Kiwix libraries
-* Medical and first-aid references
-* Emergency-preparedness information
-* Water, food, gardening, and preservation references
+Priority subject areas include:
+
+* Wikipedia and other appropriately licensed Kiwix/ZIM libraries
+* Medical, first-aid, and triage references
+* Water storage, treatment, and sanitation
+* Food storage, preservation, and practical cooking
+* Gardening, seed saving, and food production
 * Repair and maintenance manuals
-* Radio and communications material
-* Books and literature
-* Education resources
-* Faith and Scripture resources
-* Regional offline maps
+* Power, batteries, generators, and solar reference material
+* Shelter, fire safety, and emergency household guidance
+* Evacuation, family plans, and checklists
+* Weather, hazard, and regional map resources
+* Radio and communications references
+* Education, books, and family-use material
+* Faith and Scripture resources where licensing permits
+* Practical household security and privacy guidance
+* Carefully curated regional edible-plant references
 * User-supplied local documents
 * Optional legally owned offline entertainment
+
+The project favors curated, searchable collections over large undifferentiated document archives.
 
 ## Current development status
 
 | Phase | Status |
 |---|---|
-| Project definition | Completed |
-| Raspberry Pi foundation | Completed |
-| Kiwix proof of concept | Completed |
-| Dashboard prototype | Completed |
-| Local document library | Completed |
-| Reproducible installer | Completed — pristine clean-install validation passed |
-| Content-pack system | Completed |
-| System status and administration | Completed — pristine clean-install validation passed |
+| 0 — Project definition | Completed |
+| 1 — Raspberry Pi foundation | Completed |
+| 2 — Kiwix proof of concept | Completed |
+| 3 — Dashboard prototype | Completed |
+| 4 — Local document library | Completed |
+| 5 — Reproducible installer | Completed — pristine clean-install validation passed |
+| 6 — Content-pack system | Completed — starter workflow validated |
+| 7 — System status and administration | Completed — pristine clean-install validation passed |
+| 8 — Offline maps | Completed — PMTiles/PDF reader, pack validation, import, and real-world GeoPDF acceptance passed |
+| 9 — Unified Offline Search | Planned — next development phase |
+| 10 — Offline Entertainment | Planned |
+| 11 — Local Networking & Connectivity Resilience | Deferred |
+| 12 — Storage & Content Management | Deferred |
+| 13 — Power & Platform Resilience | Deferred |
+| 14 — Backup, Restore & Private Data | Deferred |
+| 15 — Appliance UX & Release Image | Deferred |
+| 16 — Hardware Qualification & Physical Protection | Deferred |
+| 17 — Release Validation & Community Release | Future |
 
-Installer `0.7.5` packages the Kiwix, dashboard, Chromium autostart, document-library, management, status, and offline legal-notice components. It supports `install-all`, independent verification, configuration snapshots, rollback, and content-preserving uninstall. Pristine clean-install acceptance was completed successfully on a separate Raspberry Pi OS 64-bit Desktop installation, including one-pass installation, reboot persistence, Chromium autostart, and offline-operation validation.
+Installer `0.7.6` packages the current Kiwix, dashboard, Chromium autostart, document-library, management, status, Offline Maps, Owner Mode foundation, and offline legal-notice components.
+
+The completed system has passed clean-install, reboot, offline-operation, protected-administration, map-package, PMTiles, PDF/GeoPDF, and real-world map acceptance testing on Raspberry Pi 4 hardware.
+
+The next development phase is Phase 9 — Unified Offline Search.
 
 ## Public and private content boundary
 
