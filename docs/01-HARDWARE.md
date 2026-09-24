@@ -1,6 +1,6 @@
 # Offgrid Pi Hardware Inventory
 
-**Reconciled:** August 1, 2026
+**Reconciled:** September 24, 2026
 
 ## Confirmed development hardware
 
@@ -11,12 +11,24 @@
 | Development power | 5V 3A USB-C Raspberry Pi-compatible supply | Validated |
 | Case | Miuzei Raspberry Pi 4 case | Validated |
 | Cooling | Integrated fan and heatsinks | Validated |
-| Display | GeeekPi 10.1-inch HDMI display | Validated |
-| Display resolution | 1024 × 600 | Validated manually |
+| Current development display | 15.6-inch HDMI display | In active development use |
+| Current display resolution | 1920 × 1080 | Validated in active use |
+| Historical baseline display | GeeekPi 10.1-inch HDMI display | Validated |
+| Historical baseline resolution | 1024 × 600 | Validated manually |
 | Input | USB keyboard and mouse | Validated |
 | Network | Wi-Fi | Validated |
 | Imaging computer | Windows computer | Used |
 | Card reader | HDE All-in-One card reader | Used |
+
+## Hardware qualification candidates
+
+| Component | Candidate | Status |
+|---|---|---|
+| Core enclosure | Flirc Raspberry Pi 4 Case with Pi 4 Security Cover | Leading candidate — qualification pending |
+
+The Flirc enclosure is being considered because it provides passive aluminum cooling, no fan or other moving parts, a clean appliance-style appearance, and reduced casual access to the microSD card.
+
+It is not yet considered production-validated. Final approval depends on Offgrid Pi-specific thermal, endurance, storage, cable-routing, and deployment testing.
 
 ## Current operating baseline
 
@@ -30,19 +42,22 @@
 
 ## Existing equipment reserved for later testing
 
-| Purpose | Equipment | Current phase |
+| Purpose | Equipment | Current role |
 |---|---|---|
-| Primary off-grid battery | EcoFlow RIVER 2 | Deferred |
-| Primary solar charging | Renogy 200-watt folding solar panel | Deferred |
-| Secondary battery | Voltaic V72 | Deferred |
-| Secondary solar charging | Voltaic Arc 20W | Deferred |
-| Content storage candidates | USB flash drives and USB hard drives | Inventory/testing pending |
+| Portable power | Anker SOLIX C1000 | Runtime and outage-use testing |
+| Portable power | EcoFlow RIVER 2 | Runtime and outage-use testing |
+| Portable power | Voltaic V72 | Low-power runtime testing |
+| Solar charging | Renogy 200-watt folding solar panel | Recharge testing |
+| Solar charging | Voltaic Arc 20W | Low-power recharge testing |
+| Content storage candidates | USB flash drives, USB hard drives, and USB SSDs | Qualification/testing pending |
+
+Portable batteries and solar panels are useful for development and resilience testing, but they are not currently required components of the Offgrid Pi Core hardware platform.
 
 ## Planned storage architecture
 
-The operating system and content library should remain logically separate.
+Offgrid Pi should keep system/boot storage logically separate from the bulk content library.
 
-### Operating-system storage
+### System and boot storage
 
 Used for:
 
@@ -51,20 +66,35 @@ Used for:
 * Service definitions
 * Configuration
 * Logs and temporary files
+* Recovery and system-management components
 
-### Content storage
+The current development system boots from microSD. Final production media and endurance requirements remain subject to qualification.
+
+### Bulk content storage
 
 Used for:
 
 * Kiwix ZIM files
 * Public documents
 * Offline maps
-* Faith resources
+* Faith and Scripture resources
 * Equipment manuals
-* Personal reference material
+* User-added reference material
 * Optional entertainment media
 
-The final content device will likely be external USB storage, but model, capacity, file system, mount path, power draw, and backup strategy remain undecided.
+External USB SSD storage is the preferred direction for the main bulk-content library.
+
+Phase 12 will finalize:
+
+* Capacity and approved device models
+* File system and stable mount paths
+* Power requirements
+* Cable retention and strain relief
+* Migration between storage devices
+* Content backup and recovery behavior
+* Preservation of user-added content through system rebuilds
+
+RAID, NAS, and cloud storage are not required for the Core platform.
 
 ## Storage priorities
 
@@ -75,16 +105,25 @@ The final content device will likely be external USB storage, but model, capacit
 5. Optional entertainment
 6. Reserved free space for updates and future growth
 
-## Remaining hardware information
+## Remaining hardware qualification work
 
-* External storage model, capacity, health, and file system
-* Stable mount behavior
-* Storage power requirements
-* Runtime with display and external storage
-* Whether a powered USB hub is needed
-* Battery runtime and solar recharge performance
-* Final recommended hardware combinations for community use
+Before hardware recommendations are considered release-ready, the project still needs to establish:
+
+* Approved external USB SSD models, capacities, health requirements, and file systems
+* Stable storage mounting and migration behavior
+* Storage-device power requirements
+* SSD and cable retention / strain-relief requirements
+* Runtime with the Raspberry Pi, display, and external storage
+* Whether any supported configurations require a powered USB hub
+* Thermal and throttling performance in the final enclosure
+* Extended endurance and burn-in behavior
+* Flirc Raspberry Pi 4 Case and Security Cover qualification
+* Approved keyboard, pointing-device, display, and other Core peripheral combinations
+* Repeated shutdown, restart, and unexpected-power-loss behavior
+* Battery runtime and solar-recharge measurements for optional power configurations
+* Evaluation of a low-cost battery-backed RTC
+* Final supported hardware combinations for community and release use
 
 ## Public-documentation boundary
 
-This inventory records reproducible technical hardware information. Product pricing, package tiers, branded cases, retail kit concepts, and commercialization plans are maintained separately as private source material.
+This inventory records reproducible technical hardware information. Product pricing, package tiers, commercial branding, retail kit concepts, and commercialization plans are maintained separately as private source material.
