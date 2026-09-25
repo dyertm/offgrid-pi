@@ -1,39 +1,55 @@
 # Offgrid Pi Content Management Guide
 
+**Reconciled:** September 24, 2026
+
 ## Purpose
 
-This guide explains how to add, organize, update, and remove locally stored documents from Offgrid Pi.
+This guide explains how locally stored documents are organized, added, indexed, accessed, and removed from Offgrid Pi.
 
-The document library is intended for user-managed reference material such as emergency guides, medical information, equipment manuals, books, educational resources, faith materials, and locally created documents.
+The document system maintains a deliberate boundary between shared reference material and private user content.
+
+Public documents are intended for household-accessible reference material such as emergency guides, medical information, equipment manuals, books, educational resources, faith materials, and locally created documents.
+
+Private documents are stored separately and are not served through the public document library or included in its catalog.
 
 Content files are stored outside the GitHub repository.
 
-## Document Library Location
+## Document library locations
 
-The document library is stored at:
-
-```text
-/srv/offgridpi/content/documents/library
-```
-
-Files placed under this directory are available through the local Offgrid Pi dashboard.
-
-The library can be opened at:
+Public documents are stored under:
 
 ```text
-http://offgridpi.local:8081/documents/
+/srv/offgridpi/content/documents/public
 ```
 
-On the Raspberry Pi itself, it can also be opened at:
+Private documents are stored under:
 
 ```text
-http://localhost:8081/documents/
+/srv/offgridpi/content/documents/personal
 ```
+
+The public document library is served directly on TCP port `8082`.
+
+From another device on the local network:
+
+```text
+http://offgridpi.local:8082/
+```
+
+On the Raspberry Pi itself:
+
+```text
+http://localhost:8082/
+```
+
+The Local Documents card on the Offgrid Pi dashboard routes users to this document service.
+
+The private document directory is intentionally excluded from both the public HTTP service and the public document index.
 
 ## Standard Categories
 
 ```text
-library/
+public/
 ├── emergency/
 ├── first-aid/
 ├── food/
@@ -51,9 +67,9 @@ library/
     └── theology/
 ```
 
-Users may create additional categories and subfolders when needed.
+The current public index uses these defined top-level categories. Additional subfolders may be created within them when useful.
 
-The first folder beneath `library` becomes the category displayed in the document index.
+Files placed in unsupported top-level folders are not currently included in the generated public catalog.
 
 ## Adding Documents
 
@@ -63,7 +79,7 @@ Example:
 
 ```bash
 cp water-purification-guide.pdf \
-  /srv/offgridpi/content/documents/library/emergency/
+  /srv/offgridpi/content/documents/public/emergency/
 ```
 
 Files may also be copied using the Raspberry Pi desktop file manager, SFTP, SCP, a USB storage device, or another approved local transfer method.
@@ -72,49 +88,64 @@ Set normal readable permissions when necessary:
 
 ```bash
 chmod 0644 \
-  /srv/offgridpi/content/documents/library/emergency/water-purification-guide.pdf
+  /srv/offgridpi/content/documents/public/emergency/water-purification-guide.pdf
 ```
 
 ## Index Updates
 
-The document index is regenerated automatically by:
+The public document catalog is maintained automatically by:
 
 ```text
-offgridpi-document-index.timer
+offgridpi-document-indexer.service
 ```
 
-The timer normally checks for changes approximately every five minutes.
+The service watches `/srv/offgridpi/content/documents/public` for local file changes using `inotify`.
 
-To regenerate the index immediately, run:
+When the watcher starts, it rebuilds the catalog immediately. After files are created, changed, moved, deleted, or have relevant attributes changed, it waits briefly for the operation to settle and then rebuilds the catalog.
 
-```bash
-sudo systemctl start offgridpi-document-index.service
-```
-
-Check the most recent indexing result with:
-
-```bash
-systemctl show \
-  offgridpi-document-index.service \
-  --property=Result \
-  --property=ExecMainStatus
-```
-
-A successful run should report:
+The generated files are:
 
 ```text
-Result=success
-ExecMainStatus=0
+/srv/offgridpi/content/documents/public/index.html
+/srv/offgridpi/content/documents/public/catalog.json
 ```
+
+To force an immediate rebuild, restart the watcher service:
+
+```bash
+sudo systemctl restart offgridpi-document-indexer.service
+```
+
+Check its current state with:
+
+```bash
+systemctl is-active offgridpi-document-indexer.service
+```
+
+Review recent indexing activity with:
+
+```bash
+sudo journalctl -u offgridpi-document-indexer.service -n 50 --no-pager
+```
+
+The public document service itself is:
+
+```text
+offgridpi-documents.service
+```
+
+It serves the generated public library read-only on TCP port `8082`.
 
 ## Supported File Types
 
-The current indexer recognizes:
+The current indexer catalogs regular files found within the defined public document categories rather than enforcing a strict extension allowlist.
+
+It provides friendly type labels for:
 
 * PDF
 * TXT
 * Markdown
-* HTML
+* HTML and HTM
 * EPUB
 * JPG and JPEG
 * PNG
@@ -122,13 +153,15 @@ The current indexer recognizes:
 * WebP
 * SVG
 * DOC and DOCX
-* XLS and XLSX
-* PPT and PPTX
-* ODT, ODS, and ODP
+* ODT
+
+Other file extensions may still appear in the catalog, but they are identified by their extension rather than a specialized document type.
+
+Catalog visibility does not guarantee that Chromium can display a file directly.
 
 ## Browser Behavior
 
-The following formats normally open directly in Chromium:
+Formats commonly viewable directly in Chromium include:
 
 * PDF
 * Plain text
@@ -139,11 +172,13 @@ The following formats normally open directly in Chromium:
 * WebP
 * SVG
 
-Markdown files normally open as readable plain text rather than formatted Markdown.
+Markdown files normally open as plain text rather than rendered Markdown.
 
-EPUB and office-document formats may download or open through an installed external application rather than displaying directly in Chromium.
+EPUB, Microsoft Office, OpenDocument, and other formats may download or require an installed local application rather than opening directly in Chromium.
 
-Offline behavior depends on the file and the installed local applications. Files should be tested before being relied upon during an emergency.
+A file being indexed therefore means that Offgrid Pi can catalog and serve it; it does not necessarily mean that the browser can render it.
+
+Content intended for emergency use should be tested on the actual Offgrid Pi system before being relied upon.
 
 ## Naming Standards
 
@@ -179,7 +214,7 @@ Recommended rules:
 Bible translations, devotionals, study materials, and theology references may be stored under:
 
 ```text
-/srv/offgridpi/content/documents/library/faith
+/srv/offgridpi/content/documents/public/faith
 ```
 
 Suggested Bible structure:
@@ -203,24 +238,34 @@ Delete the file from the library:
 
 ```bash
 rm \
-  /srv/offgridpi/content/documents/library/category/filename.ext
+  /srv/offgridpi/content/documents/public/category/filename.ext
 ```
 
-Then regenerate the index:
+The automatic indexer should detect the deletion and rebuild the catalog.
+
+If an immediate manual rebuild is needed:
 
 ```bash
-sudo systemctl start offgridpi-document-index.service
+sudo systemctl restart offgridpi-document-indexer.service
 ```
 
 The removed file should disappear from the document page after the browser is refreshed.
 
 ## Local-Network Availability
 
-Files in the document library are available to devices that can access the Offgrid Pi dashboard on the local network.
+Files in the public document library are available to devices that can reach Offgrid Pi on the local network through TCP port `8082`.
 
-Do not place passwords, financial records, private keys, confidential business records, or other sensitive material in the library unless local-network access and exposure are understood and accepted.
+The public library should therefore contain only material intended to be accessible to household or other authorized local-network users.
 
-Offgrid Pi does not make these documents publicly available on the internet by default, but the local network should not automatically be assumed to be trusted.
+Passwords, financial records, private keys, confidential business records, and other sensitive material should not be placed in the public document library.
+
+Private user documents belong under:
+
+`/srv/offgridpi/content/documents/personal`
+
+That directory is not served by `offgridpi-documents.service` and is not included in the public document catalog.
+
+Offgrid Pi does not expose the public document library to the internet by default, but the local network should not automatically be assumed to be trusted.
 
 ## Content and GitHub
 
@@ -250,39 +295,49 @@ The repository should not contain:
 
 ### A file does not appear
 
-Confirm that the file is located under:
+Confirm that the file is located under one of the defined public categories beneath:
 
 ```text
-/srv/offgridpi/content/documents/library
+/srv/offgridpi/content/documents/public
 ```
 
-Confirm that its extension is supported:
+List the current public files with:
 
 ```bash
-find /srv/offgridpi/content/documents/library \
+find /srv/offgridpi/content/documents/public \
   -type f \
   -printf '%p\n' \
   | sort
 ```
 
-Run the indexer manually:
+Files in unsupported top-level folders are not included in the generated catalog.
+
+Hidden files and symbolic links are intentionally skipped by the current indexer.
+
+Restart the automatic indexer to force an immediate rebuild:
 
 ```bash
-sudo systemctl start offgridpi-document-index.service
+sudo systemctl restart offgridpi-document-indexer.service
 ```
 
-Review the service log:
+Review recent indexing activity:
 
 ```bash
 sudo journalctl \
-  -u offgridpi-document-index.service \
+  -u offgridpi-document-indexer.service \
   -n 50 \
   --no-pager
 ```
 
 ### A file is listed but will not open
 
-Check that the dashboard service account can read it:
+Confirm that the public document service is running:
+
+```bash
+systemctl is-active offgridpi-documents.service
+```
+
+Check that the `offgridpi` service account can read the file:
 
 ```bash
 sudo -u offgridpi test -r "/path/to/file" \
@@ -296,20 +351,42 @@ Check its permissions:
 ls -l "/path/to/file"
 ```
 
-Normal document permissions are generally:
-
-```text
--rw-r--r--
-```
+Also remember that cataloged files are not guaranteed to render directly in Chromium. Some formats may require another local application or may download instead.
 
 ### The index does not update automatically
 
-Check the timer:
+Check the watcher service:
 
 ```bash
-systemctl is-enabled offgridpi-document-index.timer
-systemctl is-active offgridpi-document-index.timer
-systemctl list-timers offgridpi-document-index.timer --no-pager
+systemctl is-enabled offgridpi-document-indexer.service
+systemctl is-active offgridpi-document-indexer.service
 ```
 
-The timer should be enabled and active.
+If it is not running, inspect its log:
+
+```bash
+sudo journalctl \
+  -u offgridpi-document-indexer.service \
+  -n 100 \
+  --no-pager
+```
+
+The watcher depends on `inotifywait`, provided by the `inotify-tools` package.
+
+### The public library is unavailable
+
+Check the document-serving service:
+
+```bash
+systemctl is-enabled offgridpi-documents.service
+systemctl is-active offgridpi-documents.service
+```
+
+Review its log with:
+
+```bash
+sudo journalctl \
+  -u offgridpi-documents.service \
+  -n 50 \
+  --no-pager
+```
