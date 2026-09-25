@@ -1,6 +1,6 @@
 # Offgrid Pi Decision Record
 
-**Reconciled:** August 2, 2026
+**Reconciled:** September 24, 2026
 
 ## Decision 001 — Build a reusable public project
 
@@ -601,3 +601,264 @@ setup.
 Product overlays may improve presentation and provide product-specific
 automation, but the generic Offgrid Pi installation must remain independently
 usable.
+
+## Decision 030 — Use the dedicated dashboard server and kiosk mode
+
+**Date:** September 5, 2026
+**Status:** Accepted; supersedes Decisions 016 and 017 for the current implementation
+
+The dashboard remains a lightweight local web application on TCP port `8081`, but it is now served by the dedicated `offgridpi-dashboard-server.py` service rather than directly by `python3 -m http.server`.
+
+Chromium now launches in kiosk mode for the normal appliance experience rather than merely opening maximized.
+
+### Consequences
+
+* The dashboard remains lightweight and Python-based without introducing a larger web framework.
+* The dedicated server provides explicit cache-control and basic security headers.
+* Static dashboard assets remain rooted under `/opt/offgridpi/dashboard`.
+* Normal appliance startup presents the dashboard in Chromium kiosk mode.
+* Desktop access remains available through the underlying Raspberry Pi OS environment for development and troubleshooting.
+* Decisions 016 and 017 remain in this record as the earlier prototype choices that led to the current implementation.
+
+## Decision 031 — Use validated map packs with reader-owned presentation
+
+**Date:** September 23, 2026
+**Status:** Accepted
+
+Offline Maps will use versioned `.ogmap` packages that are validated before installation and rendered by Offgrid Pi-owned reader code.
+
+Map packs provide declared map data, documents, metadata, licensing information, and integrity records. They do not provide executable presentation code.
+
+### Current architecture
+
+* Installed map packs live under `/srv/offgridpi/content/maps/packs`.
+* The public read-only map reader uses TCP port `8084`.
+* Map-pack schema v2 supports capability-aware viewer definitions.
+* Validated viewer types currently include PMTiles vector maps and PDF/GeoPDF documents.
+* The previously validated schema-v1 PMTiles format remains supported for compatibility.
+* Every installed file must be declared with role, media type, size, SHA-256 checksum, and required/optional status.
+* Published packs must include applicable source, licensing, redistribution, attribution, and freshness metadata.
+
+### Security consequences
+
+Map packs may not supply executable HTML, JavaScript, CSS, shell scripts, executables, shared libraries, symbolic links, device files, or undeclared files.
+
+Imports must be validated for archive safety, path traversal, declared content, size, checksum, supported format, available storage, and licensing requirements before installation.
+
+An invalid package must not replace an existing installed version.
+
+### Format strategy
+
+Offgrid Pi will preserve useful native map capabilities rather than converting every source into one universal file format.
+
+The user-facing direction is a future common Add Map workflow that detects the supplied format and routes it through the appropriate validated adapter.
+
+Graphical universal import, Owner-facing map management, private waypoints and notes, optional GNSS, and additional map formats remain later work rather than requirements for the completed Phase 8 foundation.
+
+## Decision 032 — Keep Offgrid Pi offline-first and workstation-first
+
+**Date:** September 23, 2026
+**Status:** Accepted
+
+Offgrid Pi will remain an offline-first, workstation-first resilience appliance.
+
+The directly attached display and local input devices are the primary interaction path. Local-network clients such as phones, tablets, and laptops may extend the system, but they must not become a prerequisite for normal emergency use.
+
+### Consequences
+
+* Installed Core services and content must remain useful without an active internet connection.
+* Loss of Wi-Fi, a router, DNS, mDNS, or another client device must not prevent direct use of the appliance.
+* Network-accessible services are enhancements to the attached-display experience rather than replacements for it.
+* Future hotspot functionality must preserve direct local operation even when the hotspot or wireless interface is unavailable.
+* Core workflows should minimize terminal use and technical knowledge during normal operation.
+* Critical information should be reachable with as few steps as practical, especially when users may be under stress.
+* Mandatory cloud accounts, cloud identity, telemetry, or permanent internet connectivity are outside the Core design.
+* The project may remain server-capable without becoming client-dependent.
+
+This decision is a standing architectural guardrail for future phases and feature proposals.
+
+## Decision 033 — Use deterministic local full-text search for Core
+
+**Date:** September 23, 2026
+**Status:** Accepted for Phase 9 implementation
+
+Unified Offline Search will use a lightweight deterministic local full-text index rather than making AI, cloud search, embeddings, or a vector database part of the Core requirement.
+
+SQLite FTS5 or an equivalently lightweight local search engine is the preferred implementation direction.
+
+### Search goals
+
+The Core search system should:
+
+* Index supported local documents without requiring internet access.
+* Initially support PDF, TXT, Markdown, HTML, and DOCX where practical.
+* Preserve useful titles, headings, categories, tags, source metadata, and document-location information.
+* Weight titles and headings more strongly than ordinary body text.
+* Return useful result snippets showing why a source matched.
+* Preserve page or section information where the source format permits it.
+* Deep-link into the appropriate local viewer where technically practical.
+* Support curated aliases, abbreviations, synonyms, common-language terms, and common misspellings.
+* Remain responsive on Raspberry Pi 4 hardware.
+* Keep indexes, queries, and search history local.
+
+### Architectural consequences
+
+Search should improve retrieval of curated material rather than encourage larger undifferentiated content libraries.
+
+Local AI may be explored separately in the future, but it is not required for Core search and must not become a dependency for finding emergency information.
+
+The system should remain useful and predictable even on hardware that cannot support practical local language-model inference.
+
+## Decision 034 — Separate system storage from bulk content
+
+**Date:** September 23, 2026
+**Status:** Accepted; refines Decision 009
+
+Offgrid Pi will separate operating-system and application storage from larger bulk-content storage where practical.
+
+The preferred Core architecture is to keep Raspberry Pi OS, Offgrid Pi software, configuration, and recovery-critical files on the system device while allowing larger document, Kiwix, map, and media libraries to reside on external USB storage.
+
+### Storage direction
+
+* microSD or equivalent local storage remains suitable for the operating system and core application layer.
+* External USB SSD storage is preferred for larger persistent content libraries.
+* Logical Offgrid Pi content paths should remain stable even if the underlying bulk-storage device changes.
+* User content should be preservable independently of an operating-system reinstall or recovery operation.
+* Storage expansion should not require rebuilding the operating system.
+* Content integrity should be verifiable with size and checksum metadata where available.
+
+### Core exclusions
+
+Offgrid Pi will not require:
+
+* RAID
+* NAS infrastructure
+* Cloud storage
+* Permanent network storage
+* Multiple-drive redundancy
+
+Those technologies may be used by advanced users outside the standard Core architecture.
+
+### Consequences
+
+Phase 12 will finalize mount handling, external-drive migration, graphical import, content integrity, and related storage-management workflows.
+
+This decision replaces the earlier open-ended storage deferral with a defined architectural direction while preserving Decision 009 as the historical reason storage choices were postponed during early software development.
+
+## Decision 035 — Prioritize curated retrieval over content volume
+
+**Date:** September 23, 2026
+**Status:** Accepted
+
+Offgrid Pi will prioritize useful curation, trustworthy sources, clear organization, and fast retrieval over maximizing raw storage volume or file count.
+
+A smaller collection of well-selected information is preferable to a much larger collection that is difficult to search, poorly sourced, outdated, or irrelevant during an emergency.
+
+### Content principles
+
+Project-managed content should:
+
+* Serve realistic household resilience needs.
+* Favor authoritative or otherwise well-vetted sources when safety and accuracy matter.
+* Preserve source, date, edition, license, redistribution status, and integrity metadata where applicable.
+* Distinguish current guidance from intentionally historical material.
+* Carry review or freshness information when the subject is time-sensitive.
+* Be organized so useful information can be reached with as few steps as practical.
+* Be tested on the actual Offgrid Pi platform before being relied upon.
+
+### Retrieval consequences
+
+Unified Offline Search, document organization, Kiwix selection, map curation, and future content-management workflows should all support low-cognitive-load retrieval.
+
+The project should not treat a large advertised storage figure, a huge undifferentiated PDF collection, or maximum file count as a product-quality goal.
+
+Knowledge and emergency-reference content receives storage priority over optional entertainment media when capacity is constrained.
+
+## Decision 036 — Protect private data separately from shared emergency content
+
+**Date:** September 23, 2026
+**Status:** Accepted for later implementation; refines Decision 028
+
+Offgrid Pi will distinguish between shared resilience information that should remain easy to access during an emergency and genuinely private user data that requires stronger protection.
+
+The Owner PIN remains an authorization credential and is not itself the encryption key for private storage.
+
+### Shared-content principle
+
+Public and household-reference content should remain directly usable without unnecessary authentication barriers.
+
+Examples include:
+
+* Approved emergency references
+* Kiwix content
+* Public documents
+* Installed public map packs
+* Other intentionally shared household resources
+
+### Private-data principle
+
+Private user material should remain logically and operationally separate from shared content.
+
+Future protected storage may include:
+
+* Personal documents
+* Private map waypoints and notes
+* Owner-specific configuration
+* Private exports or backups
+* Other sensitive household information
+
+Phase 14 will define the encryption, backup, restore, and recovery model for protected private data.
+
+### Recovery consequences
+
+Encryption must not be added casually to data whose loss would make the appliance less useful during an emergency.
+
+Any encrypted-private-data design must clearly define:
+
+* What is encrypted
+* Which credential unlocks it
+* How recovery works
+* What happens if recovery credentials are lost
+* Which data can become permanently unrecoverable
+* How backups preserve the same protection boundary
+
+Credential recovery, private-data recovery, and destructive factory reset must remain distinct operations.
+
+This decision preserves the non-destructive Owner PIN recovery model from Decision 028 while allowing stronger cryptographic protection for data that genuinely requires it.
+
+## Decision 037 — Keep local AI outside the Core requirement
+
+**Date:** September 23, 2026
+**Status:** Accepted
+
+Local artificial intelligence will not be a Core requirement for Offgrid Pi.
+
+The Core appliance must remain useful, searchable, and dependable on the Raspberry Pi 4-class platform without requiring a local language model, AI accelerator, vector database, cloud inference service, or internet connection.
+
+### Rationale
+
+Potential offline AI features may provide value for summarization, conversational retrieval, or other advanced workflows, but they also introduce additional:
+
+* Hardware cost
+* Power consumption
+* Thermal load
+* Storage requirements
+* Software complexity
+* Model-maintenance requirements
+* Performance variability
+* Failure modes
+
+Those tradeoffs are not justified as dependencies for the primary household-resilience appliance.
+
+### Future scope
+
+Local AI may be revisited later as:
+
+* An experimental feature
+* An optional add-on
+* A higher-performance hardware profile
+* A separate future product configuration
+
+Any future AI capability must augment rather than replace deterministic access to the underlying source material.
+
+Critical emergency information must remain accessible through ordinary navigation and Unified Offline Search even when AI functionality is absent, disabled, or unavailable.
