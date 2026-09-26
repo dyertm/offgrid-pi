@@ -141,7 +141,7 @@ Validation results:
 * Local browser access: passed
 * Development-computer access through `offgridpi.local`: passed
 * Reboot persistence: passed
-* Offline search and navigation: passed
+* Kiwix offline search and navigation: passed
 * Post-test temperature: 34.5°C
 * Throttle status: `0x0`
 

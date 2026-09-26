@@ -4,9 +4,9 @@ Offgrid Pi is a customizable, reproducible offline knowledge system built initia
 
 It is designed to provide locally stored reference material when internet access is unavailable, unreliable, or intentionally disconnected. The system can be used directly from an attached display or from another device on the same local network.
 
-## Current prototype
+## Current development platform
 
-The development prototype currently provides:
+The current development platform provides:
 
 * Raspberry Pi OS 64-bit Desktop based on Debian 13
 * Native Kiwix service hosting local ZIM archives

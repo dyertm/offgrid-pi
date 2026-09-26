@@ -145,7 +145,7 @@ The dashboard is stored under `/opt/offgridpi/dashboard` and is served locally o
 
 The dashboard includes a generated, read-only Legal & Notices page containing the MIT project license, direct software-component versions, and locally available Debian copyright records.
 
-The prototype uses Python's built-in static HTTP server. This is accepted for development and must be reviewed before a stable release.
+The dashboard is served by the dedicated `offgridpi-dashboard-server.py` service, which replaces the earlier prototype use of Python's built-in static HTTP server.
 
 ### Document-library layer
 
@@ -207,14 +207,12 @@ Entertainment storage must not displace reserved knowledge-library capacity.
 
 ### Service layer
 
-Current repository service definitions include:
+The current installed and managed service set includes:
 
 ```text
 kiwix-serve.service
 offgridpi-dashboard.service
 offgridpi-documents.service
-offgridpi-document-index.service
-offgridpi-document-index.timer
 offgridpi-document-indexer.service
 offgridpi-status-publisher.service
 offgridpi-status-publisher.timer
@@ -269,7 +267,7 @@ The document-indexing services maintain the browsable public catalog. Status and
 └── owner/
 ```
 
-Bulk-content storage may move to external USB storage in a later phase while these logical paths remain stable.
+Bulk-content storage is expected to move to external USB SSD storage in a later phase, while these logical paths remain stable and the system-storage layer remains separate.
 
 ## 8. Dashboard surfaces
 

@@ -87,10 +87,10 @@ Validated outcomes:
 * Manual full-screen mode passed
 * Reboot and offline tests passed
 
-Known follow-up:
+Resolved follow-up:
 
-* Reassess the Python prototype server before stable release
-* Decide whether kiosk mode should be configurable
+* The original Python `http.server` implementation was replaced by the dedicated `offgridpi-dashboard-server.py` service.
+* Chromium now launches in kiosk mode for the normal appliance experience while the underlying Raspberry Pi OS desktop remains available for development and troubleshooting.
 
 ## Phase 4 — Local document library
 
@@ -594,6 +594,6 @@ Explicitly outside the Core roadmap unless revisited later:
 
 ## Immediate next actions
 
-1. Complete the September 2026 GitHub documentation reconciliation so project documentation reflects the finished Phase 8 work and revised roadmap.
-2. Begin Phase 9 Unified Offline Search architecture and implementation after documentation reconciliation.
-3. Continue acquiring, validating, licensing, and packaging high-priority curated content in parallel with software development.
+1. Begin Phase 9 Unified Offline Search architecture and implementation.
+2. Continue acquiring, validating, licensing, and packaging high-priority curated content in parallel with software development.
+3. Preserve the completed Phase 8 baseline while deferring graphical map import, waypoints/notes, optional GNSS, and broader content-management workflows to Phase 12.
