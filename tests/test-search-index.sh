@@ -27,6 +27,12 @@ cat > "$PUBLIC_ROOT/emergency/water.txt" <<'TEXT'
 During a boil water advisory, bring water to a rolling boil before use.
 TEXT
 
+cat > "$PUBLIC_ROOT/emergency/power.md" <<'MARKDOWN'
+# Extended Power Outage
+
+Disconnect unnecessary loads to conserve battery capacity.
+MARKDOWN
+
 OFFGRIDPI_SEARCH_ROOT="$PUBLIC_ROOT" \
 OFFGRIDPI_SEARCH_DB="$SEARCH_DB" \
 "$INDEXER"
@@ -48,6 +54,14 @@ row = database.execute(
 
 if row != ("emergency/water.txt",):
     raise SystemExit(f"Unexpected search result: {row!r}")
+
+row = database.execute(
+    "SELECT path FROM search_fts WHERE search_fts MATCH ?",
+    ('"battery capacity"',),
+).fetchone()
+
+if row != ("emergency/power.md",):
+    raise SystemExit(f"Unexpected Markdown search result: {row!r}")
 PY
 
-pass "Plain-text document body is searchable through SQLite FTS5."
+pass "Plain-text and Markdown document bodies are searchable through SQLite FTS5."

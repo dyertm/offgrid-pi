@@ -38,7 +38,7 @@ def iter_text_files(root: Path):
             if name.startswith(".") or path.is_symlink():
                 continue
 
-            if path.is_file() and path.suffix.lower() == ".txt":
+            if path.is_file() and path.suffix.lower() in {".txt", ".md"}:
                 yield path
 
 
