@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 import sqlite3
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 
 
@@ -14,6 +15,35 @@ DEFAULT_DB = Path("/srv/offgridpi/indexes/search.sqlite3")
 
 ROOT = Path(os.environ.get("OFFGRIDPI_SEARCH_ROOT", str(DEFAULT_ROOT)))
 DATABASE = Path(os.environ.get("OFFGRIDPI_SEARCH_DB", str(DEFAULT_DB)))
+
+
+class HTMLTextExtractor(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+
+    def handle_data(self, data: str) -> None:
+        text = " ".join(data.split())
+        if text:
+            self.parts.append(text)
+
+    def text(self) -> str:
+        return "\n".join(self.parts)
+
+
+def read_content(path: Path) -> str:
+    content = path.read_text(
+        encoding="utf-8",
+        errors="replace",
+    )
+
+    if path.suffix.lower() in {".html", ".htm"}:
+        parser = HTMLTextExtractor()
+        parser.feed(content)
+        parser.close()
+        return parser.text()
+
+    return content
 
 
 def fail(message: str) -> int:
@@ -38,7 +68,7 @@ def iter_text_files(root: Path):
             if name.startswith(".") or path.is_symlink():
                 continue
 
-            if path.is_file() and path.suffix.lower() in {".txt", ".md"}:
+            if path.is_file() and path.suffix.lower() in {".txt", ".md", ".html", ".htm"}:
                 yield path
 
 
@@ -69,10 +99,7 @@ def main() -> int:
 
         for path in iter_text_files(ROOT):
             relative = path.relative_to(ROOT).as_posix()
-            content = path.read_text(
-                encoding="utf-8",
-                errors="replace",
-            )
+            content = read_content(path)
 
             connection.execute(
                 """

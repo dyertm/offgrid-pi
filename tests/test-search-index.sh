@@ -33,6 +33,11 @@ cat > "$PUBLIC_ROOT/emergency/power.md" <<'MARKDOWN'
 Disconnect unnecessary loads to conserve battery capacity.
 MARKDOWN
 
+cat > "$PUBLIC_ROOT/emergency/heat.html" <<'HTML'
+<!doctype html>
+<html><body><h1>Extreme Heat</h1><p>Move to a cooler location and drink water regularly.</p></body></html>
+HTML
+
 OFFGRIDPI_SEARCH_ROOT="$PUBLIC_ROOT" \
 OFFGRIDPI_SEARCH_DB="$SEARCH_DB" \
 "$INDEXER"
@@ -62,6 +67,14 @@ row = database.execute(
 
 if row != ("emergency/power.md",):
     raise SystemExit(f"Unexpected Markdown search result: {row!r}")
+
+row = database.execute(
+    "SELECT path FROM search_fts WHERE search_fts MATCH ?",
+    ('"cooler location"',),
+).fetchone()
+
+if row != ("emergency/heat.html",):
+    raise SystemExit(f"Unexpected HTML search result: {row!r}")
 PY
 
-pass "Plain-text and Markdown document bodies are searchable through SQLite FTS5."
+pass "Plain-text, Markdown, and HTML document bodies are searchable through SQLite FTS5."
