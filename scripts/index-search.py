@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 import sqlite3
 import sys
 import zipfile
@@ -33,6 +34,17 @@ class HTMLTextExtractor(HTMLParser):
         return "\n".join(self.parts)
 
 
+def read_pdf(path: Path) -> str:
+    result = subprocess.run(
+        ["/usr/bin/pdftotext", "-enc", "UTF-8", str(path), "-"],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=True,
+    )
+    return result.stdout
+
+
 def read_docx(path: Path) -> str:
     with zipfile.ZipFile(path) as archive:
         document_xml = archive.read("word/document.xml")
@@ -51,6 +63,9 @@ def read_docx(path: Path) -> str:
 
 def read_content(path: Path) -> str:
     suffix = path.suffix.lower()
+
+    if suffix == ".pdf":
+        return read_pdf(path)
 
     if suffix == ".docx":
         return read_docx(path)
@@ -91,7 +106,7 @@ def iter_text_files(root: Path):
             if name.startswith(".") or path.is_symlink():
                 continue
 
-            if path.is_file() and path.suffix.lower() in {".txt", ".md", ".html", ".htm", ".docx"}:
+            if path.is_file() and path.suffix.lower() in {".txt", ".md", ".html", ".htm", ".docx", ".pdf"}:
                 yield path
 
 
@@ -126,6 +141,8 @@ def main() -> int:
                 content = read_content(path)
             except (
                 zipfile.BadZipFile,
+                subprocess.CalledProcessError,
+                subprocess.TimeoutExpired,
                 KeyError,
                 ElementTree.ParseError,
             ) as error:

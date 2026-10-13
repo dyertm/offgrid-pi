@@ -54,6 +54,10 @@ PYDOCX
 
 printf %s "not-a-zip" > "$PUBLIC_ROOT/emergency/broken.docx"
 
+cp "$ROOT/tests/fixtures/search/water-storage.pdf" "$PUBLIC_ROOT/emergency/water-storage.pdf"
+
+printf %s "not-a-pdf" > "$PUBLIC_ROOT/emergency/broken.pdf"
+
 OFFGRIDPI_SEARCH_ROOT="$PUBLIC_ROOT" \
 OFFGRIDPI_SEARCH_DB="$SEARCH_DB" \
 "$INDEXER"
@@ -99,12 +103,23 @@ row = database.execute(
 
 if row != ("emergency/first-aid.docx",):
     raise SystemExit(f"Unexpected DOCX search result: {row!r}")
+
+row = database.execute(
+    "SELECT path FROM search_fts WHERE search_fts MATCH ?",
+    ('"sealed containers"',),
+).fetchone()
+
+if row != ("emergency/water-storage.pdf",):
+    raise SystemExit(f"Unexpected PDF search result: {row!r}")
+
 rows = database.execute("SELECT path FROM search_fts").fetchall()
-if len(rows) != 4:
-    raise SystemExit(f"Expected 4 valid documents, got {len(rows)}")
+if len(rows) != 5:
+    raise SystemExit(f"Expected 5 valid documents, got {len(rows)}")
 if ("emergency/broken.docx",) in rows:
     raise SystemExit("Corrupted DOCX was indexed")
+if ("emergency/broken.pdf",) in rows:
+    raise SystemExit("Corrupted PDF was indexed")
 
 PY
 
-pass "Plain-text, Markdown, HTML, and DOCX document bodies are searchable through SQLite FTS5."
+pass "Plain-text, Markdown, HTML, DOCX, and PDF document bodies are searchable through SQLite FTS5."
