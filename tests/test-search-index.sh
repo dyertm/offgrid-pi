@@ -35,7 +35,12 @@ MARKDOWN
 
 cat > "$PUBLIC_ROOT/emergency/heat.html" <<'HTML'
 <!doctype html>
-<html><body><h1>Extreme Heat</h1><p>Move to a cooler location and drink water regularly.</p></body></html>
+<html><head>
+<style>.stylenoisemarker {color: red}</style>
+<script>const scriptnoisemarker = true;</script>
+</head><body><h1>Extreme Heat</h1>
+<p>Move to a cooler location and drink water regularly.</p>
+</body></html>
 HTML
 
 python3 - "$PUBLIC_ROOT/emergency/first-aid.docx" <<'PYDOCX'
@@ -95,6 +100,14 @@ row = database.execute(
 
 if row != ("emergency/heat.html",):
     raise SystemExit(f"Unexpected HTML search result: {row!r}")
+
+for marker in ("stylenoisemarker", "scriptnoisemarker"):
+    result = database.execute(
+        "SELECT path FROM search_fts WHERE search_fts MATCH ?",
+        (marker,),
+    ).fetchone()
+    if result is not None:
+        raise SystemExit(f"HTML noise was indexed: {marker}")
 
 row = database.execute(
     "SELECT path FROM search_fts WHERE search_fts MATCH ?",

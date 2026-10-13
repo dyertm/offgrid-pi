@@ -24,8 +24,19 @@ class HTMLTextExtractor(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.parts: list[str] = []
+        self.ignored_depth = 0
+
+    def handle_starttag(self, tag, attrs) -> None:
+        if tag in {"script", "style"}:
+            self.ignored_depth += 1
+
+    def handle_endtag(self, tag) -> None:
+        if tag in {"script", "style"} and self.ignored_depth:
+            self.ignored_depth -= 1
 
     def handle_data(self, data: str) -> None:
+        if self.ignored_depth:
+            return
         text = " ".join(data.split())
         if text:
             self.parts.append(text)
