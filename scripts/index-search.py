@@ -6,7 +6,9 @@ from __future__ import annotations
 import os
 import sqlite3
 import sys
+import zipfile
 from html.parser import HTMLParser
+from xml.etree import ElementTree
 from pathlib import Path
 
 
@@ -31,13 +33,34 @@ class HTMLTextExtractor(HTMLParser):
         return "\n".join(self.parts)
 
 
+def read_docx(path: Path) -> str:
+    with zipfile.ZipFile(path) as archive:
+        document_xml = archive.read("word/document.xml")
+
+    root = ElementTree.fromstring(document_xml)
+    parts: list[str] = []
+
+    for element in root.iter():
+        if element.tag.endswith("}t") and element.text:
+            text = " ".join(element.text.split())
+            if text:
+                parts.append(text)
+
+    return "\n".join(parts)
+
+
 def read_content(path: Path) -> str:
+    suffix = path.suffix.lower()
+
+    if suffix == ".docx":
+        return read_docx(path)
+
     content = path.read_text(
         encoding="utf-8",
         errors="replace",
     )
 
-    if path.suffix.lower() in {".html", ".htm"}:
+    if suffix in {".html", ".htm"}:
         parser = HTMLTextExtractor()
         parser.feed(content)
         parser.close()
@@ -68,7 +91,7 @@ def iter_text_files(root: Path):
             if name.startswith(".") or path.is_symlink():
                 continue
 
-            if path.is_file() and path.suffix.lower() in {".txt", ".md", ".html", ".htm"}:
+            if path.is_file() and path.suffix.lower() in {".txt", ".md", ".html", ".htm", ".docx"}:
                 yield path
 
 
@@ -99,7 +122,18 @@ def main() -> int:
 
         for path in iter_text_files(ROOT):
             relative = path.relative_to(ROOT).as_posix()
-            content = read_content(path)
+            try:
+                content = read_content(path)
+            except (
+                zipfile.BadZipFile,
+                KeyError,
+                ElementTree.ParseError,
+            ) as error:
+                print(
+                    f"WARNING: Skipping invalid document {relative}: {error}",
+                    file=sys.stderr,
+                )
+                continue
 
             connection.execute(
                 """

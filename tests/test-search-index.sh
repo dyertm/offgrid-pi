@@ -38,6 +38,22 @@ cat > "$PUBLIC_ROOT/emergency/heat.html" <<'HTML'
 <html><body><h1>Extreme Heat</h1><p>Move to a cooler location and drink water regularly.</p></body></html>
 HTML
 
+python3 - "$PUBLIC_ROOT/emergency/first-aid.docx" <<'PYDOCX'
+import sys
+import zipfile
+
+document_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body><w:p><w:r><w:t>Apply direct pressure to control severe bleeding.</w:t></w:r></w:p></w:body>
+</w:document>
+"""
+
+with zipfile.ZipFile(sys.argv[1], "w") as archive:
+    archive.writestr("word/document.xml", document_xml)
+PYDOCX
+
+printf %s "not-a-zip" > "$PUBLIC_ROOT/emergency/broken.docx"
+
 OFFGRIDPI_SEARCH_ROOT="$PUBLIC_ROOT" \
 OFFGRIDPI_SEARCH_DB="$SEARCH_DB" \
 "$INDEXER"
@@ -75,6 +91,20 @@ row = database.execute(
 
 if row != ("emergency/heat.html",):
     raise SystemExit(f"Unexpected HTML search result: {row!r}")
+
+row = database.execute(
+    "SELECT path FROM search_fts WHERE search_fts MATCH ?",
+    ('"severe bleeding"',),
+).fetchone()
+
+if row != ("emergency/first-aid.docx",):
+    raise SystemExit(f"Unexpected DOCX search result: {row!r}")
+rows = database.execute("SELECT path FROM search_fts").fetchall()
+if len(rows) != 4:
+    raise SystemExit(f"Expected 4 valid documents, got {len(rows)}")
+if ("emergency/broken.docx",) in rows:
+    raise SystemExit("Corrupted DOCX was indexed")
+
 PY
 
-pass "Plain-text, Markdown, and HTML document bodies are searchable through SQLite FTS5."
+pass "Plain-text, Markdown, HTML, and DOCX document bodies are searchable through SQLite FTS5."
